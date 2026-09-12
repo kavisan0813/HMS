@@ -315,9 +315,11 @@ function mapQueueItemToConsultation(
       (rawItem.encounterId as number | string) ||
       ((rawItem.encounter as Record<string, unknown>)?.id as number | string) ||
       ((rawItem.encounter as Record<string, unknown>)?.encounterId as
-        number | string) ||
+        | number
+        | string) ||
       ((rawItem.encounter as Record<string, unknown>)?.encounterId as
-        number | string) ||
+        | number
+        | string) ||
       (rawItem.encounter_id as number | string) ||
       (item as unknown as { encounterId?: number | string })?.encounterId,
     patientId:
@@ -1137,8 +1139,7 @@ function OPDConsultationPage({
         actions={
           resolvedRole === "admin" ? (
             <>
-
-             <button
+              <button
                 onClick={() => setShowSummaryModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#111827] hover:bg-slate-50 text-sm font-semibold transition-colors shadow-sm"
                 style={{ fontFamily: PP }}

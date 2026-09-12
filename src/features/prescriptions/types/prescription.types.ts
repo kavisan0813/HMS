@@ -1,5 +1,9 @@
 export type RxStatus =
-  "Draft" | "Issued" | "Completed" | "Cancelled" | "Archived";
+  | "Draft"
+  | "Issued"
+  | "Completed"
+  | "Cancelled"
+  | "Archived";
 
 export interface UnifiedPrescription {
   id: string;

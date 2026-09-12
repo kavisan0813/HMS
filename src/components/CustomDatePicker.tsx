@@ -458,8 +458,6 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     }
   }, [viewMode]);
 
-  // Format YYYY-MM-DD for display as DD / MM / YYYY
-
   // Generate Year options (e.g. 1920 to currentYear)
   const currentYear = new Date().getFullYear();
   const startYear = 1920;

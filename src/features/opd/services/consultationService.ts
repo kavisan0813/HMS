@@ -168,7 +168,9 @@ export const consultationService = {
         mrn: appointment.mrn || appointment.patientMrn || "",
         age: Number(appointment.patientAge || appointment.age || 30),
         gender: (appointment.patientGender || appointment.gender || "Other") as
-          "Male" | "Female" | "Other",
+          | "Male"
+          | "Female"
+          | "Other",
         phone: String(appointment.patientPhone || appointment.mobile || ""),
         doctor: appointment.doctorName,
         department:

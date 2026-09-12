@@ -255,11 +255,16 @@ export function DoctorPatientReportScreen({
   const setDateRange = (val: string) => dispatch({ dateRange: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
-  const setConsultStatusFilter = (val: string) => dispatch({ consultStatusFilter: val });
-  const setFollowUpStatusFilter = (val: string) => dispatch({ followUpStatusFilter: val });
-  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") => dispatch({ trendDays: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
+  const setConsultStatusFilter = (val: string) =>
+    dispatch({ consultStatusFilter: val });
+  const setFollowUpStatusFilter = (val: string) =>
+    dispatch({ followUpStatusFilter: val });
+  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") =>
+    dispatch({ trendDays: val });
+  const setShowLoadingDemo = (val: boolean) =>
+    dispatch({ showLoadingDemo: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending, startTransition] = useTransition();
@@ -293,22 +298,24 @@ export function DoctorPatientReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    const recordsToExport = (filteredPatients.length > 0 ? filteredPatients : doctorPatientSource).map((rec) => ({
+    const recordsToExport = (
+      filteredPatients.length > 0 ? filteredPatients : doctorPatientSource
+    ).map((rec) => ({
       Section: "DOCTOR PATIENT REPORT",
-      "MRN": rec.mrn || "N/A",
+      MRN: rec.mrn || "N/A",
       "Patient Name": rec.patientName || "N/A",
       "Age / Gender": `${rec.age || 0} / ${rec.gender || "N/A"}`,
-      "Mobile": rec.mobileNumber || "N/A",
+      Mobile: rec.mobileNumber || "N/A",
       "Last Consultation Date": rec.lastConsultationDate || todayStr,
       "Visit Type": rec.visitType || "N/A",
-      "Diagnosis": rec.diagnosis || "Routine OPD",
+      Diagnosis: rec.diagnosis || "Routine OPD",
       "Follow-Up Date": rec.followUpDate || "N/A",
-      "Status": rec.status || "Completed",
+      Status: rec.status || "Completed",
     }));
 
     exportDataToCsv(
       `Doctor_Patient_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport
+      recordsToExport,
     );
   };
 

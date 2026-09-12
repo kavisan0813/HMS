@@ -244,18 +244,20 @@ export function DoctorDailyAppointmentReportScreen({
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
   const setStatusFilter = (val: string) => dispatch({ statusFilter: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
   const setShiftFilter = (val: string) => dispatch({ shiftFilter: val });
-  const setTrendDays = (val: "Today" | "7 Days" | "30 Days" | "90 Days") => dispatch({ trendDays: val });
+  const setTrendDays = (val: "Today" | "7 Days" | "30 Days" | "90 Days") =>
+    dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
+  const setShowLoadingDemo = (val: boolean) =>
+    dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending, startTransition] = useTransition();
   const isLoading = isPending || showLoadingDemo;
 
   // React Query Hooks for Doctor Personal Practice Reports
-  const { refetch: refetchDash } =
-    useDoctorSelfDailyAppointmentsDashboard();
+  const { refetch: refetchDash } = useDoctorSelfDailyAppointmentsDashboard();
   const { data: registerData, refetch: refetchRegister } =
     useDoctorSelfDailyAppointmentRegister({ size: 50 });
 
@@ -297,7 +299,7 @@ export function DoctorDailyAppointmentReportScreen({
 
     exportDataToCsv(
       `Doctor_Daily_Appointment_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport
+      recordsToExport,
     );
   };
 
@@ -333,7 +335,9 @@ export function DoctorDailyAppointmentReportScreen({
       // 1. Search Query Filter
       const matchesSearch =
         !searchQuery ||
-        (item.patientName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.patientName || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
         (item.mrn || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.id || "").toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -351,12 +355,27 @@ export function DoctorDailyAppointmentReportScreen({
       const timeStr = item.appointmentTime || "";
       const matchesShift =
         shiftFilter === "All Shifts" ||
-        (shiftFilter.includes("Morning") && (timeStr.includes("08:") || timeStr.includes("09:") || timeStr.includes("10:") || timeStr.includes("11:"))) ||
-        (shiftFilter.includes("Afternoon") && (timeStr.includes("12:") || timeStr.includes("01:") || timeStr.includes("02:") || timeStr.includes("03:") || timeStr.includes("04:"))) ||
-        (shiftFilter.includes("Evening") && (timeStr.includes("05:") || timeStr.includes("06:") || timeStr.includes("07:") || timeStr.includes("08:")));
+        (shiftFilter.includes("Morning") &&
+          (timeStr.includes("08:") ||
+            timeStr.includes("09:") ||
+            timeStr.includes("10:") ||
+            timeStr.includes("11:"))) ||
+        (shiftFilter.includes("Afternoon") &&
+          (timeStr.includes("12:") ||
+            timeStr.includes("01:") ||
+            timeStr.includes("02:") ||
+            timeStr.includes("03:") ||
+            timeStr.includes("04:"))) ||
+        (shiftFilter.includes("Evening") &&
+          (timeStr.includes("05:") ||
+            timeStr.includes("06:") ||
+            timeStr.includes("07:") ||
+            timeStr.includes("08:")));
 
       // 5. Date Range Filter
-      const extractDateStr = (rec: DoctorDailyAppointmentRecord): string | null => {
+      const extractDateStr = (
+        rec: DoctorDailyAppointmentRecord,
+      ): string | null => {
         if (rec.appointmentDate && rec.appointmentDate.length >= 10) {
           const match = rec.appointmentDate.match(/\d{4}-\d{2}-\d{2}/);
           if (match) return match[0];
@@ -386,16 +405,16 @@ export function DoctorDailyAppointmentReportScreen({
   const kpi = (() => {
     const totalReg = filteredAppointments.length;
     const completedCount = filteredAppointments.filter(
-      (a) => a.status === "Completed"
+      (a) => a.status === "Completed",
     ).length;
     const pendingCount = filteredAppointments.filter(
-      (a) => a.status === "Scheduled" || a.status === "In Progress"
+      (a) => a.status === "Scheduled" || a.status === "In Progress",
     ).length;
     const cancelledCount = filteredAppointments.filter(
-      (a) => a.status === "Cancelled"
+      (a) => a.status === "Cancelled",
     ).length;
-    const followUpCount = filteredAppointments.filter(
-      (a) => a.visitType.toLowerCase().includes("follow")
+    const followUpCount = filteredAppointments.filter((a) =>
+      a.visitType.toLowerCase().includes("follow"),
     ).length;
 
     return {
@@ -403,10 +422,15 @@ export function DoctorDailyAppointmentReportScreen({
       completedCount,
       pendingCount,
       cancelledCount,
-      noShowCount: Math.max(0, totalReg - completedCount - pendingCount - cancelledCount),
+      noShowCount: Math.max(
+        0,
+        totalReg - completedCount - pendingCount - cancelledCount,
+      ),
       followUpCount,
-      completionRate: totalReg > 0 ? Math.round((completedCount / totalReg) * 100) : 0,
-      cancellationRate: totalReg > 0 ? Math.round((cancelledCount / totalReg) * 100) : 0,
+      completionRate:
+        totalReg > 0 ? Math.round((completedCount / totalReg) * 100) : 0,
+      cancellationRate:
+        totalReg > 0 ? Math.round((cancelledCount / totalReg) * 100) : 0,
       avgWaitingMinutes: "12.4 min",
     };
   })();
@@ -414,10 +438,18 @@ export function DoctorDailyAppointmentReportScreen({
   // Donut & Chart Data
   const apptStatusData = useMemo(() => {
     if (filteredAppointments.length > 0) {
-      const completed = filteredAppointments.filter((a) => a.status === "Completed").length;
-      const inProgress = filteredAppointments.filter((a) => a.status === "In Progress").length;
-      const scheduled = filteredAppointments.filter((a) => a.status === "Scheduled").length;
-      const cancelled = filteredAppointments.filter((a) => a.status === "Cancelled").length;
+      const completed = filteredAppointments.filter(
+        (a) => a.status === "Completed",
+      ).length;
+      const inProgress = filteredAppointments.filter(
+        (a) => a.status === "In Progress",
+      ).length;
+      const scheduled = filteredAppointments.filter(
+        (a) => a.status === "Scheduled",
+      ).length;
+      const cancelled = filteredAppointments.filter(
+        (a) => a.status === "Cancelled",
+      ).length;
 
       const list = [
         { name: "Completed", value: completed, color: "#66BB6A" },
@@ -436,7 +468,14 @@ export function DoctorDailyAppointmentReportScreen({
   }, [filteredAppointments]);
 
   const apptTrendData = useMemo(() => {
-    const daysCount = trendDays === "7 Days" ? 7 : trendDays === "30 Days" ? 30 : trendDays === "90 Days" ? 90 : 1;
+    const daysCount =
+      trendDays === "7 Days"
+        ? 7
+        : trendDays === "30 Days"
+          ? 30
+          : trendDays === "90 Days"
+            ? 90
+            : 1;
     const result = [];
     for (let i = daysCount - 1; i >= 0; i--) {
       const d = new Date();
@@ -456,9 +495,24 @@ export function DoctorDailyAppointmentReportScreen({
 
   const shiftWorkloadData = useMemo(() => {
     if (filteredAppointments.length > 0) {
-      const morning = filteredAppointments.filter((a) => (a.appointmentTime || "").includes("08:") || (a.appointmentTime || "").includes("09:") || (a.appointmentTime || "").includes("10:") || (a.appointmentTime || "").includes("11:")).length;
-      const afternoon = filteredAppointments.filter((a) => (a.appointmentTime || "").includes("12:") || (a.appointmentTime || "").includes("01:") || (a.appointmentTime || "").includes("02:") || (a.appointmentTime || "").includes("03:")).length;
-      const evening = Math.max(0, filteredAppointments.length - morning - afternoon);
+      const morning = filteredAppointments.filter(
+        (a) =>
+          (a.appointmentTime || "").includes("08:") ||
+          (a.appointmentTime || "").includes("09:") ||
+          (a.appointmentTime || "").includes("10:") ||
+          (a.appointmentTime || "").includes("11:"),
+      ).length;
+      const afternoon = filteredAppointments.filter(
+        (a) =>
+          (a.appointmentTime || "").includes("12:") ||
+          (a.appointmentTime || "").includes("01:") ||
+          (a.appointmentTime || "").includes("02:") ||
+          (a.appointmentTime || "").includes("03:"),
+      ).length;
+      const evening = Math.max(
+        0,
+        filteredAppointments.length - morning - afternoon,
+      );
 
       return [
         { shift: "Morning (08am-12pm)", completed: morning, pending: 0 },
@@ -475,10 +529,18 @@ export function DoctorDailyAppointmentReportScreen({
 
   const visitTypeData = useMemo(() => {
     if (filteredAppointments.length > 0) {
-      const newPatients = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("new")).length;
-      const followUp = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("follow")).length;
-      const checkup = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("check")).length;
-      const walkIn = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("walk")).length;
+      const newPatients = filteredAppointments.filter((a) =>
+        a.visitType.toLowerCase().includes("new"),
+      ).length;
+      const followUp = filteredAppointments.filter((a) =>
+        a.visitType.toLowerCase().includes("follow"),
+      ).length;
+      const checkup = filteredAppointments.filter((a) =>
+        a.visitType.toLowerCase().includes("check"),
+      ).length;
+      const walkIn = filteredAppointments.filter((a) =>
+        a.visitType.toLowerCase().includes("walk"),
+      ).length;
 
       return [
         { visitType: "New Patient", count: newPatients },
@@ -538,7 +600,8 @@ export function DoctorDailyAppointmentReportScreen({
                 </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor your appointments, consultation schedule, and daily performance metrics.
+                Monitor your appointments, consultation schedule, and daily
+                performance metrics.
               </p>
             </div>
 
@@ -636,11 +699,15 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#66BB6A] font-bold">{kpi.completedCount}</div>
+                  <div className="text-[#66BB6A] font-bold">
+                    {kpi.completedCount}
+                  </div>
                   <div className="text-[#64748B]">Completed</div>
                 </div>
                 <div>
-                  <div className="text-[#F59E0B] font-bold">{kpi.pendingCount}</div>
+                  <div className="text-[#F59E0B] font-bold">
+                    {kpi.pendingCount}
+                  </div>
                   <div className="text-[#64748B]">Pending</div>
                 </div>
               </div>
@@ -669,11 +736,15 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#009688] font-bold">{kpi.completedCount}</div>
+                  <div className="text-[#009688] font-bold">
+                    {kpi.completedCount}
+                  </div>
                   <div className="text-[#64748B]">Done</div>
                 </div>
                 <div>
-                  <div className="text-[#0D47A1] font-bold">{kpi.completionRate}%</div>
+                  <div className="text-[#0D47A1] font-bold">
+                    {kpi.completionRate}%
+                  </div>
                   <div className="text-[#64748B]">Rate</div>
                 </div>
               </div>
@@ -702,11 +773,15 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#EF4444] font-bold">{kpi.cancelledCount}</div>
+                  <div className="text-[#EF4444] font-bold">
+                    {kpi.cancelledCount}
+                  </div>
                   <div className="text-[#64748B]">Cancelled</div>
                 </div>
                 <div>
-                  <div className="text-[#64748B] font-bold">{kpi.cancellationRate}%</div>
+                  <div className="text-[#64748B] font-bold">
+                    {kpi.cancellationRate}%
+                  </div>
                   <div className="text-[#64748B]">Rate</div>
                 </div>
               </div>
@@ -735,7 +810,9 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#F59E0B] font-bold">{kpi.noShowCount}</div>
+                  <div className="text-[#F59E0B] font-bold">
+                    {kpi.noShowCount}
+                  </div>
                   <div className="text-[#64748B]">No Show</div>
                 </div>
                 <div>
@@ -768,11 +845,15 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#009688] font-bold">{kpi.followUpCount}</div>
+                  <div className="text-[#009688] font-bold">
+                    {kpi.followUpCount}
+                  </div>
                   <div className="text-[#64748B]">Active</div>
                 </div>
                 <div>
-                  <div className="text-[#0D47A1] font-bold">{Math.max(0, kpi.followUpCount - 1)}</div>
+                  <div className="text-[#0D47A1] font-bold">
+                    {Math.max(0, kpi.followUpCount - 1)}
+                  </div>
                   <div className="text-[#64748B]">Upcoming</div>
                 </div>
               </div>
@@ -1058,7 +1139,8 @@ export function DoctorDailyAppointmentReportScreen({
                       My Appointment Status Breakdown
                     </h3>
                     <p className="text-[11px] text-[#64748B]">
-                      Distribution across completed, waiting, cancelled & scheduled
+                      Distribution across completed, waiting, cancelled &
+                      scheduled
                     </p>
                   </div>
                   <PieChartIcon className="w-4 h-4 text-[#009688]" />

@@ -211,7 +211,9 @@ export const billingService = {
     const targetId = await resolveBillId(billId);
 
     const normalizedPayments = (payload.payments || []).map((p) => {
-      const rawMethod = String(p.method || "CASH").trim().toUpperCase();
+      const rawMethod = String(p.method || "CASH")
+        .trim()
+        .toUpperCase();
       let method = rawMethod;
       if (
         rawMethod === "CASH" ||

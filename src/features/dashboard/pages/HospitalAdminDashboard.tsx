@@ -185,7 +185,12 @@ function Av({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 const ADMIN_CHIP_MAP: Record<ChipVariant, string> = {
   success: "bg-green-50 text-[#66BB6A]",
   warning: "bg-amber-50 text-[#F59E0B]",
@@ -386,9 +391,7 @@ export function HospitalAdminDashboard({
             {label}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-2">
-
-        </div>
+        <div className="ml-auto flex items-center gap-2"></div>
       </div>
 
       {/* ── KPI Row — 5 Operational Cards ── */}

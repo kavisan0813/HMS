@@ -6,4 +6,3 @@ import { CommonProfilePage } from "../../users/pages/CommonProfilePage";
 export function UserProfileRoute() {
   return <CommonProfilePage />;
 }
-

@@ -88,10 +88,7 @@ function CircularProgress({
   );
 }
 
-import {
-  usePatientMasterRegister,
-  extractList,
-} from "../hooks/useReports";
+import { usePatientMasterRegister, extractList } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
 import type { PatientMasterRecord } from "../types/reports.types";
 
@@ -186,12 +183,14 @@ export function ReceptionistPatientReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    const recordsToExport = (filteredPatients.length > 0 ? filteredPatients : patientSource).map((rec) => ({
+    const recordsToExport = (
+      filteredPatients.length > 0 ? filteredPatients : patientSource
+    ).map((rec) => ({
       Section: "RECEPTIONIST PATIENT REPORT",
-      "MRN": rec.mrn || "N/A",
+      MRN: rec.mrn || "N/A",
       "Patient Name": rec.patientName || "N/A",
       "Age / Gender": `${rec.age || 0} / ${rec.gender || "N/A"}`,
-      "Mobile": rec.mobileNumber || "N/A",
+      Mobile: rec.mobileNumber || "N/A",
       "Visit Type": rec.visitType || "N/A",
       "Registration Status": rec.registrationStatus || "Active",
       "Check-In Status": rec.checkInStatus || "N/A",
@@ -200,7 +199,7 @@ export function ReceptionistPatientReportScreen({
 
     exportDataToCsv(
       `Receptionist_Patient_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport
+      recordsToExport,
     );
   };
 

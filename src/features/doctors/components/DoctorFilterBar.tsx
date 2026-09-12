@@ -54,7 +54,6 @@ export function DoctorFilterBar({
   return (
     <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
         <div className="relative">
           <Hash
             size={14}

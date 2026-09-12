@@ -70,7 +70,8 @@ export function RecordPatientVitalsForm({
   );
   const [bloodGroup] = useState(
     initialVitalsData?.bloodGroup ||
-      ((activeApt as unknown as Record<string, unknown>).bloodGroup as string) ||
+      ((activeApt as unknown as Record<string, unknown>)
+        .bloodGroup as string) ||
       ((activeApt.patient as unknown as Record<string, unknown>)
         ?.bloodGroup as string) ||
       "O+",

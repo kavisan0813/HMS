@@ -1,9 +1,4 @@
-import {
-  Phone,
-  Stethoscope,
-  FolderOpen,
-  FileText,
-} from "lucide-react";
+import { Phone, Stethoscope, FolderOpen, FileText } from "lucide-react";
 import type { ConsultationRecord, OauthRole } from "../types/consultation";
 
 const PP = "'Poppins', system-ui, sans-serif";
@@ -40,10 +35,10 @@ export const ConsultationActionMenu: React.FC<ConsultationActionMenuProps> = ({
 
   const isLocallyCalled = Boolean(
     calledPatientIds &&
-      (calledPatientIds.has(String(item.id)) ||
-        (item.appointmentId != null &&
-          calledPatientIds.has(String(item.appointmentId))) ||
-        (item.tokenNo && calledPatientIds.has(String(item.tokenNo)))),
+    (calledPatientIds.has(String(item.id)) ||
+      (item.appointmentId != null &&
+        calledPatientIds.has(String(item.appointmentId))) ||
+      (item.tokenNo && calledPatientIds.has(String(item.tokenNo)))),
   );
 
   const isCalled =
@@ -114,8 +109,6 @@ export const ConsultationActionMenu: React.FC<ConsultationActionMenuProps> = ({
           <FolderOpen size={13} /> Continue Consultation
         </button>
       )}
-
-
 
       {isCompleted && (
         <button

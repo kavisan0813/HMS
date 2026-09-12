@@ -1,5 +1,9 @@
 type EncounterStatus =
-  "CREATED" | "IN_PROGRESS" | "COMPLETED" | "FINALIZED" | string;
+  | "CREATED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "FINALIZED"
+  | string;
 
 type PrescriptionOutcome =
   | "MEDICATION_PRESCRIBED"

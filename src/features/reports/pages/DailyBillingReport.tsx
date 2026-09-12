@@ -156,7 +156,8 @@ export function DailyBillingReportPage() {
     ];
 
     // 2. Chart Performance: Payment Method Distribution Graph Share (%)
-    const methodTotal = (metrics.upiAmount + metrics.cashAmount + metrics.cardAmount) || 1;
+    const methodTotal =
+      metrics.upiAmount + metrics.cashAmount + metrics.cardAmount || 1;
     const methodRows = [
       {
         Section: "2. PAYMENT METHOD GRAPH SHARE",
@@ -188,7 +189,8 @@ export function DailyBillingReportPage() {
     ];
 
     // 3. Chart Performance: Department Breakdown Graph Share (%)
-    const totalDeptBilled = departmentBreakdown.reduce((sum, d) => sum + d.revenue, 0) || 1;
+    const totalDeptBilled =
+      departmentBreakdown.reduce((sum, d) => sum + d.revenue, 0) || 1;
     const deptRows = departmentBreakdown.map((dept) => {
       const pct = ((dept.revenue / totalDeptBilled) * 100).toFixed(1);
       return {
@@ -207,22 +209,20 @@ export function DailyBillingReportPage() {
       Section: "4. DAILY INVOICE TABLE REGISTRY",
       Category_Item: rec.id || "N/A",
       Count_or_Amount: `Billed: INR ${rec.invoiceAmount || 0} (Paid: INR ${rec.paidAmount || 0})`,
-      Percentage_Share: rec.invoiceAmount > 0 ? `${(((rec.paidAmount || 0) / rec.invoiceAmount) * 100).toFixed(1)}%` : "0%",
+      Percentage_Share:
+        rec.invoiceAmount > 0
+          ? `${(((rec.paidAmount || 0) / rec.invoiceAmount) * 100).toFixed(1)}%`
+          : "0%",
       Primary_Detail: `Patient: ${rec.patientName} (${rec.mrn})`,
       Secondary_Detail: `Dept: ${rec.department} | Method: ${rec.paymentMethod}`,
       Date_or_Status: `Date: ${rec.invoiceDate || reportDate} | Status: ${rec.paymentStatus}`,
     }));
 
-    const allRows = [
-      ...kpiRows,
-      ...methodRows,
-      ...deptRows,
-      ...recordRows,
-    ];
+    const allRows = [...kpiRows, ...methodRows, ...deptRows, ...recordRows];
 
     exportDataToCsv(
       `Daily_Billing_Collection_Rate_Report_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows
+      allRows,
     );
   };
 

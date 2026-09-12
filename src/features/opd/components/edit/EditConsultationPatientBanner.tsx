@@ -77,23 +77,17 @@ export const EditConsultationPatientBanner: React.FC<
               <span>•</span>
               <span>
                 Blood:{" "}
-                <strong className="text-[#111827]">
-                  {bloodGroup || "—"}
-                </strong>
+                <strong className="text-[#111827]">{bloodGroup || "—"}</strong>
               </span>
               <span>•</span>
               <span>
                 Token:{" "}
-                <strong className="text-[#0D47A1]">
-                  {tokenNo || "—"}
-                </strong>
+                <strong className="text-[#0D47A1]">{tokenNo || "—"}</strong>
               </span>
               <span>•</span>
               <span>
                 Doctor:{" "}
-                <strong className="text-[#111827]">
-                  {doctorName || "—"}
-                </strong>
+                <strong className="text-[#111827]">{doctorName || "—"}</strong>
               </span>
               {department && (
                 <>
@@ -107,9 +101,7 @@ export const EditConsultationPatientBanner: React.FC<
               <span>•</span>
               <span>
                 Date:{" "}
-                <strong className="text-[#111827]">
-                  {visitDate || "—"}
-                </strong>
+                <strong className="text-[#111827]">{visitDate || "—"}</strong>
               </span>
             </div>
           </div>

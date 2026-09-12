@@ -555,7 +555,9 @@ export function PatientAppointmentsTab({
                       );
                       const apptRecord: AppointmentRecord = {
                         id: String(appt.id),
-                        appointmentNumber: String(appt.appointmentNumber || appt.id),
+                        appointmentNumber: String(
+                          appt.appointmentNumber || appt.id,
+                        ),
                         patientId: patient.id || patient.mrn,
                         patientName: patientDisplayName,
                         patientMrn: patient.mrn,
@@ -691,7 +693,9 @@ export function PatientAppointmentsTab({
                       ].includes(appt.status || "");
                       const apptRecord: AppointmentRecord = {
                         id: String(appt.id),
-                        appointmentNumber: String(appt.appointmentNumber || appt.id),
+                        appointmentNumber: String(
+                          appt.appointmentNumber || appt.id,
+                        ),
                         patientId: patient.id || patient.mrn,
                         patientName: patientDisplayName,
                         patientMrn: patient.mrn,

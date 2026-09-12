@@ -1,7 +1,5 @@
 import React from "react";
-import {
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import type { AuditCategory, AuditMetric } from "../types/auditlog.types";
 
 const PP = "Poppins, sans-serif";
@@ -37,7 +35,9 @@ export function AuditLogHeaderMetrics({
               key={metric.code || metric.label}
               className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-1"
             >
-              <p className="text-xs font-semibold text-gray-500">{metric.label}</p>
+              <p className="text-xs font-semibold text-gray-500">
+                {metric.label}
+              </p>
               <div className="flex items-baseline justify-between">
                 <span
                   className="text-2xl font-bold text-gray-900"
@@ -50,7 +50,9 @@ export function AuditLogHeaderMetrics({
                 {metric.trend !== undefined && (
                   <span className="text-[11px] font-bold text-emerald-600 flex items-center gap-0.5">
                     <ArrowUpRight className="w-3 h-3" />
-                    {metric.trend > 0 ? `+${metric.trend}%` : `${metric.trend}%`}
+                    {metric.trend > 0
+                      ? `+${metric.trend}%`
+                      : `${metric.trend}%`}
                   </span>
                 )}
               </div>
@@ -70,7 +72,8 @@ export function AuditLogHeaderMetrics({
               Audit Log Streams
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
-              Select a specialized event stream to audit system activity, access, or data mutations.
+              Select a specialized event stream to audit system activity,
+              access, or data mutations.
             </p>
           </div>
         </div>

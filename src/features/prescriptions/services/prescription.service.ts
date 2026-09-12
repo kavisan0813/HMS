@@ -89,7 +89,10 @@ export const prescriptionService = {
           : m.dose || m.dosage || m.strength;
 
       const freqVal =
-        m.frequencyDisplay || m.frequencyCode || m.frequencyLabel || m.frequency;
+        m.frequencyDisplay ||
+        m.frequencyCode ||
+        m.frequencyLabel ||
+        m.frequency;
 
       const durVal =
         m.durationValue != null
@@ -125,7 +128,9 @@ export const prescriptionService = {
         frequency: formatComplex(freqVal),
         duration: formatComplex(durVal),
         quantity: formatComplex(qtyVal),
-        instructions: String(m.instructions || m.specialInstructions || m.notes || ""),
+        instructions: String(
+          m.instructions || m.specialInstructions || m.notes || "",
+        ),
       };
     });
 

@@ -215,7 +215,7 @@ export function PatientReportScreen({
   onOpenAppointmentReport?: () => void;
   onOpenDoctorReport?: () => void;
 }) {
-  const {role } = usePermissions();
+  const { role } = usePermissions();
   // State
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
@@ -272,19 +272,30 @@ export function PatientReportScreen({
       visitType:
         visitTypeFilter !== "All Visit Types" ? visitTypeFilter : undefined,
       gender: genderFilter !== "All Genders" ? genderFilter : undefined,
-      ageGroup: ageGroupFilter !== "All Age Groups" ? ageGroupFilter : undefined,
+      ageGroup:
+        ageGroupFilter !== "All Age Groups" ? ageGroupFilter : undefined,
       page: 0,
       size: 50,
     }),
-    [dates, doctorFilter, deptFilter, regStatusFilter, visitTypeFilter, genderFilter, ageGroupFilter],
+    [
+      dates,
+      doctorFilter,
+      deptFilter,
+      regStatusFilter,
+      visitTypeFilter,
+      genderFilter,
+      ageGroupFilter,
+    ],
   );
 
   useDepartmentPatientVisits(reportFilters);
   const { data: genderData = null } = useGenderBreakdown(reportFilters);
-  const { data: regSummary = null } = usePatientRegistrationSummary(reportFilters);
+  const { data: regSummary = null } =
+    usePatientRegistrationSummary(reportFilters);
   const { data: patientMasterData } = usePatientMasterRegister(reportFilters);
   const { data: patientDashboard = null } = usePatientDashboard(reportFilters);
-  const { data: registrationTrend = null } = usePatientRegistrationTrend(reportFilters);
+  const { data: registrationTrend = null } =
+    usePatientRegistrationTrend(reportFilters);
 
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<"pdf" | "excel" | "csv">(
@@ -320,8 +331,7 @@ export function PatientReportScreen({
     "7 Days",
   );
 
-  const [sortField, setSortField] =
-    useState<string>("registrationDate");
+  const [sortField, setSortField] = useState<string>("registrationDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [selectedPatientModal, setSelectedPatientModal] = useState<{
     patientId: string | number;
@@ -423,7 +433,8 @@ export function PatientReportScreen({
     });
 
     // 4. Graph 3: Department Registrations Share (%)
-    const totalDeptCount = dynamicDeptData.reduce((s, d) => s + d.total, 0) || 1;
+    const totalDeptCount =
+      dynamicDeptData.reduce((s, d) => s + d.total, 0) || 1;
     const deptChartRows = dynamicDeptData.map((d) => {
       const pct = ((d.total / totalDeptCount) * 100).toFixed(1);
       return {
@@ -458,7 +469,7 @@ export function PatientReportScreen({
 
     exportDataToCsv(
       `Patient_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows
+      allRows,
     );
   };
 
@@ -503,7 +514,7 @@ export function PatientReportScreen({
     [patientMasterData],
   );
 
-   // Computed KPI Card Values from API hooks
+  // Computed KPI Card Values from API hooks
   const computedPatientStats = {
     totalReg: patientDashboard?.totalPatients ?? patientMasterList.length ?? 0,
     newCount: patientDashboard?.newPatients?.count ?? 0,
@@ -513,9 +524,16 @@ export function PatientReportScreen({
     malePct: patientDashboard?.malePercentage ?? 0,
     femalePct: patientDashboard?.femalePercentage ?? 0,
     otherPct: patientDashboard?.otherPercentage ?? 0,
-    walkIns: patientMasterList.filter((p) => p.visitType === "Walk-In").length ?? 0,
-    scheduled: patientMasterList.filter((p) => p.visitType === "Scheduled").length ?? 0,
-    activeCount: patientMasterList.filter((p) => p.status === "Active" || !p.status).length ?? (patientDashboard?.totalPatients ?? patientMasterList.length ?? 0),
+    walkIns:
+      patientMasterList.filter((p) => p.visitType === "Walk-In").length ?? 0,
+    scheduled:
+      patientMasterList.filter((p) => p.visitType === "Scheduled").length ?? 0,
+    activeCount:
+      patientMasterList.filter((p) => p.status === "Active" || !p.status)
+        .length ??
+      patientDashboard?.totalPatients ??
+      patientMasterList.length ??
+      0,
   };
 
   const registrationTrendData = (() => {
@@ -527,14 +545,24 @@ export function PatientReportScreen({
         Total: d.newPatients + d.returningPatients,
       }));
     }
-    const daysCount = trendDays === "7 Days" ? 7 : trendDays === "30 Days" ? 30 : 90;
+    const daysCount =
+      trendDays === "7 Days" ? 7 : trendDays === "30 Days" ? 30 : 90;
     const result = [];
-    const baseNew = Math.max(2, Math.round((computedPatientStats.newCount || 20) / (daysCount / 4)));
-    const baseRet = Math.max(1, Math.round((computedPatientStats.returningCount || 10) / (daysCount / 4)));
+    const baseNew = Math.max(
+      2,
+      Math.round((computedPatientStats.newCount || 20) / (daysCount / 4)),
+    );
+    const baseRet = Math.max(
+      1,
+      Math.round((computedPatientStats.returningCount || 10) / (daysCount / 4)),
+    );
     for (let i = daysCount - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const dateStr = d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
       const dayNew = Math.max(1, baseNew + ((i * 3) % 7));
       const dayRet = Math.max(1, baseRet + ((i * 2) % 5));
       result.push({
@@ -578,12 +606,20 @@ export function PatientReportScreen({
         item.gender.toLowerCase() === appliedFilters.gender.toLowerCase();
       const matchesDept =
         appliedFilters.dept === "All Departments" ||
-        item.department.toLowerCase().includes(appliedFilters.dept.toLowerCase()) ||
-        appliedFilters.dept.toLowerCase().includes(item.department.toLowerCase());
+        item.department
+          .toLowerCase()
+          .includes(appliedFilters.dept.toLowerCase()) ||
+        appliedFilters.dept
+          .toLowerCase()
+          .includes(item.department.toLowerCase());
       const matchesDoctor =
         appliedFilters.doctor === "All Doctors" ||
-        item.doctorName.toLowerCase().includes(appliedFilters.doctor.toLowerCase()) ||
-        appliedFilters.doctor.toLowerCase().includes(item.doctorName.toLowerCase());
+        item.doctorName
+          .toLowerCase()
+          .includes(appliedFilters.doctor.toLowerCase()) ||
+        appliedFilters.doctor
+          .toLowerCase()
+          .includes(item.doctorName.toLowerCase());
       const matchesVisit =
         appliedFilters.visitType === "All Visit Types" ||
         item.visitType.toLowerCase() === appliedFilters.visitType.toLowerCase();
@@ -639,9 +675,12 @@ export function PatientReportScreen({
       return genderData.breakdown.map((item) => ({
         name: item.label,
         value: item.value,
-        color: item.label.toLowerCase() === "male" ? "#0D47A1"
-               : item.label.toLowerCase() === "female" ? "#009688"
-               : "#4DB6AC",
+        color:
+          item.label.toLowerCase() === "male"
+            ? "#0D47A1"
+            : item.label.toLowerCase() === "female"
+              ? "#009688"
+              : "#4DB6AC",
       }));
     }
     if (genderData) {
@@ -651,7 +690,9 @@ export function PatientReportScreen({
         { name: "Other", value: genderData.otherCount, color: "#4DB6AC" },
       ];
     }
-    let male = 0, female = 0, other = 0;
+    let male = 0,
+      female = 0,
+      other = 0;
     filteredData.forEach((p) => {
       const g = (p.gender || "").toLowerCase();
       if (g === "male") male++;
@@ -671,7 +712,10 @@ export function PatientReportScreen({
       const d = p.department || "General Medicine";
       map[d] = (map[d] || 0) + 1;
     });
-    const list = Object.entries(map).map(([dept, total]) => ({ department: dept, total }));
+    const list = Object.entries(map).map(([dept, total]) => ({
+      department: dept,
+      total,
+    }));
     if (list.length === 0) {
       return [
         { department: "General", total: 42 },
@@ -690,7 +734,10 @@ export function PatientReportScreen({
       const doc = p.doctorName || "Dr. Sarath";
       map[doc] = (map[doc] || 0) + 1;
     });
-    const list = Object.entries(map).map(([doc, count]) => ({ doctor: doc, count }));
+    const list = Object.entries(map).map(([doc, count]) => ({
+      doctor: doc,
+      count,
+    }));
     if (list.length === 0) {
       return [
         { doctor: "Dr. Sarath", count: 35 },
@@ -839,8 +886,6 @@ export function PatientReportScreen({
                 <span>Export Report</span>
               </button>
 
-            
-
               <button
                 onClick={() => window.print()}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
@@ -914,7 +959,7 @@ export function PatientReportScreen({
                   className="text-2xl font-bold text-[#111827] mb-1"
                   style={{ fontFamily: PP }}
                 >
-                   {computedPatientStats.newCount}
+                  {computedPatientStats.newCount}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#64748B] mb-2">
                   <span className="text-[#009688] font-semibold">
@@ -954,7 +999,7 @@ export function PatientReportScreen({
                   className="text-2xl font-bold text-[#111827] mb-1"
                   style={{ fontFamily: PP }}
                 >
-                   {computedPatientStats.returningCount}
+                  {computedPatientStats.returningCount}
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[#64748B] mb-2">
                   <span className="text-[#66BB6A] font-semibold">
@@ -999,14 +1044,8 @@ export function PatientReportScreen({
                 </div>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2 flex overflow-hidden mt-3">
-                <div
-                  className="bg-[#F59E0B] h-full"
-                  style={{ width: "24%" }}
-                />
-                <div
-                  className="bg-[#0D47A1] h-full"
-                  style={{ width: "76%" }}
-                />
+                <div className="bg-[#F59E0B] h-full" style={{ width: "24%" }} />
+                <div className="bg-[#0D47A1] h-full" style={{ width: "76%" }} />
               </div>
             </div>
 
@@ -1022,26 +1061,41 @@ export function PatientReportScreen({
                   </div>
                 </div>
                 <div className="text-xs font-bold text-[#111827] mb-1">
-                  Male: {genderData?.breakdown?.[0]?.percentage ?? genderData?.maleCount ? Math.round((genderData.maleCount / (genderData.totalCount || 1)) * 100) : 0}% | Female:{" "}
-                  {genderData?.breakdown?.[1]?.percentage ?? genderData?.femaleCount ? Math.round((genderData.femaleCount / (genderData.totalCount || 1)) * 100) : 0}%
+                  Male:{" "}
+                  {(genderData?.breakdown?.[0]?.percentage ??
+                  genderData?.maleCount)
+                    ? Math.round(
+                        (genderData.maleCount / (genderData.totalCount || 1)) *
+                          100,
+                      )
+                    : 0}
+                  % | Female:{" "}
+                  {(genderData?.breakdown?.[1]?.percentage ??
+                  genderData?.femaleCount)
+                    ? Math.round(
+                        (genderData.femaleCount /
+                          (genderData.totalCount || 1)) *
+                          100,
+                      )
+                    : 0}
+                  %
                 </div>
                 <div className="text-[11px] text-[#64748B] mb-2">
-                  Other: {genderData?.breakdown?.[2]?.percentage ?? genderData?.otherCount ? Math.round((genderData.otherCount / (genderData.totalCount || 1)) * 100) : 0}%
+                  Other:{" "}
+                  {(genderData?.breakdown?.[2]?.percentage ??
+                  genderData?.otherCount)
+                    ? Math.round(
+                        (genderData.otherCount / (genderData.totalCount || 1)) *
+                          100,
+                      )
+                    : 0}
+                  %
                 </div>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-2 flex overflow-hidden">
-                <div
-                  className="bg-[#0D47A1] h-full"
-                  style={{ width: "50%" }}
-                />
-                <div
-                  className="bg-[#009688] h-full"
-                  style={{ width: "46%" }}
-                />
-                <div
-                  className="bg-[#4DB6AC] h-full"
-                  style={{ width: "4%" }}
-                />
+                <div className="bg-[#0D47A1] h-full" style={{ width: "50%" }} />
+                <div className="bg-[#009688] h-full" style={{ width: "46%" }} />
+                <div className="bg-[#4DB6AC] h-full" style={{ width: "4%" }} />
               </div>
             </div>
 
@@ -1511,86 +1565,203 @@ export function PatientReportScreen({
 
         {!isLoading && !hasError && (
           <div className="space-y-6 w-full">
-
-              {/* PATIENT REGISTRATION TREND AREA CHART */}
-              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                  <div>
-                    <h3
-                      className="text-base font-bold text-[#111827]"
-                      style={{ fontFamily: PP }}
-                    >
-                      Patient Registration Trend
-                    </h3>
-                    <p className="text-xs text-[#64748B]">
-                      Daily volume tracking of new vs returning registered
-                      patients
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-[#E5E7EB] text-xs">
-                    {(["7 Days", "30 Days", "90 Days"] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setTrendDays(t)}
-                        className={`px-3 py-1 rounded-lg font-medium transition ${trendDays === t ? "bg-white text-[#0D47A1] shadow-sm" : "text-[#64748B]"}`}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
+            {/* PATIENT REGISTRATION TREND AREA CHART */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h3
+                    className="text-base font-bold text-[#111827]"
+                    style={{ fontFamily: PP }}
+                  >
+                    Patient Registration Trend
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Daily volume tracking of new vs returning registered
+                    patients
+                  </p>
                 </div>
 
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={registrationTrendData}
-                      margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                <div className="flex items-center gap-1 bg-[#F1F5F9] p-1 rounded-xl border border-[#E5E7EB] text-xs">
+                  {(["7 Days", "30 Days", "90 Days"] as const).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => setTrendDays(t)}
+                      className={`px-3 py-1 rounded-lg font-medium transition ${trendDays === t ? "bg-white text-[#0D47A1] shadow-sm" : "text-[#64748B]"}`}
                     >
-                      <defs>
-                        <linearGradient
-                          id="colorNewGrad"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#009688"
-                            stopOpacity={0.4}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#009688"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                        <linearGradient
-                          id="colorRetGrad"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#0D47A1"
-                            stopOpacity={0.4}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#0D47A1"
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      </defs>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={registrationTrendData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorNewGrad"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#009688"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#009688"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id="colorRetGrad"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#0D47A1"
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#0D47A1"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11, fill: "#64748B" }}
+                    />
+                    <YAxis tick={{ fontSize: 11, fill: "#64748B" }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#FFFFFF",
+                        borderRadius: "12px",
+                        borderColor: "#E5E7EB",
+                        fontSize: "11px",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="top"
+                      height={36}
+                      wrapperStyle={{ fontSize: "11px" }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="New"
+                      name="New Patients"
+                      stroke="#009688"
+                      fillOpacity={1}
+                      fill="url(#colorNewGrad)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Returning"
+                      name="Returning Patients"
+                      stroke="#0D47A1"
+                      fillOpacity={1}
+                      fill="url(#colorRetGrad)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* AGE DISTRIBUTION & GENDER DISTRIBUTION CHARTS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Patient Age Distribution Vertical Bar */}
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3
+                      className="text-sm font-bold text-[#111827]"
+                      style={{ fontFamily: PP }}
+                    >
+                      Patient Age Demographics
+                    </h3>
+                    <p className="text-[11px] text-[#64748B]">
+                      Distribution of patients across age groups
+                    </p>
+                  </div>
+                  <Users className="w-4 h-4 text-[#0D47A1]" />
+                </div>
+                <div className="h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dynamicAgeData}
+                      margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
                       <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 11, fill: "#64748B" }}
+                        dataKey="group"
+                        tick={{ fontSize: 10, fill: "#64748B" }}
                       />
-                      <YAxis tick={{ fontSize: 11, fill: "#64748B" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "#64748B" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#FFFFFF",
+                          borderRadius: "12px",
+                          borderColor: "#E5E7EB",
+                          fontSize: "11px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="count"
+                        name="Patient Count"
+                        fill="#0D47A1"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Gender Distribution Donut */}
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3
+                      className="text-sm font-bold text-[#111827]"
+                      style={{ fontFamily: PP }}
+                    >
+                      Gender Breakdown
+                    </h3>
+                    <p className="text-[11px] text-[#64748B]">
+                      Ratio of Male, Female, and Other registrations
+                    </p>
+                  </div>
+                  <PieChartIcon className="w-4 h-4 text-[#009688]" />
+                </div>
+                <div className="h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPie>
+                      <Pie
+                        data={dynamicGenderData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {dynamicGenderData.map((entry) => (
+                          <Cell
+                            key={entry.name}
+                            fill={entry.color || "#0D47A1"}
+                          />
+                        ))}
+                      </Pie>
                       <Tooltip
                         contentStyle={{
                           backgroundColor: "#FFFFFF",
@@ -1600,455 +1771,338 @@ export function PatientReportScreen({
                         }}
                       />
                       <Legend
-                        verticalAlign="top"
-                        height={36}
-                        wrapperStyle={{ fontSize: "11px" }}
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        wrapperStyle={{
+                          fontSize: "10px",
+                          paddingTop: "10px",
+                        }}
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="New"
-                        name="New Patients"
-                        stroke="#009688"
-                        fillOpacity={1}
-                        fill="url(#colorNewGrad)"
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* DEPARTMENT PATIENT VISITS & DOCTOR PATIENT DISTRIBUTION */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Department Visits Horizontal Bar */}
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3
+                      className="text-sm font-bold text-[#111827]"
+                      style={{ fontFamily: PP }}
+                    >
+                      Department-wise Patient Visits
+                    </h3>
+                    <p className="text-[11px] text-[#64748B]">
+                      Total patient visits per specialty department
+                    </p>
+                  </div>
+                  <Building2 className="w-4 h-4 text-[#009688]" />
+                </div>
+                <div className="h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={dynamicDeptData}
+                      margin={{ top: 5, right: 10, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                      <XAxis
+                        type="number"
+                        tick={{ fontSize: 10, fill: "#64748B" }}
                       />
-                      <Area
-                        type="monotone"
-                        dataKey="Returning"
-                        name="Returning Patients"
-                        stroke="#0D47A1"
-                        fillOpacity={1}
-                        fill="url(#colorRetGrad)"
+                      <YAxis
+                        type="category"
+                        dataKey="department"
+                        tick={{ fontSize: 10, fill: "#111827" }}
+                        width={80}
                       />
-                    </AreaChart>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#FFFFFF",
+                          borderRadius: "12px",
+                          borderColor: "#E5E7EB",
+                          fontSize: "11px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="total"
+                        name="Total Visits"
+                        fill="#009688"
+                        radius={[0, 4, 4, 0]}
+                      />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* AGE DISTRIBUTION & GENDER DISTRIBUTION CHARTS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Patient Age Distribution Vertical Bar */}
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3
-                        className="text-sm font-bold text-[#111827]"
-                        style={{ fontFamily: PP }}
-                      >
-                        Patient Age Demographics
-                      </h3>
-                      <p className="text-[11px] text-[#64748B]">
-                        Distribution of patients across age groups
-                      </p>
-                    </div>
-                    <Users className="w-4 h-4 text-[#0D47A1]" />
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={dynamicAgeData}
-                        margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                        <XAxis
-                          dataKey="group"
-                          tick={{ fontSize: 10, fill: "#64748B" }}
-                        />
-                        <YAxis tick={{ fontSize: 10, fill: "#64748B" }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#FFFFFF",
-                            borderRadius: "12px",
-                            borderColor: "#E5E7EB",
-                            fontSize: "11px",
-                          }}
-                        />
-                        <Bar
-                          dataKey="count"
-                          name="Patient Count"
-                          fill="#0D47A1"
-                          radius={[4, 4, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Gender Distribution Donut */}
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3
-                        className="text-sm font-bold text-[#111827]"
-                        style={{ fontFamily: PP }}
-                      >
-                        Gender Breakdown
-                      </h3>
-                      <p className="text-[11px] text-[#64748B]">
-                        Ratio of Male, Female, and Other registrations
-                      </p>
-                    </div>
-                    <PieChartIcon className="w-4 h-4 text-[#009688]" />
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RechartsPie>
-                        <Pie
-                          data={dynamicGenderData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={45}
-                          outerRadius={75}
-                          paddingAngle={3}
-                          dataKey="value"
-                        >
-                          {dynamicGenderData.map((entry) => (
-                            <Cell
-                              key={entry.name}
-                              fill={entry.color || "#0D47A1"}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#FFFFFF",
-                            borderRadius: "12px",
-                            borderColor: "#E5E7EB",
-                            fontSize: "11px",
-                          }}
-                        />
-                        <Legend
-                          layout="horizontal"
-                          verticalAlign="bottom"
-                          align="center"
-                          wrapperStyle={{
-                            fontSize: "10px",
-                            paddingTop: "10px",
-                          }}
-                        />
-                      </RechartsPie>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* DEPARTMENT PATIENT VISITS & DOCTOR PATIENT DISTRIBUTION */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Department Visits Horizontal Bar */}
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3
-                        className="text-sm font-bold text-[#111827]"
-                        style={{ fontFamily: PP }}
-                      >
-                        Department-wise Patient Visits
-                      </h3>
-                      <p className="text-[11px] text-[#64748B]">
-                        Total patient visits per specialty department
-                      </p>
-                    </div>
-                    <Building2 className="w-4 h-4 text-[#009688]" />
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        layout="vertical"
-                        data={dynamicDeptData}
-                        margin={{ top: 5, right: 10, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                        <XAxis
-                          type="number"
-                          tick={{ fontSize: 10, fill: "#64748B" }}
-                        />
-                        <YAxis
-                          type="category"
-                          dataKey="department"
-                          tick={{ fontSize: 10, fill: "#111827" }}
-                          width={80}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#FFFFFF",
-                            borderRadius: "12px",
-                            borderColor: "#E5E7EB",
-                            fontSize: "11px",
-                          }}
-                        />
-                        <Bar
-                          dataKey="total"
-                          name="Total Visits"
-                          fill="#009688"
-                          radius={[0, 4, 4, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                {/* Doctor Patient Distribution Vertical Bar */}
-                <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3
-                        className="text-sm font-bold text-[#111827]"
-                        style={{ fontFamily: PP }}
-                      >
-                        Doctor-wise Patient Workload
-                      </h3>
-                      <p className="text-[11px] text-[#64748B]">
-                        Assigned patient load per attending physician
-                      </p>
-                    </div>
-                    <UserCheck className="w-4 h-4 text-[#0D47A1]" />
-                  </div>
-                  <div className="h-60">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={dynamicDoctorData}
-                        margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                        <XAxis
-                          dataKey="doctor"
-                          tick={{ fontSize: 9, fill: "#64748B" }}
-                        />
-                        <YAxis tick={{ fontSize: 10, fill: "#64748B" }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#FFFFFF",
-                            borderRadius: "12px",
-                            borderColor: "#E5E7EB",
-                            fontSize: "11px",
-                          }}
-                        />
-                        <Bar
-                          dataKey="assigned"
-                          name="Assigned Patients"
-                          fill="#0D47A1"
-                          radius={[4, 4, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* PATIENT REPORT TABLE */}
-              <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
-                <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Doctor Patient Distribution Vertical Bar */}
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3
-                      className="text-base font-bold text-[#111827]"
+                      className="text-sm font-bold text-[#111827]"
                       style={{ fontFamily: PP }}
                     >
-                      Patient Master Register
+                      Doctor-wise Patient Workload
                     </h3>
-                    <p className="text-xs text-[#64748B]">
-                      Detailed OPD patient demographic and visit registry
+                    <p className="text-[11px] text-[#64748B]">
+                      Assigned patient load per attending physician
                     </p>
                   </div>
-                  <button
-                    onClick={() =>
-                      alert("Exporting Patient Master Register (CSV)...")
-                    }
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
-                    <span>Export Register</span>
-                  </button>
+                  <UserCheck className="w-4 h-4 text-[#0D47A1]" />
                 </div>
+                <div className="h-60">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={dynamicDoctorData}
+                      margin={{ top: 10, right: 10, left: -15, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                      <XAxis
+                        dataKey="doctor"
+                        tick={{ fontSize: 9, fill: "#64748B" }}
+                      />
+                      <YAxis tick={{ fontSize: 10, fill: "#64748B" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#FFFFFF",
+                          borderRadius: "12px",
+                          borderColor: "#E5E7EB",
+                          fontSize: "11px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="assigned"
+                        name="Assigned Patients"
+                        fill="#0D47A1"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
-                        <th
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              (e.currentTarget as HTMLElement).click();
-                            }
-                          }}
-                          className="py-3.5 px-4 cursor-pointer hover:text-[#0D47A1]"
-                          onClick={() => handleSort("mrn")}
+            {/* PATIENT REPORT TABLE */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
+              <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h3
+                    className="text-base font-bold text-[#111827]"
+                    style={{ fontFamily: PP }}
+                  >
+                    Patient Master Register
+                  </h3>
+                  <p className="text-xs text-[#64748B]">
+                    Detailed OPD patient demographic and visit registry
+                  </p>
+                </div>
+                <button
+                  onClick={() =>
+                    alert("Exporting Patient Master Register (CSV)...")
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
+                  <span>Export Register</span>
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
+                      <th
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                          }
+                        }}
+                        className="py-3.5 px-4 cursor-pointer hover:text-[#0D47A1]"
+                        onClick={() => handleSort("mrn")}
+                      >
+                        MRN{" "}
+                        {sortField === "mrn" &&
+                          (sortOrder === "asc" ? "â†‘" : "â†“")}
+                      </th>
+                      <th
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                          }
+                        }}
+                        className="py-3.5 px-4 cursor-pointer hover:text-[#0D47A1]"
+                        onClick={() => handleSort("patientName")}
+                      >
+                        Patient Name{" "}
+                        {sortField === "patientName" &&
+                          (sortOrder === "asc" ? "â†‘" : "â†“")}
+                      </th>
+                      <th className="py-3.5 px-4">Age / Gender</th>
+                      <th className="py-3.5 px-4">Mobile</th>
+                      <th className="py-3.5 px-4">Department</th>
+                      <th className="py-3.5 px-4">Attending Doctor</th>
+                      <th className="py-3.5 px-4">Reg. Date</th>
+                      <th className="py-3.5 px-4">Visit Type</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E5E7EB] text-xs">
+                    {sortedData.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          className="py-8 text-center text-[#64748B]"
                         >
-                          MRN{" "}
-                          {sortField === "mrn" &&
-                            (sortOrder === "asc" ? "â†‘" : "â†“")}
-                        </th>
-                        <th
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              (e.currentTarget as HTMLElement).click();
-                            }
-                          }}
-                          className="py-3.5 px-4 cursor-pointer hover:text-[#0D47A1]"
-                          onClick={() => handleSort("patientName")}
-                        >
-                          Patient Name{" "}
-                          {sortField === "patientName" &&
-                            (sortOrder === "asc" ? "â†‘" : "â†“")}
-                        </th>
-                        <th className="py-3.5 px-4">Age / Gender</th>
-                        <th className="py-3.5 px-4">Mobile</th>
-                        <th className="py-3.5 px-4">Department</th>
-                        <th className="py-3.5 px-4">Attending Doctor</th>
-                        <th className="py-3.5 px-4">Reg. Date</th>
-                        <th className="py-3.5 px-4">Visit Type</th>
-                        <th className="py-3.5 px-4 text-center">Status</th>
-                        <th className="py-3.5 px-4 text-right">Actions</th>
+                          No patient records match the selected filter criteria.
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#E5E7EB] text-xs">
-                      {sortedData.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={10}
-                            className="py-8 text-center text-[#64748B]"
-                          >
-                            No patient records match the selected filter
-                            criteria.
+                    ) : (
+                      sortedData.map((item) => (
+                        <tr
+                          key={item.mrn}
+                          className="hover:bg-slate-50 transition-colors"
+                        >
+                          <td className="py-3.5 px-4 font-bold text-[#0D47A1]">
+                            {item.mrn}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-[#111827]">
+                            {item.patientName}
+                          </td>
+                          <td className="py-3.5 px-4 text-[#64748B]">
+                            {item.age} yrs / {item.gender}
+                          </td>
+                          <td className="py-3.5 px-4 text-[#64748B]">
+                            {item.mobile}
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-[#111827]">
+                            {item.department}
+                          </td>
+                          <td className="py-3.5 px-4 text-[#111827]">
+                            {item.doctorName}
+                          </td>
+                          <td className="py-3.5 px-4 text-[#64748B]">
+                            {item.registrationDate}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 text-[#64748B] text-[10px] font-medium">
+                              {item.visitType}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span
+                              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${item.status === "Active" ? "bg-teal-50 border-teal-200 text-[#009688]" : item.status === "Completed" ? "bg-green-50 border-green-200 text-[#66BB6A]" : "bg-amber-50 border-amber-200 text-[#F59E0B]"}`}
+                            >
+                              {item.status}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => setSelectedPatientModal(item)}
+                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                                title="View Patient Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  alert(`Printing summary for ${item.mrn}`)
+                                }
+                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                                title="Print Summary"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
-                      ) : (
-                        sortedData.map((item) => (
-                          <tr
-                            key={item.mrn}
-                            className="hover:bg-slate-50 transition-colors"
-                          >
-                            <td className="py-3.5 px-4 font-bold text-[#0D47A1]">
-                              {item.mrn}
-                            </td>
-                            <td className="py-3.5 px-4 font-semibold text-[#111827]">
-                              {item.patientName}
-                            </td>
-                            <td className="py-3.5 px-4 text-[#64748B]">
-                              {item.age} yrs / {item.gender}
-                            </td>
-                            <td className="py-3.5 px-4 text-[#64748B]">
-                              {item.mobile}
-                            </td>
-                            <td className="py-3.5 px-4 font-medium text-[#111827]">
-                              {item.department}
-                            </td>
-                            <td className="py-3.5 px-4 text-[#111827]">
-                              {item.doctorName}
-                            </td>
-                            <td className="py-3.5 px-4 text-[#64748B]">
-                              {item.registrationDate}
-                            </td>
-                            <td className="py-3.5 px-4">
-                              <span className="px-2 py-0.5 rounded bg-slate-100 text-[#64748B] text-[10px] font-medium">
-                                {item.visitType}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-center">
-                              <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${item.status === "Active" ? "bg-teal-50 border-teal-200 text-[#009688]" : item.status === "Completed" ? "bg-green-50 border-green-200 text-[#66BB6A]" : "bg-amber-50 border-amber-200 text-[#F59E0B]"}`}
-                              >
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <button
-                                  onClick={() => setSelectedPatientModal(item)}
-                                  className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
-                                  title="View Patient Details"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    alert(`Printing summary for ${item.mrn}`)
-                                  }
-                                  className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                                  title="Print Summary"
-                                >
-                                  <Printer className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-                {/* Table Pagination */}
-                <div className="p-4 bg-[#F1F5F9] border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
-                  <span>
-                    Showing 1 to {sortedData.length} of {sortedData.length}{" "}
-                    entries
+              {/* Table Pagination */}
+              <div className="p-4 bg-[#F1F5F9] border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
+                <span>
+                  Showing 1 to {sortedData.length} of {sortedData.length}{" "}
+                  entries
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    aria-label="Previous"
+                    disabled
+                    className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-semibold text-[#111827]">
+                    Page 1 of 1
                   </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      aria-label="Previous"
-                      disabled
-                      className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <span className="font-semibold text-[#111827]">
-                      Page 1 of 1
-                    </span>
-                    <button
-                      aria-label="Next"
-                      disabled
-                      className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
-                    >
-                      <ChevronRightIcon className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    aria-label="Next"
+                    disabled
+                    className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
+                  >
+                    <ChevronRightIcon className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* RECENT PATIENT VISIT ACTIVITY TIMELINE */}
-              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
-                <h3
-                  className="text-base font-bold text-[#111827] mb-4"
-                  style={{ fontFamily: PP }}
-                >
-                  Recent Patient Registration & Visit Activity
-                </h3>
-                <div className="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-[#E5E7EB]">
-                  {filteredData.slice(0, 5).map((act, idx) => (
-                    <div
-                      key={act.mrn + idx}
-                      className="flex items-start gap-4 relative z-10"
-                    >
-                      <div className="w-7 h-7 rounded-full bg-white border-2 border-[#0D47A1] flex items-center justify-center text-[#0D47A1] shrink-0">
-                        <UserCheck className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="bg-[#F1F5F9] rounded-xl p-3 border border-[#E5E7EB] flex-1 text-xs">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-[#111827]">
-                            {act.patientName} ({act.mrn})
-                          </span>
-                          <span className="text-[11px] text-[#64748B]">
-                            {act.registrationDate}
-                          </span>
-                        </div>
-                        <p className="text-[#64748B]">
-                          Event:{" "}
-                          <strong className="text-[#0D47A1]">{act.visitType}</strong>{" "}
-                          with{" "}
-                          <span className="font-semibold text-[#111827]">
-                            {act.doctorName}
-                          </span>
-                          .
-                        </p>
-                      </div>
+            {/* RECENT PATIENT VISIT ACTIVITY TIMELINE */}
+            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
+              <h3
+                className="text-base font-bold text-[#111827] mb-4"
+                style={{ fontFamily: PP }}
+              >
+                Recent Patient Registration & Visit Activity
+              </h3>
+              <div className="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-[#E5E7EB]">
+                {filteredData.slice(0, 5).map((act, idx) => (
+                  <div
+                    key={act.mrn + idx}
+                    className="flex items-start gap-4 relative z-10"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-white border-2 border-[#0D47A1] flex items-center justify-center text-[#0D47A1] shrink-0">
+                      <UserCheck className="w-3.5 h-3.5" />
                     </div>
-                  ))}
-                </div>
+                    <div className="bg-[#F1F5F9] rounded-xl p-3 border border-[#E5E7EB] flex-1 text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-[#111827]">
+                          {act.patientName} ({act.mrn})
+                        </span>
+                        <span className="text-[11px] text-[#64748B]">
+                          {act.registrationDate}
+                        </span>
+                      </div>
+                      <p className="text-[#64748B]">
+                        Event:{" "}
+                        <strong className="text-[#0D47A1]">
+                          {act.visitType}
+                        </strong>{" "}
+                        with{" "}
+                        <span className="font-semibold text-[#111827]">
+                          {act.doctorName}
+                        </span>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </div>
           </div>
         )}
 

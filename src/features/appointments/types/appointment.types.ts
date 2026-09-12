@@ -38,10 +38,18 @@ export type AppointmentStatus =
   | string;
 
 type QueueStatusEnum =
-  "WAITING" | "CALLED" | "IN_CONSULTATION" | "COMPLETED" | "SKIPPED";
+  | "WAITING"
+  | "CALLED"
+  | "IN_CONSULTATION"
+  | "COMPLETED"
+  | "SKIPPED";
 
 type AppointmentTypeEnum =
-  "CONSULTATION" | "WALK_IN" | "FOLLOW_UP" | "EMERGENCY" | "ROUTINE";
+  | "CONSULTATION"
+  | "WALK_IN"
+  | "FOLLOW_UP"
+  | "EMERGENCY"
+  | "ROUTINE";
 
 type FamilyRelationshipEnum =
   | "SELF"

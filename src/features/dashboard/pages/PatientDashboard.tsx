@@ -154,7 +154,12 @@ function DKpi({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 
 type DashboardRecord = Record<string, unknown> & {
   prescriptionId?: string | number;

@@ -72,21 +72,24 @@ async function fetchEncounterPrescription(
           unknown
         >;
         const doseObj = item.dose as
-          { value?: unknown; unit?: unknown } | undefined;
+          | { value?: unknown; unit?: unknown }
+          | undefined;
         const doseStr =
           typeof item.dose === "object" && item.dose !== null
             ? `${doseObj?.value ?? ""} ${doseObj?.unit ?? ""}`.trim()
             : String(item.dosage || item.dose || item.strength || "1 Tablet");
 
         const freqObj = item.frequency as
-          { code?: unknown; display?: unknown } | undefined;
+          | { code?: unknown; display?: unknown }
+          | undefined;
         const freqStr =
           typeof item.frequency === "object" && item.frequency !== null
             ? String(freqObj?.display || freqObj?.code || "1-0-1")
             : String(item.frequency || "1-0-1");
 
         const durObj = item.duration as
-          { value?: unknown; unit?: unknown } | undefined;
+          | { value?: unknown; unit?: unknown }
+          | undefined;
         const durStr =
           typeof item.duration === "object" && item.duration !== null
             ? `${durObj?.value ?? ""} ${durObj?.unit ?? ""}`.trim()

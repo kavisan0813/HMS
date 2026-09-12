@@ -519,7 +519,9 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {prescription.medicines.map((m) => {
-                    const mObj = (m && typeof m === "object" ? m : {}) as Record<string, unknown>;
+                    const mObj = (
+                      m && typeof m === "object" ? m : {}
+                    ) as Record<string, unknown>;
 
                     const nameStr = safeStr(
                       m.name ||
@@ -531,7 +533,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                     );
 
                     const doseObj = mObj.dose as
-                      { value?: unknown; unit?: unknown } | undefined;
+                      | { value?: unknown; unit?: unknown }
+                      | undefined;
                     const doseVal =
                       typeof mObj.dose === "object" && mObj.dose !== null
                         ? `${doseObj?.value ?? ""} ${doseObj?.unit ?? ""}`.trim()
@@ -555,7 +558,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                     const dosageStr = safeStr(m.dosage || doseVal, "—");
 
                     const freqObj = mObj.frequency as
-                      { code?: unknown; display?: unknown } | undefined;
+                      | { code?: unknown; display?: unknown }
+                      | undefined;
                     const freqVal =
                       typeof mObj.frequency === "object" &&
                       mObj.frequency !== null
@@ -568,7 +572,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                     const frequencyStr = safeStr(freqVal, "—");
 
                     const durObj = mObj.duration as
-                      { value?: unknown; unit?: unknown } | undefined;
+                      | { value?: unknown; unit?: unknown }
+                      | undefined;
                     const durVal =
                       typeof mObj.duration === "object" &&
                       mObj.duration !== null
@@ -579,7 +584,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                     const durationStr = safeStr(durVal, "—");
 
                     const qtyObj = mObj.quantity as
-                      { value?: unknown; unit?: unknown } | undefined;
+                      | { value?: unknown; unit?: unknown }
+                      | undefined;
                     const qtyVal =
                       typeof mObj.quantity === "object" &&
                       mObj.quantity !== null

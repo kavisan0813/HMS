@@ -577,9 +577,10 @@ export const encountersApi = {
     payload: UpdateDiagnosisPayload,
   ): Promise<Diagnosis | Record<string, unknown> | null> => {
     try {
-      const response = await apiClient.put<
-        ApiEnvelope<Diagnosis> | Diagnosis
-      >(`/api/v1/encounters/${encounterId}/diagnoses/${diagnosisId}`, payload);
+      const response = await apiClient.put<ApiEnvelope<Diagnosis> | Diagnosis>(
+        `/api/v1/encounters/${encounterId}/diagnoses/${diagnosisId}`,
+        payload,
+      );
       return unwrap<Diagnosis>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -697,7 +698,8 @@ export const encountersApi = {
   ): Promise<Array<Record<string, unknown>>> => {
     try {
       const response = await apiClient.get<
-        ApiEnvelope<Array<Record<string, unknown>>> | Array<Record<string, unknown>>
+        | ApiEnvelope<Array<Record<string, unknown>>>
+        | Array<Record<string, unknown>>
       >(`/api/v1/patients/${mrn}/encounters`);
       const data = unwrap<Array<Record<string, unknown>>>(response.data);
       return Array.isArray(data) ? data : [];
@@ -748,7 +750,8 @@ export const encountersApi = {
   ): Promise<Array<Record<string, unknown>>> => {
     try {
       const response = await apiClient.get<
-        ApiEnvelope<Array<Record<string, unknown>>> | Array<Record<string, unknown>>
+        | ApiEnvelope<Array<Record<string, unknown>>>
+        | Array<Record<string, unknown>>
       >(`/api/v1/encounters/${encounterId}/amendments`);
       const data = unwrap<Array<Record<string, unknown>>>(response.data);
       return Array.isArray(data) ? data : [];

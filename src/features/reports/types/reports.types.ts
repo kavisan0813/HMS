@@ -143,7 +143,8 @@ export interface KpiConsultationRecord {
   consultationTime: string;
   durationMinutes: number;
   status: "Completed" | "In-Progress" | "Cancelled";
-}export interface KpiPendingPaymentRecord {
+}
+export interface KpiPendingPaymentRecord {
   invoiceId: string;
   patientName: string;
   doctorName: string;

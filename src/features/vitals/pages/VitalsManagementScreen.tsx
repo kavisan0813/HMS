@@ -94,7 +94,9 @@ export function RecordPatientVitalsScreen({
   const [state, dispatch] = useReducer(
     (
       prev: VitalsState,
-      action: Partial<VitalsState> | ((prevState: VitalsState) => Partial<VitalsState>),
+      action:
+        | Partial<VitalsState>
+        | ((prevState: VitalsState) => Partial<VitalsState>),
     ) => {
       const patch = typeof action === "function" ? action(prev) : action;
       return { ...prev, ...patch };
@@ -122,20 +124,28 @@ export function RecordPatientVitalsScreen({
   } = state;
 
   const setAppointments = (
-    val: AppointmentRecord[] | ((prev: AppointmentRecord[]) => AppointmentRecord[]),
+    val:
+      | AppointmentRecord[]
+      | ((prev: AppointmentRecord[]) => AppointmentRecord[]),
   ) =>
     dispatch((prev) => ({
       appointments: typeof val === "function" ? val(prev.appointments) : val,
     }));
-  const setSelectedAptId = (val: string | null) => dispatch({ selectedAptId: val });
+  const setSelectedAptId = (val: string | null) =>
+    dispatch({ selectedAptId: val });
   const setSelectedAptRecord = (
-    val: AppointmentRecord | null | ((prev: AppointmentRecord | null) => AppointmentRecord | null),
+    val:
+      | AppointmentRecord
+      | null
+      | ((prev: AppointmentRecord | null) => AppointmentRecord | null),
   ) =>
     dispatch((prev) => ({
-      selectedAptRecord: typeof val === "function" ? val(prev.selectedAptRecord) : val,
+      selectedAptRecord:
+        typeof val === "function" ? val(prev.selectedAptRecord) : val,
     }));
   const setIsEditMode = (val: boolean) => dispatch({ isEditMode: val });
-  const setViewMode = (val: "center" | "record" | "details") => dispatch({ viewMode: val });
+  const setViewMode = (val: "center" | "record" | "details") =>
+    dispatch({ viewMode: val });
   const setSelectedDate = (val: string) => dispatch({ selectedDate: val });
 
   const loadWaitingAppointments = useCallback(
@@ -732,7 +742,8 @@ export function RecordPatientVitalsScreen({
     try {
       const res = await appointmentsApi.getAppointmentById(numericId);
       const data = (res?.data || res) as unknown as
-        Record<string, unknown> | undefined;
+        | Record<string, unknown>
+        | undefined;
       if (data && typeof data === "object") {
         let patObj = (data.patient || {}) as Record<string, unknown>;
         const docObj = (data.doctor || {}) as Record<string, unknown>;
@@ -839,7 +850,8 @@ export function RecordPatientVitalsScreen({
           ),
           patient: {
             id: (patObj.id || data.patientId || apt.patientId) as
-              string | number,
+              | string
+              | number,
             mrn: String(data.mrn || patObj.mrn || apt.mrn || "—"),
             name: String(
               data.patientName ||

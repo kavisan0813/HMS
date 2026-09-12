@@ -13,8 +13,13 @@ const receptionReportKeys = {
     [...receptionReportKeys.all, "dashboard-summary", date] as const,
   queuePerformance: (date?: string) =>
     [...receptionReportKeys.all, "queue-performance", date] as const,
-  register: (params?: { date?: string; from?: string; to?: string; page?: number; size?: number }) =>
-    [...receptionReportKeys.all, "register", params] as const,
+  register: (params?: {
+    date?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    size?: number;
+  }) => [...receptionReportKeys.all, "register", params] as const,
   registrationTrend: (params?: { from?: string; to?: string }) =>
     [...receptionReportKeys.all, "registration-trend", params] as const,
   summaryWidget: (date?: string) =>

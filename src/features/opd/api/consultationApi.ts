@@ -875,7 +875,10 @@ export const consultationApi = {
     try {
       const response = await apiClient.put<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/prescriptions/${prescriptionId}/medications/${medicationId}`, payload);
+      >(
+        `/api/v1/prescriptions/${prescriptionId}/medications/${medicationId}`,
+        payload,
+      );
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -887,9 +890,10 @@ export const consultationApi = {
     amendmentIdOrPayload: string | number | Record<string, unknown>,
     payload?: Record<string, unknown>,
   ) => {
-    const data = (payload || (typeof amendmentIdOrPayload === "object" ? amendmentIdOrPayload : {})) as Record<string, unknown>;
+    const data = (payload ||
+      (typeof amendmentIdOrPayload === "object"
+        ? amendmentIdOrPayload
+        : {})) as Record<string, unknown>;
     return consultationApi.createAmendment(encounterId, data);
   },
 };
-
-

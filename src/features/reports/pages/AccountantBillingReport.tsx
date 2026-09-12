@@ -192,23 +192,25 @@ export function AccountantBillingReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    const recordsToExport = (filteredBillingRows.length > 0 ? filteredBillingRows : billingRowsSource).map((rec) => ({
+    const recordsToExport = (
+      filteredBillingRows.length > 0 ? filteredBillingRows : billingRowsSource
+    ).map((rec) => ({
       Section: "ACCOUNTANT BILLING REPORT",
       "Invoice ID": rec.invoiceId || "N/A",
       "Patient Name": rec.patientName || "N/A",
-      "MRN": rec.mrn || "N/A",
+      MRN: rec.mrn || "N/A",
       "Total Amount (INR)": rec.invoiceAmount || 0,
       "Paid Amount (INR)": rec.amountPaid || 0,
       "Balance (INR)": rec.outstandingBalance || 0,
       "Payment Status": rec.paymentStatus || "Paid",
       "Payment Method": rec.paymentMethod || "Cash",
       "Collected By": rec.collectedBy || "System Accountant",
-      "Date": rec.invoiceDate || today,
+      Date: rec.invoiceDate || today,
     }));
 
     exportDataToCsv(
       `Accountant_Billing_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport
+      recordsToExport,
     );
   };
 

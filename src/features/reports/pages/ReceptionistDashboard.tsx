@@ -1349,7 +1349,10 @@ const ReceptionRegisterTable = ({
           ) : (
             filteredActivities.map((item) => (
               <tr
-                key={item.appointmentId || `${item.mrn}-${item.visitType}-${item.checkInTime || item.registrationTime || ''}`}
+                key={
+                  item.appointmentId ||
+                  `${item.mrn}-${item.visitType}-${item.checkInTime || item.registrationTime || ""}`
+                }
                 className="hover:bg-slate-50 transition-colors"
               >
                 <td className="py-3.5 px-4 font-mono font-bold text-[#0D47A1]">
@@ -1537,11 +1540,14 @@ const ReceptionDashboardFooter = ({ resultCount }: { resultCount: number }) => (
   </div>
 );
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ReceptionistReportsDashboardScreen(_props?: {
+export interface ReceptionistReportsDashboardScreenProps {
   onOpenDailyAppointments?: () => void;
   onOpenPatientReport?: () => void;
-}) {
+}
+
+export const ReceptionistReportsDashboardScreen: React.FC<
+  ReceptionistReportsDashboardScreenProps
+> = () => {
   const navigate = useNavigate();
   const [state, dispatch] = useReducer(
     (
@@ -1608,11 +1614,16 @@ export function ReceptionistReportsDashboardScreen(_props?: {
   const setDateRange = (val: string) => dispatch({ dateRange: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
-  const setApptStatusFilter = (val: string) => dispatch({ apptStatusFilter: val });
-  const setCheckInStatusFilter = (val: string) => dispatch({ checkInStatusFilter: val });
-  const setQueueStatusFilter = (val: string) => dispatch({ queueStatusFilter: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
-  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") => dispatch({ trendDays: val });
+  const setApptStatusFilter = (val: string) =>
+    dispatch({ apptStatusFilter: val });
+  const setCheckInStatusFilter = (val: string) =>
+    dispatch({ checkInStatusFilter: val });
+  const setQueueStatusFilter = (val: string) =>
+    dispatch({ queueStatusFilter: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
+  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") =>
+    dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
   const setIsLoading = (val: boolean) => dispatch({ isLoading: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
@@ -1911,4 +1922,4 @@ export function ReceptionistReportsDashboardScreen(_props?: {
       </div>
     </div>
   );
-}
+};

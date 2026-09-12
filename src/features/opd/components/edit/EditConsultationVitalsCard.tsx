@@ -4,34 +4,35 @@ import { ChevronDown } from "lucide-react";
 const PP = "'Poppins', system-ui, sans-serif";
 const RB = "'Roboto', system-ui, sans-serif";
 
-interface EditConsultationVitalsCardProps {
+export interface VitalsFormData {
+  height: string;
+  weight: string;
+  temperature: string;
+  bp: string;
+  pulse: string;
+  spo2: string;
+  bloodSugar?: string;
+}
+
+interface EditConsultationVitalsCardProps<
+  T extends VitalsFormData = VitalsFormData,
+> {
   collapsed: boolean;
   onToggle: () => void;
   isEditing: boolean;
   calculatedBmi: string;
-  formData: {
-    height: string;
-    weight: string;
-    temperature: string;
-    bp: string;
-    pulse: string;
-    spo2: string;
-    bloodSugar?: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFormData: (action: any) => void;
+  formData: T;
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
 }
 
-export const EditConsultationVitalsCard: React.FC<
-  EditConsultationVitalsCardProps
-> = ({
+export const EditConsultationVitalsCard = <T extends VitalsFormData>({
   collapsed,
   onToggle,
   isEditing,
   calculatedBmi,
   formData,
   setFormData,
-}) => {
+}: EditConsultationVitalsCardProps<T>) => {
   return (
     <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
       <button
@@ -81,8 +82,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="number"
                 value={formData.height}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     height: e.target.value,
                   }))
@@ -103,8 +103,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="number"
                 value={formData.weight}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     weight: e.target.value,
                   }))
@@ -141,8 +140,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="text"
                 value={formData.temperature}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     temperature: e.target.value,
                   }))
@@ -166,8 +164,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="text"
                 value={formData.bp}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     bp: e.target.value,
                   }))
@@ -189,8 +186,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="number"
                 value={formData.pulse}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     pulse: e.target.value,
                   }))
@@ -211,8 +207,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="number"
                 value={formData.spo2}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     spo2: e.target.value,
                   }))
@@ -233,8 +228,7 @@ export const EditConsultationVitalsCard: React.FC<
                 type="text"
                 value={formData.bloodSugar || ""}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     bloodSugar: e.target.value,
                   }))

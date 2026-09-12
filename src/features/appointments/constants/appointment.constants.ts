@@ -2,7 +2,12 @@ export const PP = "Poppins, sans-serif";
 export const RB = "Roboto, sans-serif";
 
 export type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 
 export type AppointmentStatus =
   | "Booked"

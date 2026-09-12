@@ -721,12 +721,22 @@ export function StartConsultationPage({
           assessmentSummary: formData.assessment,
           advice: formData.advice,
           followUpInstructions: formData.followupNotes,
-          followUpType: formData.followupRequired ? (formData.followUpType || "ROUTINE") : undefined,
-          followUpIntervalValue: formData.followupRequired ? Number(formData.followUpIntervalValue || 7) : undefined,
-          followUpIntervalUnit: formData.followupRequired ? (formData.followUpIntervalUnit || "DAYS") : undefined,
-          followUpDate: formData.followupRequired ? formData.nextVisitDate : undefined,
+          followUpType: formData.followupRequired
+            ? formData.followUpType || "ROUTINE"
+            : undefined,
+          followUpIntervalValue: formData.followupRequired
+            ? Number(formData.followUpIntervalValue || 7)
+            : undefined,
+          followUpIntervalUnit: formData.followupRequired
+            ? formData.followUpIntervalUnit || "DAYS"
+            : undefined,
+          followUpDate: formData.followupRequired
+            ? formData.nextVisitDate
+            : undefined,
         };
-        await encountersApi.initConsultationPut(activeEncounterId, consultationPayload).catch(() => null);
+        await encountersApi
+          .initConsultationPut(activeEncounterId, consultationPayload)
+          .catch(() => null);
         await consultationApi.saveDraft(activeEncounterId, {
           chiefComplaint: formData.chiefComplaint,
           symptoms: formData.symptoms,
@@ -931,17 +941,28 @@ export function StartConsultationPage({
         try {
           const consultationPayload = {
             chiefComplaint: formData.chiefComplaint || formData.symptoms,
-            historyOfPresentIllness: formData.symptoms || formData.chiefComplaint,
+            historyOfPresentIllness:
+              formData.symptoms || formData.chiefComplaint,
             generalExamination: formData.clinicalExamination,
             assessmentSummary: formData.assessment || formData.finalDiagnosis,
             advice: formData.advice,
             followUpInstructions: formData.followupNotes,
-            followUpType: formData.followupRequired ? (formData.followUpType || "ROUTINE") : undefined,
-            followUpIntervalValue: formData.followupRequired ? Number(formData.followUpIntervalValue || 7) : undefined,
-            followUpIntervalUnit: formData.followupRequired ? (formData.followUpIntervalUnit || "DAYS") : undefined,
-            followUpDate: formData.followupRequired ? formData.nextVisitDate : undefined,
+            followUpType: formData.followupRequired
+              ? formData.followUpType || "ROUTINE"
+              : undefined,
+            followUpIntervalValue: formData.followupRequired
+              ? Number(formData.followUpIntervalValue || 7)
+              : undefined,
+            followUpIntervalUnit: formData.followupRequired
+              ? formData.followUpIntervalUnit || "DAYS"
+              : undefined,
+            followUpDate: formData.followupRequired
+              ? formData.nextVisitDate
+              : undefined,
           };
-          await encountersApi.initConsultationPut(activeEncounterId, consultationPayload).catch(() => null);
+          await encountersApi
+            .initConsultationPut(activeEncounterId, consultationPayload)
+            .catch(() => null);
         } catch (putErr) {
           console.warn("Non-blocking PUT consultation warning:", putErr);
         }

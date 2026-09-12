@@ -146,7 +146,9 @@ export const receptionApi = {
       }
 
       const resData = res.data as
-        { data?: unknown; content?: unknown } | unknown[] | undefined;
+        | { data?: unknown; content?: unknown }
+        | unknown[]
+        | undefined;
       const list = Array.isArray(resData)
         ? resData
         : Array.isArray((resData as { data?: unknown })?.data)

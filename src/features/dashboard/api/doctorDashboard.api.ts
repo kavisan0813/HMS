@@ -47,9 +47,8 @@ export const doctorDashboardApi = {
       const url = doctorId
         ? `/api/v1/doctor/${doctorId}/dashboard/today-appointments${date ? `?date=${date}` : ""}`
         : `/api/v1/doctor/dashboard/today-appointments${date ? `?date=${date}` : ""}`;
-      const res = await apiClient.get<
-        DashboardApiResponse<DoctorTodayAppointments>
-      >(url);
+      const res =
+        await apiClient.get<DashboardApiResponse<DoctorTodayAppointments>>(url);
       return unwrap(res);
     } catch {
       const res = await apiClient.get<

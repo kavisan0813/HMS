@@ -49,7 +49,10 @@ export const appointmentStatusMap: Record<ConsultationStatus, string> = {
 };
 
 export type VisitType =
-  "First Visit" | "Follow-up" | "Walk-In" | "New Consultation";
+  | "First Visit"
+  | "Follow-up"
+  | "Walk-In"
+  | "New Consultation";
 
 export type OauthRole = "doctor" | "admin";
 

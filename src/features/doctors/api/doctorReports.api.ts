@@ -53,7 +53,9 @@ export const doctorReportsApi = {
   },
 
   // 2. Doctor Daily Appointments Dashboard
-  getDailyDashboard: async (date?: string): Promise<DoctorDailyDashboardData> => {
+  getDailyDashboard: async (
+    date?: string,
+  ): Promise<DoctorDailyDashboardData> => {
     const qs = buildQuery({ date });
     const res = await apiClient.get<ApiEnvelope<DoctorDailyDashboardData>>(
       `/api/v1/doctors/me/reports/daily-appointments/dashboard${qs}`,

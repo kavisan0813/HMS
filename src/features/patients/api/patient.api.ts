@@ -412,7 +412,8 @@ export const patientsApi = {
       const searchParams = new URLSearchParams();
       const queryVal =
         ((params as Record<string, unknown> | undefined)?.query as
-          string | undefined) || params?.search;
+          | string
+          | undefined) || params?.search;
       if (queryVal) searchParams.append("query", queryVal);
       if (params?.page) searchParams.append("page", String(params.page));
       if (params?.limit) searchParams.append("limit", String(params.limit));
@@ -1101,7 +1102,10 @@ export const patientsApi = {
             `/api/v1/patient/prescriptions?mrn=${encodeURIComponent(mrn)}`,
             `/api/v1/patients/me/prescriptions`,
           ]
-        : ["/api/v1/patients/me/prescriptions", "/api/v1/patient/prescriptions"];
+        : [
+            "/api/v1/patients/me/prescriptions",
+            "/api/v1/patient/prescriptions",
+          ];
 
       for (const url of endpoints) {
         try {
@@ -1118,11 +1122,7 @@ export const patientsApi = {
 
       return rawList.map((r) => {
         const rawMeds =
-          r.medicines ||
-          r.medications ||
-          r.items ||
-          r.sampleMedicines ||
-          [];
+          r.medicines || r.medications || r.items || r.sampleMedicines || [];
         const meds = Array.isArray(rawMeds) ? rawMeds : [];
         const docObj = (
           r.doctor && typeof r.doctor === "object" ? r.doctor : {}
@@ -1137,17 +1137,20 @@ export const patientsApi = {
             ? r.totalMedicines
             : meds.length || Number(r.medicineCount) || 0;
 
-        const encId = r.encounterId || r.encounterNumber || r.encounter_id || "";
+        const encId =
+          r.encounterId || r.encounterNumber || r.encounter_id || "";
 
         return {
           id: String(r.id || r.prescriptionId || ""),
-          prescriptionId: String(r.prescriptionId || r.prescriptionNumber || r.id || ""),
-          encounterId: encId ? String(encId) : undefined,
-          date: String(r.issueDate || r.date || r.createdAt || r.finalizedAt || ""),
-          doctorName: String(docName),
-          department: String(
-            r.department || r.departmentName || "General OPD",
+          prescriptionId: String(
+            r.prescriptionId || r.prescriptionNumber || r.id || "",
           ),
+          encounterId: encId ? String(encId) : undefined,
+          date: String(
+            r.issueDate || r.date || r.createdAt || r.finalizedAt || "",
+          ),
+          doctorName: String(docName),
+          department: String(r.department || r.departmentName || "General OPD"),
           medicineCount: count,
           status: String(r.status || "FINALIZED"),
           medicines: meds.map((m: unknown, idx: number) => {
@@ -1161,14 +1164,28 @@ export const patientsApi = {
                 instructions: "After food",
               };
             }
-            const item = (m && typeof m === "object" ? m : {}) as Record<string, unknown>;
+            const item = (m && typeof m === "object" ? m : {}) as Record<
+              string,
+              unknown
+            >;
             return {
               id: String(item.id || item.medicationId || idx + 1),
-              name: String(item.medicineName || item.name || item.title || "Medication"),
-              dosage: String(item.strength || item.dosage || item.dose || "1 tab"),
-              frequency: String(item.frequency || item.frequencyCode || item.frequencyDisplay || "1-0-1"),
+              name: String(
+                item.medicineName || item.name || item.title || "Medication",
+              ),
+              dosage: String(
+                item.strength || item.dosage || item.dose || "1 tab",
+              ),
+              frequency: String(
+                item.frequency ||
+                  item.frequencyCode ||
+                  item.frequencyDisplay ||
+                  "1-0-1",
+              ),
               duration: String(item.duration || item.durationValue || "5 days"),
-              instructions: String(item.instructions || item.notes || "After food"),
+              instructions: String(
+                item.instructions || item.notes || "After food",
+              ),
             };
           }) as ApiPatientPrescription["medicines"],
         };
@@ -1198,7 +1215,12 @@ export const patientsApi = {
 
   getPrescriptionSummary: async (
     mrn: string,
-  ): Promise<{ active: number; completed: number; expired: number; total: number } | null> => {
+  ): Promise<{
+    active: number;
+    completed: number;
+    expired: number;
+    total: number;
+  } | null> => {
     try {
       const endpoints = mrn
         ? [
@@ -1213,7 +1235,10 @@ export const patientsApi = {
         try {
           const res = await apiClient.get<Record<string, unknown>>(url);
           const data = (res.data?.data || res.data) as Record<string, unknown>;
-          if (data && (typeof data.active === "number" || typeof data.total === "number")) {
+          if (
+            data &&
+            (typeof data.active === "number" || typeof data.total === "number")
+          ) {
             return {
               active: Number(data.active || 0),
               completed: Number(data.completed || 0),
@@ -1240,9 +1265,16 @@ export const patientsApi = {
         date: r.invoiceDate,
         amount: r.invoiceAmount,
         paidAmount: r.paidAmount ?? 0,
-        balance: r.balance != null ? r.balance : Math.max(0, r.invoiceAmount - (r.paidAmount || 0)),
+        balance:
+          r.balance != null
+            ? r.balance
+            : Math.max(0, r.invoiceAmount - (r.paidAmount || 0)),
         doctorName: r.doctorName || "Doctor",
-        departmentName: r.department || (r as unknown as Record<string, unknown>).departmentName as string || "General OPD",
+        departmentName:
+          r.department ||
+          ((r as unknown as Record<string, unknown>)
+            .departmentName as string) ||
+          "General OPD",
         status: r.paymentStatus || "Pending",
       }));
     } catch {
@@ -1425,7 +1457,13 @@ export const patientsApi = {
 
   uploadDocument: async (
     mrn: string,
-    payload: { title: string; category: string; fileType?: string; fileSize?: string; url?: string },
+    payload: {
+      title: string;
+      category: string;
+      fileType?: string;
+      fileSize?: string;
+      url?: string;
+    },
   ): Promise<ApiPatientDocument> => {
     try {
       const res = await apiClient.post<unknown>(

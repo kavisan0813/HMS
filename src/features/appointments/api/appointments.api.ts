@@ -175,9 +175,9 @@ export const appointmentsApi = {
     } catch (error: unknown) {
       if (numericStr && numericStr !== rawStr) {
         try {
-          const fallbackRes = await apiClient.get<ApiResponse<AppointmentRecord>>(
-            `/api/v1/appointments/${numericStr}`,
-          );
+          const fallbackRes = await apiClient.get<
+            ApiResponse<AppointmentRecord>
+          >(`/api/v1/appointments/${numericStr}`);
           return fallbackRes.data;
         } catch {
           // Ignore fallback error

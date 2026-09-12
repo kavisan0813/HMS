@@ -265,7 +265,8 @@ export function PatientSearchScreen({
     setIsUpdatingStatus(true);
     try {
       const targetId = (activatePatient.mrn || activatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "ACTIVE" });
       setActivatePatient(null);
     } catch (err) {
@@ -280,7 +281,8 @@ export function PatientSearchScreen({
     setIsUpdatingStatus(true);
     try {
       const targetId = (deactivatePatient.mrn || deactivatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "INACTIVE" });
       setDeactivatePatient(null);
     } catch (err) {

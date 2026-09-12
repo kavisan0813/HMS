@@ -180,7 +180,8 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
     setIsUpdatingStatus(true);
     try {
       const targetId = (activatePatient.mrn || activatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "ACTIVE" });
       setActivatePatient(null);
       fetchPatients();
@@ -196,7 +197,8 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
     setIsUpdatingStatus(true);
     try {
       const targetId = (deactivatePatient.mrn || deactivatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "INACTIVE" });
       setDeactivatePatient(null);
       fetchPatients();
@@ -209,9 +211,12 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
 
   if (viewingPatient) {
     const currentIndex = filteredPatients.findIndex(
-      (p) => (p.mrn || String(p.id)) === (viewingPatient.mrn || String(viewingPatient.id)),
+      (p) =>
+        (p.mrn || String(p.id)) ===
+        (viewingPatient.mrn || String(viewingPatient.id)),
     );
-    const hasNext = currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
+    const hasNext =
+      currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
     const hasPrev = currentIndex > 0;
 
     return (
@@ -254,7 +259,16 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
   if (bookingAppt) {
     return (
       <BookAppointmentScreen
-        role={currentRole.toLowerCase() as "super-admin" | "admin" | "doctor" | "nurse" | "receptionist" | "accountant" | "patient"}
+        role={
+          currentRole.toLowerCase() as
+            | "super-admin"
+            | "admin"
+            | "doctor"
+            | "nurse"
+            | "receptionist"
+            | "accountant"
+            | "patient"
+        }
         onBack={() => setBookingAppt(false)}
         onBookSuccess={() => {
           setBookingAppt(false);
@@ -343,13 +357,17 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-          <div className="text-xs text-[#64748B] font-medium">Active Patients</div>
+          <div className="text-xs text-[#64748B] font-medium">
+            Active Patients
+          </div>
           <div className="text-2xl font-bold text-[#009688] mt-0.5">
             {activePatients}
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-          <div className="text-xs text-[#64748B] font-medium">Inactive Patients</div>
+          <div className="text-xs text-[#64748B] font-medium">
+            Inactive Patients
+          </div>
           <div className="text-2xl font-bold text-[#F59E0B] mt-0.5">
             {Math.max(0, totalPatients - activePatients)}
           </div>
@@ -361,7 +379,9 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
         totalCount={patients.length}
         isLoading={loading}
         filterValues={filters}
-        onFilterChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        onFilterChange={(patch) =>
+          setFilters((prev) => ({ ...prev, ...patch }))
+        }
         onResetFilters={() => setFilters(DEFAULT_FILTERS)}
         hasActiveFilters={hasActiveFilters}
         selectedPatientId={selectedPatientId}
@@ -372,7 +392,9 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
         onEditPatient={
           canEdit
             ? (p) =>
-                navigate(ROUTES.PATIENT_PROFILE.replace(":mrn", p.mrn || String(p.id)))
+                navigate(
+                  ROUTES.PATIENT_PROFILE.replace(":mrn", p.mrn || String(p.id)),
+                )
             : undefined
         }
         onBookAppointment={

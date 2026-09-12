@@ -988,7 +988,9 @@ export function DoctorProfileScreen({
         doctor={docState}
         role={
           String(currentRole).toUpperCase() as
-            "ADMIN" | "DOCTOR" | "RECEPTIONIST"
+            | "ADMIN"
+            | "DOCTOR"
+            | "RECEPTIONIST"
         }
         isOwnRecord={isOwnRecord}
         isLoading={isLoading}
@@ -1030,7 +1032,9 @@ export function DoctorProfileScreen({
             scheduledToday={scheduledToday}
             role={
               String(currentRole).toUpperCase() as
-                "ADMIN" | "DOCTOR" | "RECEPTIONIST"
+                | "ADMIN"
+                | "DOCTOR"
+                | "RECEPTIONIST"
             }
             canEdit={can("DOCTOR_PROFILE_UPDATE") && isOwnRecord}
             onOpenEdit={() => setShowEditDrawer(true)}

@@ -1,5 +1,9 @@
 export type PaymentStatus =
-  "Pending" | "Partially Paid" | "Paid" | "Cancelled" | "Refunded";
+  | "Pending"
+  | "Partially Paid"
+  | "Paid"
+  | "Cancelled"
+  | "Refunded";
 
 export type PaymentMethod = "Cash" | "Card" | "UPI" | "Bank Transfer";
 

@@ -273,7 +273,9 @@ export function ConsultationDetailsScreen({
 
   const handleStartEdit = () => {
     if (onEditConsultation) {
-      onEditConsultation(record.id || String(encounterId || consultationId || ""));
+      onEditConsultation(
+        record.id || String(encounterId || consultationId || ""),
+      );
     }
     setIsEditing(true);
   };
@@ -292,7 +294,8 @@ export function ConsultationDetailsScreen({
       try {
         setLoading(true);
         const rawEncIdStr = String(targetEncId).trim();
-        const encIdNum = Number(rawEncIdStr.replace(/\D+/g, "")) || Number(targetEncId) || 0;
+        const encIdNum =
+          Number(rawEncIdStr.replace(/\D+/g, "")) || Number(targetEncId) || 0;
         if (encIdNum <= 0) return;
 
         // 1. Load workspace context (patient, appointment, vitals, consultation notes, diagnoses)
@@ -576,7 +579,8 @@ export function ConsultationDetailsScreen({
             })();
 
             const freqObj = m.frequency as
-              { display?: unknown; code?: unknown } | undefined;
+              | { display?: unknown; code?: unknown }
+              | undefined;
             const freqVal =
               m.frequency && typeof m.frequency === "object"
                 ? (freqObj?.display as string) ||
@@ -589,7 +593,8 @@ export function ConsultationDetailsScreen({
                   "";
 
             const durObj = m.duration as
-              { value?: unknown; unit?: unknown } | undefined;
+              | { value?: unknown; unit?: unknown }
+              | undefined;
             const durVal =
               m.duration && typeof m.duration === "object"
                 ? `${durObj?.value ?? ""} ${durObj?.unit ?? ""}`.trim()
@@ -613,9 +618,7 @@ export function ConsultationDetailsScreen({
                   m.medicine ||
                   "Medication",
               ),
-              dosage: String(
-                doseVal || m.dosage || m.strength || "—",
-              ),
+              dosage: String(doseVal || m.dosage || m.strength || "—"),
               frequency: String(freqVal || "—"),
               duration: String(durVal || m.duration || "—"),
               instructions: String(
@@ -635,7 +638,9 @@ export function ConsultationDetailsScreen({
             .map((item: unknown): string => {
               if (typeof item === "string") return item;
               const itemObj = item as
-                Record<string, unknown> | null | undefined;
+                | Record<string, unknown>
+                | null
+                | undefined;
               return String(
                 itemObj?.testName ||
                   itemObj?.investigationName ||
@@ -671,9 +676,13 @@ export function ConsultationDetailsScreen({
             );
 
             const realDoctorName = String(
-              (typeof encSub.doctorName === "string" ? encSub.doctorName : "") ||
+              (typeof encSub.doctorName === "string"
+                ? encSub.doctorName
+                : "") ||
                 (typeof encSub.doctor === "string" ? encSub.doctor : "") ||
-                (typeof apptSub.doctorName === "string" ? apptSub.doctorName : "") ||
+                (typeof apptSub.doctorName === "string"
+                  ? apptSub.doctorName
+                  : "") ||
                 (typeof apptSub.doctor === "string" ? apptSub.doctor : "") ||
                 docSub.name ||
                 docSub.fullName ||
@@ -689,12 +698,14 @@ export function ConsultationDetailsScreen({
               (typeof encSub.department === "string"
                 ? encSub.department
                 : (encSub.department as Record<string, unknown>)?.name ||
-                  (encSub.department as Record<string, unknown>)?.departmentName ||
+                  (encSub.department as Record<string, unknown>)
+                    ?.departmentName ||
                   "") ||
                 (typeof apptSub.department === "string"
                   ? apptSub.department
                   : (apptSub.department as Record<string, unknown>)?.name ||
-                    (apptSub.department as Record<string, unknown>)?.departmentName ||
+                    (apptSub.department as Record<string, unknown>)
+                      ?.departmentName ||
                     "") ||
                 docSub.department ||
                 docSub.departmentName ||
@@ -708,7 +719,11 @@ export function ConsultationDetailsScreen({
             );
 
             const realAge = (() => {
-              if (patSub.age != null && patSub.age !== "" && patSub.age !== "—") {
+              if (
+                patSub.age != null &&
+                patSub.age !== "" &&
+                patSub.age !== "—"
+              ) {
                 const n = Number(patSub.age);
                 if (!Number.isNaN(n) && n >= 0) return n;
                 if (typeof patSub.age === "string" && patSub.age.trim())
@@ -773,11 +788,11 @@ export function ConsultationDetailsScreen({
                 followUpDt !== "—" &&
                 followUpDt !== "None" &&
                 followUpDt !== "") ||
-                (followUpNt &&
-                  followUpNt !== "—" &&
-                  followUpNt !== "None" &&
-                  followUpNt !== "None recorded" &&
-                  followUpNt !== ""),
+              (followUpNt &&
+                followUpNt !== "—" &&
+                followUpNt !== "None" &&
+                followUpNt !== "None recorded" &&
+                followUpNt !== ""),
             );
 
             const isExplicitlyNo =
@@ -894,7 +909,8 @@ export function ConsultationDetailsScreen({
               medicines:
                 meds.length > 0
                   ? meds
-                  : initialRecord?.medicines && initialRecord.medicines.length > 0
+                  : initialRecord?.medicines &&
+                      initialRecord.medicines.length > 0
                     ? initialRecord.medicines
                     : prev.medicines,
               vitals: {
@@ -1015,13 +1031,22 @@ export function ConsultationDetailsScreen({
 
               followupRequired: isFollowUpRequiredYes ? "Yes" : "No",
               nextVisitDate: String(
-                followUpDt || initialRecord?.nextVisitDate || prev.nextVisitDate || "",
+                followUpDt ||
+                  initialRecord?.nextVisitDate ||
+                  prev.nextVisitDate ||
+                  "",
               ),
               followupNotes: String(
-                followUpNt || initialRecord?.followupNotes || prev.followupNotes || "",
+                followUpNt ||
+                  initialRecord?.followupNotes ||
+                  prev.followupNotes ||
+                  "",
               ),
               followUpType: String(
-                followUpTp || initialRecord?.followUpType || prev.followUpType || "ROUTINE",
+                followUpTp ||
+                  initialRecord?.followUpType ||
+                  prev.followUpType ||
+                  "ROUTINE",
               ),
             };
           });
@@ -1058,7 +1083,9 @@ export function ConsultationDetailsScreen({
   if (isEditing) {
     return (
       <EditConsultationScreen
-        consultationId={record.id || String(encounterId || consultationId || "")}
+        consultationId={
+          record.id || String(encounterId || consultationId || "")
+        }
         encounterId={encounterId || record.id}
         initialRecord={record as unknown as Record<string, unknown>}
         onBack={() => setIsEditing(false)}
@@ -1213,7 +1240,6 @@ export function ConsultationDetailsScreen({
 
           {/* Quick Buttons */}
           <div className="flex items-center gap-2 shrink-0">
-           
             <button
               onClick={handleViewPatientProfile}
               className="px-3 py-1.5 rounded-lg border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-colors cursor-pointer"
@@ -1284,9 +1310,9 @@ export function ConsultationDetailsScreen({
                   {record.appointmentId &&
                   String(record.appointmentId) !== "0" &&
                   String(record.appointmentId) !== ""
-                    ? (String(record.appointmentId).startsWith("APT-")
+                    ? String(record.appointmentId).startsWith("APT-")
                       ? record.appointmentId
-                      : `APT-${record.appointmentId}`)
+                      : `APT-${record.appointmentId}`
                     : "—"}
                 </p>
               </div>
@@ -1443,8 +1469,7 @@ export function ConsultationDetailsScreen({
                     {record.department || record.doctorSpecialty || "—"}
                   </p>
                 </div>
-               
-                
+
                 <div className="col-span-2 sm:col-span-4 pt-2 border-t border-gray-100">
                   <span
                     className="text-[10px] font-bold text-slate-400 uppercase"
@@ -1910,87 +1935,95 @@ export function ConsultationDetailsScreen({
               />
             </button>
 
-            {!collapsedSections.followup && (() => {
-              const isRequiredYes =
-                record.followupRequired === "Yes" ||
-                (record.followupRequired as unknown) === true ||
-                String(record.followupRequired).toLowerCase() === "yes" ||
-                String(record.followupRequired).toLowerCase() === "true";
+            {!collapsedSections.followup &&
+              (() => {
+                const isRequiredYes =
+                  record.followupRequired === "Yes" ||
+                  (record.followupRequired as unknown) === true ||
+                  String(record.followupRequired).toLowerCase() === "yes" ||
+                  String(record.followupRequired).toLowerCase() === "true";
 
-              return (
-                <div
-                  className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs"
-                  style={{ fontFamily: RB }}
-                >
-                  <div>
-                    <span
-                      className="text-[10px] font-bold text-slate-400 uppercase block mb-1"
-                      style={{ fontFamily: PP }}
-                    >
-                      Follow-up Required
-                    </span>
-                    {isRequiredYes ? (
-                      <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-xs">
-                        <CheckCircle2 size={15} className="text-emerald-600" /> Yes (Follow-up Scheduled)
+                return (
+                  <div
+                    className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs"
+                    style={{ fontFamily: RB }}
+                  >
+                    <div>
+                      <span
+                        className="text-[10px] font-bold text-slate-400 uppercase block mb-1"
+                        style={{ fontFamily: PP }}
+                      >
+                        Follow-up Required
                       </span>
-                    ) : (
-                      <span className="font-semibold text-slate-500 text-xs">No</span>
+                      {isRequiredYes ? (
+                        <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-xs">
+                          <CheckCircle2
+                            size={15}
+                            className="text-emerald-600"
+                          />{" "}
+                          Yes (Follow-up Scheduled)
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-slate-500 text-xs">
+                          No
+                        </span>
+                      )}
+                    </div>
+
+                    {isRequiredYes && (
+                      <>
+                        <div>
+                          <span
+                            className="text-[10px] font-bold text-slate-400 uppercase"
+                            style={{ fontFamily: PP }}
+                          >
+                            Follow-up Type
+                          </span>
+                          <p className="font-semibold text-slate-800 mt-1">
+                            {record.followUpType === "ROUTINE"
+                              ? "Routine Follow-up"
+                              : record.followUpType === "SPECIALIST"
+                                ? "Specialist Referral"
+                                : record.followUpType === "TELECONSULT"
+                                  ? "Teleconsultation"
+                                  : record.followUpType === "EMERGENCY"
+                                    ? "Urgent / Emergency"
+                                    : record.followUpType ||
+                                      "Routine Follow-up"}
+                          </p>
+                        </div>
+                        {record.nextVisitDate &&
+                          record.nextVisitDate !== "—" &&
+                          record.nextVisitDate !== "None" &&
+                          record.nextVisitDate !== "" && (
+                            <div>
+                              <span
+                                className="text-[10px] font-bold text-slate-400 uppercase"
+                                style={{ fontFamily: PP }}
+                              >
+                                Next Visit Date
+                              </span>
+                              <p className="font-bold text-[#0D47A1] text-sm mt-1">
+                                {formatDateOnly(record.nextVisitDate)}
+                              </p>
+                            </div>
+                          )}
+                        <div className="sm:col-span-3 border-t border-gray-100 pt-2">
+                          <span
+                            className="text-[10px] font-bold text-slate-400 uppercase"
+                            style={{ fontFamily: PP }}
+                          >
+                            Follow-up Notes
+                          </span>
+                          <p className="font-medium text-slate-700 mt-1 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            {record.followupNotes || "None recorded"}
+                          </p>
+                        </div>
+                      </>
                     )}
                   </div>
-
-                  {isRequiredYes && (
-                    <>
-                      <div>
-                        <span
-                          className="text-[10px] font-bold text-slate-400 uppercase"
-                          style={{ fontFamily: PP }}
-                        >
-                          Follow-up Type
-                        </span>
-                        <p className="font-semibold text-slate-800 mt-1">
-                          {record.followUpType === "ROUTINE"
-                            ? "Routine Follow-up"
-                            : record.followUpType === "SPECIALIST"
-                              ? "Specialist Referral"
-                              : record.followUpType === "TELECONSULT"
-                                ? "Teleconsultation"
-                                : record.followUpType === "EMERGENCY"
-                                  ? "Urgent / Emergency"
-                                  : record.followUpType || "Routine Follow-up"}
-                        </p>
-                      </div>
-                      {record.nextVisitDate &&
-                        record.nextVisitDate !== "—" &&
-                        record.nextVisitDate !== "None" &&
-                        record.nextVisitDate !== "" && (
-                          <div>
-                            <span
-                              className="text-[10px] font-bold text-slate-400 uppercase"
-                              style={{ fontFamily: PP }}
-                            >
-                              Next Visit Date
-                            </span>
-                            <p className="font-bold text-[#0D47A1] text-sm mt-1">
-                              {formatDateOnly(record.nextVisitDate)}
-                            </p>
-                          </div>
-                        )}
-                      <div className="sm:col-span-3 border-t border-gray-100 pt-2">
-                        <span
-                          className="text-[10px] font-bold text-slate-400 uppercase"
-                          style={{ fontFamily: PP }}
-                        >
-                          Follow-up Notes
-                        </span>
-                        <p className="font-medium text-slate-700 mt-1 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                          {record.followupNotes || "None recorded"}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })()}
+                );
+              })()}
           </div>
 
           {/* ── SECTION 08: CONSULTATION SUMMARY ── */}
@@ -2137,8 +2170,12 @@ export function ConsultationDetailsScreen({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center no-print">
           <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-800" style={{ fontFamily: PP }}>
-                Patient Consultation History — {record.patientName} ({record.mrn})
+              <h2
+                className="text-base font-bold text-slate-800"
+                style={{ fontFamily: PP }}
+              >
+                Patient Consultation History — {record.patientName} (
+                {record.mrn})
               </h2>
               <button
                 onClick={() => setShowHistoryModal(false)}

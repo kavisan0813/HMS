@@ -60,7 +60,6 @@ import {
 import { formatCompactCurrency } from "../../billing/utils/billing.utils";
 import { exportDataToCsv } from "../utils/export.utils";
 
-
 type ReportState = {
   searchQuery: string;
   branchFilter: string;
@@ -222,8 +221,6 @@ function CircularProgress({
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-
-
 const formatCurrency = (amount: number) => formatCompactCurrency(amount);
 
 export function AdminReportsDashboardScreen({
@@ -239,8 +236,6 @@ export function AdminReportsDashboardScreen({
 
   const [selectedReportModal, setSelectedReportModal] =
     useState<AvailableReportCard | null>(null);
-
-
 
   const handleExportReportsCsv = () => {
     // 1. KPI Overview Summary Metrics
@@ -441,11 +436,21 @@ export function AdminReportsDashboardScreen({
     [overviewDates, appliedFilters],
   );
 
-   const { data: adminDash = null } = useAdminReportsDashboard(overviewReportFilters);
-  const { data: colRate = null } = useCollectionRateSummary(overviewReportFilters);
-  const { data: doctorPerformanceData, isLoading: isDocLoading, refetch: refetchDoc } = useDoctorPerformance(overviewReportFilters);
-  const { data: operationalTrend = { period: "7D", data: [] } } = useOperationalTrend(overviewReportFilters);
-  const { data: deptConsultVolume = { departments: [] } } = useDepartmentConsultationVolume(overviewReportFilters);
+  const { data: adminDash = null } = useAdminReportsDashboard(
+    overviewReportFilters,
+  );
+  const { data: colRate = null } = useCollectionRateSummary(
+    overviewReportFilters,
+  );
+  const {
+    data: doctorPerformanceData,
+    isLoading: isDocLoading,
+    refetch: refetchDoc,
+  } = useDoctorPerformance(overviewReportFilters);
+  const { data: operationalTrend = { period: "7D", data: [] } } =
+    useOperationalTrend(overviewReportFilters);
+  const { data: deptConsultVolume = { departments: [] } } =
+    useDepartmentConsultationVolume(overviewReportFilters);
   const { data: mostViewedReports = [] } = useMostViewedReports();
   const { data: categoryShare = [] } = useReportCategoryShare();
 
@@ -474,13 +479,10 @@ export function AdminReportsDashboardScreen({
 
   const doctorSummary = doctorPerformanceData?.summary;
 
-  const trendSource = useMemo(
-    () => {
-      if (!operationalTrend || Array.isArray(operationalTrend)) return [];
-      return operationalTrend.data ?? [];
-    },
-    [operationalTrend],
-  );
+  const trendSource = useMemo(() => {
+    if (!operationalTrend || Array.isArray(operationalTrend)) return [];
+    return operationalTrend.data ?? [];
+  }, [operationalTrend]);
 
   const deptSource = useMemo(() => {
     if (!deptConsultVolume || Array.isArray(deptConsultVolume)) return [];
@@ -492,8 +494,6 @@ export function AdminReportsDashboardScreen({
     }));
   }, [deptConsultVolume]);
 
-
-
   const computedKpis = {
     appointments: Number(adminDash?.totalAppointments ?? 0),
     registrations: Number(adminDash?.totalPatients ?? 0),
@@ -503,12 +503,18 @@ export function AdminReportsDashboardScreen({
     completed: Number(adminDash?.completedConsultations ?? 0),
     cancelled: Number(adminDash?.cancelledConsultations ?? 0),
     pendingAmount: Number(adminDash?.pendingConsultations ?? 0),
-    collectionRate: Number(adminDash?.collectionRate ?? colRate?.collectionRate ?? 0),
+    collectionRate: Number(
+      adminDash?.collectionRate ?? colRate?.collectionRate ?? 0,
+    ),
     totalBilled: Number(colRate?.totalBilledAmount ?? 0),
     totalCollected: Number(colRate?.totalCollectedAmount ?? 0),
     totalDoctors: Number(adminDash?.totalDoctors ?? 0),
     avgConsultations: Number(doctorSummary?.avgConsultationsPerDoctor ?? 0),
-    avgConsultationDuration: Number(adminDash?.averageConsultationDurationMinutes ?? doctorSummary?.averageConsultationDurationMinutes ?? 0),
+    avgConsultationDuration: Number(
+      adminDash?.averageConsultationDurationMinutes ??
+        doctorSummary?.averageConsultationDurationMinutes ??
+        0,
+    ),
     activeDoctors: Number(adminDash?.doctorUtilizationPercentage ?? 0),
     bedOccupancy: 0,
   };
@@ -519,9 +525,7 @@ export function AdminReportsDashboardScreen({
       doc.department
         .toLowerCase()
         .includes(appliedFilters.dept.toLowerCase()) ||
-      appliedFilters.dept
-        .toLowerCase()
-        .includes(doc.department.toLowerCase());
+      appliedFilters.dept.toLowerCase().includes(doc.department.toLowerCase());
     const matchesDoc =
       appliedFilters.doctor === "All Doctors" ||
       doc.doctorName
@@ -532,9 +536,7 @@ export function AdminReportsDashboardScreen({
         .includes(doc.doctorName.toLowerCase());
     const matchesSearch =
       !state.searchQuery ||
-      doc.doctorName
-        .toLowerCase()
-        .includes(state.searchQuery.toLowerCase()) ||
+      doc.doctorName.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
       doc.department.toLowerCase().includes(state.searchQuery.toLowerCase());
     return matchesDept && matchesDoc && matchesSearch;
   });
@@ -551,40 +553,58 @@ export function AdminReportsDashboardScreen({
     return 0;
   });
 
-  const dynamicDeptPerformance = appliedFilters.dept !== "All Departments"
-    ? deptSource.filter(
-        (d) =>
-          d.department
-            .toLowerCase()
-            .includes(appliedFilters.dept.toLowerCase()) ||
-          appliedFilters.dept
-            .toLowerCase()
-            .includes(d.department.toLowerCase()),
-      )
-    : deptSource;
+  const dynamicDeptPerformance =
+    appliedFilters.dept !== "All Departments"
+      ? deptSource.filter(
+          (d) =>
+            d.department
+              .toLowerCase()
+              .includes(appliedFilters.dept.toLowerCase()) ||
+            appliedFilters.dept
+              .toLowerCase()
+              .includes(d.department.toLowerCase()),
+        )
+      : deptSource;
 
   const dynamicHospitalPerformanceTrend = Array.isArray(trendSource)
-    ? trendSource.map((t: { date: string; appointments?: number; registrations?: number; revenue?: number; collections?: number }) => ({
-        date: t.date,
-        appointments: Number(t.appointments ?? 0),
-        registrations: Number(t.registrations ?? 0),
-        revenue: 0,
-        collections: 0,
-      }))
-    : ([] as { date: string; appointments: number; registrations: number; revenue: number; collections: number }[]);
+    ? trendSource.map(
+        (t: {
+          date: string;
+          appointments?: number;
+          registrations?: number;
+          revenue?: number;
+          collections?: number;
+        }) => ({
+          date: t.date,
+          appointments: Number(t.appointments ?? 0),
+          registrations: Number(t.registrations ?? 0),
+          revenue: 0,
+          collections: 0,
+        }),
+      )
+    : ([] as {
+        date: string;
+        appointments: number;
+        registrations: number;
+        revenue: number;
+        collections: number;
+      }[]);
 
-  const dynamicReportDistribution = categoryShare && categoryShare.length > 0
-    ? categoryShare
-    : [
-        { category: "Clinical", value: 40, color: "#0D47A1" },
-        { category: "Financial", value: 30, color: "#009688" },
-        { category: "Operational", value: 20, color: "#F59E0B" },
-        { category: "Patient", value: 10, color: "#66BB6A" },
-      ];
+  const dynamicReportDistribution =
+    categoryShare && categoryShare.length > 0
+      ? categoryShare
+      : [
+          { category: "Clinical", value: 40, color: "#0D47A1" },
+          { category: "Financial", value: 30, color: "#009688" },
+          { category: "Operational", value: 20, color: "#F59E0B" },
+          { category: "Patient", value: 10, color: "#66BB6A" },
+        ];
 
   const dynamicRevenueVsCollection: RevenueVsCollectionPoint[] = [];
 
-  const dynamicMostViewedReports = Array.isArray(mostViewedReports) ? mostViewedReports : [];
+  const dynamicMostViewedReports = Array.isArray(mostViewedReports)
+    ? mostViewedReports
+    : [];
 
   const AVAILABLE_REPORTS_LIST: AvailableReportCard[] = useMemo(
     () => [
@@ -1075,8 +1095,8 @@ export function AdminReportsDashboardScreen({
                 style={{ fontFamily: PP }}
               >
                 {computedKpis.avgConsultationDuration != 0
-                   ? `${computedKpis.avgConsultationDuration} min`
-                   : "15 min"}
+                  ? `${computedKpis.avgConsultationDuration} min`
+                  : "15 min"}
               </div>
               <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-3">
                 <span className="text-[#009688] font-semibold">
@@ -1097,9 +1117,9 @@ export function AdminReportsDashboardScreen({
                 </div>
                 <div>
                   <div className="text-[#66BB6A] font-bold">
-                {computedKpis.avgConsultations != 0
-                       ? `${computedKpis.avgConsultations}`
-                       : "0"}
+                    {computedKpis.avgConsultations != 0
+                      ? `${computedKpis.avgConsultations}`
+                      : "0"}
                   </div>
                   <div className="text-[#64748B]">Avg Rating</div>
                 </div>
@@ -1131,17 +1151,15 @@ export function AdminReportsDashboardScreen({
                   className="text-2xl font-bold text-[#111827] mt-1"
                   style={{ fontFamily: PP }}
                 >
-                   {computedKpis.collectionRate != 0
-                     ? `${computedKpis.collectionRate}%`
-                     : "--"}
+                  {computedKpis.collectionRate != 0
+                    ? `${computedKpis.collectionRate}%`
+                    : "--"}
                 </div>
                 <p className="text-[11px] text-[#64748B] mt-1">
-                {computedKpis.totalCollected != 0
-                     ? formatCurrency(
-                         Math.round(computedKpis.totalCollected),
-                       )
-                     : "--"}{" "}
-                 collected
+                  {computedKpis.totalCollected != 0
+                    ? formatCurrency(Math.round(computedKpis.totalCollected))
+                    : "--"}{" "}
+                  collected
                 </p>
                 <div className="mt-2 text-[11px] font-semibold text-[#009688] flex items-center gap-0.5 group-hover:underline">
                   View Detail <ChevronRight className="w-3 h-3" />

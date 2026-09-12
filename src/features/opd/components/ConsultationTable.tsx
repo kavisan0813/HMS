@@ -60,8 +60,20 @@ const getVisitTypeColor = (visitType: string): string => {
   return visitTypeColors[visitType] || "bg-slate-100 text-slate-600";
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const formatAppointmentFormattedId = (item: any): string => {
+interface FormattableAppointmentItem extends Partial<ConsultationRecord> {
+  appointmentNumber?: string | number;
+  appointmentCode?: string | number;
+  appointmentNo?: string | number;
+  apptNumber?: string | number;
+  apptId?: string | number;
+  appointmentDate?: string;
+  createdAt?: string;
+}
+
+const formatAppointmentFormattedId = (
+  item?: FormattableAppointmentItem | null,
+): string => {
+  if (!item) return "—";
   const rawNum =
     item.appointmentNumber ||
     item.appointmentCode ||

@@ -8,7 +8,11 @@ export type QueueStatus =
   | "CHECKED_IN";
 
 export type BillingStatus =
-  "PAID" | "PENDING" | "PARTIAL" | "EXEMPT" | "REFUNDED";
+  | "PAID"
+  | "PENDING"
+  | "PARTIAL"
+  | "EXEMPT"
+  | "REFUNDED";
 
 export interface ReceptionQueueItem {
   id: string | number;

@@ -162,7 +162,8 @@ export function InvoicePrintPreviewPage() {
     "N/A";
   const rawAge =
     ((bill?.patient as unknown as Record<string, unknown>)?.age as
-      number | string) ??
+      | number
+      | string) ??
     (billData.age as number | string) ??
     (billData.patientAge as number | string) ??
     ((user as unknown as Record<string, unknown>)?.age as number | string) ??

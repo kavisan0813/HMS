@@ -728,7 +728,10 @@ export function AppointmentDetailsDrawer({
             const mapped = events.map((evtItem: unknown) => {
               const e = (evtItem as Record<string, unknown>) || {};
               const title = String(
-                e.remarks || e.eventType || e.newStatus || "Queue Event Updated",
+                e.remarks ||
+                  e.eventType ||
+                  e.newStatus ||
+                  "Queue Event Updated",
               );
               const roleStr = e.role ? ` (${e.role})` : "";
               const by = `${e.performedBy || "System"}${roleStr}`;

@@ -426,7 +426,7 @@ export function FamilyMembersManagement({
                 Current Active Profile
               </div>
               <div
-                className="text-sm font-bold text-[#111827] truncate max-w-[200px]"
+                className="text-sm font-bold text-[#111827] truncate max-w-50"
                 style={{ fontFamily: PP }}
               >
                 {formatMemberDisplayName(

@@ -282,6 +282,7 @@ export function mapApiUserToDoctorRecord(u: ApiUserDoctorRecord): DoctorRecord {
     effectiveFrom: anyProfile?.effectiveFrom as string | undefined,
     effectiveTo: anyProfile?.effectiveTo as string | undefined,
     availabilityTemplate: anyProfile?.availabilityTemplate as
-      string | undefined,
+      | string
+      | undefined,
   };
 }

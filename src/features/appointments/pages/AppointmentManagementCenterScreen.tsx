@@ -129,9 +129,9 @@ export function AppointmentManagementCenterScreen({
     userRole as UserRole,
     dateFilter || undefined,
     {
-      doctorId: filters.doctorFilter !== "All" ? filters.doctorFilter : undefined,
-      status:
-        filters.statusFilter !== "All" ? filters.statusFilter : undefined,
+      doctorId:
+        filters.doctorFilter !== "All" ? filters.doctorFilter : undefined,
+      status: filters.statusFilter !== "All" ? filters.statusFilter : undefined,
     },
   );
   const [viewMode, setViewMode] = useState<"directory" | "queue">("directory");

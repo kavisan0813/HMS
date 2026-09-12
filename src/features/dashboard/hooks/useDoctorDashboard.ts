@@ -35,7 +35,10 @@ export function useDoctorNextPatient() {
   });
 }
 
-export function useDoctorTodayAppointments(doctorId?: string | number, date?: string) {
+export function useDoctorTodayAppointments(
+  doctorId?: string | number,
+  date?: string,
+) {
   return useQuery({
     queryKey: [...doctorKeys.todayAppointments(), doctorId, date] as const,
     queryFn: () => doctorDashboardApi.getTodayAppointments(doctorId, date),

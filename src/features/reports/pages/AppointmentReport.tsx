@@ -565,7 +565,8 @@ export function DailyAppointmentReportScreen({
     ];
 
     // 2. Chart Performance: Appointment Status Graph Share (%)
-    const totalStatusCount = statusDistFromApi.reduce((s, i) => s + (i.value || 0), 0) || 1;
+    const totalStatusCount =
+      statusDistFromApi.reduce((s, i) => s + (i.value || 0), 0) || 1;
     const statusChartRows = statusDistFromApi.map((item) => {
       const pct = ((item.value / totalStatusCount) * 100).toFixed(1);
       return {
@@ -580,10 +581,14 @@ export function DailyAppointmentReportScreen({
     });
 
     // 3. Chart Performance: Department Volume Graph Share (%)
-    const totalDeptAppts = deptVolumeData.reduce((s, d) => s + d.appointments, 0) || 1;
+    const totalDeptAppts =
+      deptVolumeData.reduce((s, d) => s + d.appointments, 0) || 1;
     const deptChartRows = deptVolumeData.map((dept) => {
       const pct = ((dept.appointments / totalDeptAppts) * 100).toFixed(1);
-      const compPct = dept.appointments > 0 ? ((dept.completed / dept.appointments) * 100).toFixed(1) : "0";
+      const compPct =
+        dept.appointments > 0
+          ? ((dept.completed / dept.appointments) * 100).toFixed(1)
+          : "0";
       return {
         Section: "3. DEPARTMENT VOLUME GRAPH SHARE",
         Category_Item: dept.department,
@@ -596,7 +601,9 @@ export function DailyAppointmentReportScreen({
     });
 
     // 4. Detailed Table Values
-    const recordRows = (filteredData.length > 0 ? filteredData : tableDataSource).map((rec) => ({
+    const recordRows = (
+      filteredData.length > 0 ? filteredData : tableDataSource
+    ).map((rec) => ({
       Section: "4. APPOINTMENT DETAILED TABLE REGISTRY",
       Category_Item: rec.id,
       Count_or_Amount: `Visit: ${rec.visitType}`,
@@ -615,7 +622,7 @@ export function DailyAppointmentReportScreen({
 
     exportDataToCsv(
       `Daily_Appointment_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows
+      allRows,
     );
   };
   const handleResetFilters = () => {

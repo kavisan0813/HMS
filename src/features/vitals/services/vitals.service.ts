@@ -450,4 +450,3 @@ export const vitalsService = {
     return res?.success !== false;
   },
 };
-

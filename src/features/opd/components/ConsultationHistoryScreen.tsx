@@ -252,8 +252,13 @@ export function ConsultationHistoryScreen({
           const deptRes = await departmentsApi
             .getDepartments({ page: 0, size: 100 })
             .catch(() => null);
-          const deptObj = deptRes as { content?: unknown[]; items?: unknown[] } | null;
-          const deptList = (deptObj?.content || deptObj?.items || []) as Array<Record<string, unknown>>;
+          const deptObj = deptRes as {
+            content?: unknown[];
+            items?: unknown[];
+          } | null;
+          const deptList = (deptObj?.content || deptObj?.items || []) as Array<
+            Record<string, unknown>
+          >;
           if (Array.isArray(deptList)) {
             deptList.forEach((dp) => {
               const dpId = String(dp.id || dp.departmentId || "");
@@ -406,7 +411,8 @@ export function ConsultationHistoryScreen({
                     })();
 
                     const freqObj = m.frequency as
-                      { display?: unknown; code?: unknown } | undefined;
+                      | { display?: unknown; code?: unknown }
+                      | undefined;
                     const freqVal =
                       m.frequency && typeof m.frequency === "object"
                         ? (freqObj?.display as string) ||
@@ -419,7 +425,8 @@ export function ConsultationHistoryScreen({
                           "—";
 
                     const durObj = m.duration as
-                      { value?: unknown; unit?: unknown } | undefined;
+                      | { value?: unknown; unit?: unknown }
+                      | undefined;
                     const durVal =
                       m.duration && typeof m.duration === "object"
                         ? `${durObj?.value ?? ""} ${durObj?.unit ?? ""}`.trim()
@@ -527,8 +534,7 @@ export function ConsultationHistoryScreen({
                     ? "Completed"
                     : sRaw === "CANCELLED" || sRaw === "CANCELED"
                       ? "Cancelled"
-                      : sRaw.includes("SCHEDULED") ||
-                          sRaw.includes("FOLLOW")
+                      : sRaw.includes("SCHEDULED") || sRaw.includes("FOLLOW")
                         ? "Follow-up Scheduled"
                         : "In Progress";
 
@@ -765,8 +771,7 @@ export function ConsultationHistoryScreen({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId]);
+  }, [patientData.department, patientData.primaryDoctor, patientId]);
 
   const toggleExpand = (id: string) => {
     setExpandedCardIds((prev) => ({ ...prev, [id]: !prev[id] }));
