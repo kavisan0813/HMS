@@ -13,7 +13,7 @@ export function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unable to load audit data.";
 }
 
-export function localDate(date: Date): string {
+function localDate(date: Date): string {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 10);
 }

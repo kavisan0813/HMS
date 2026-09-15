@@ -9,13 +9,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatTime } from "../../../lib/time-utils";
-import type {
-  PatientCancelAppointmentDialogProps,
-  PatientRescheduleAppointmentDialogProps,
-} from "../types/patient.types";
+import type { PatientCancelAppointmentDialogProps } from "../types/patient.types";
 import { PP, RB } from "../constants/patient.fonts";
-import { RescheduleAppointmentConfirmationDialog } from "../../appointments/components/RescheduleAppointmentConfirmationDialog";
-import type { AppointmentRecord } from "../../appointments/types/appointment.types";
 
 export function PatientCancelAppointmentDialog({
   appointment,
@@ -331,57 +326,5 @@ export function PatientCancelAppointmentDialog({
         </form>
       </div>
     </div>
-  );
-}
-
-export function PatientRescheduleAppointmentDialog({
-  appointment,
-  isOpen,
-  onClose,
-  onConfirmReschedule,
-}: PatientRescheduleAppointmentDialogProps) {
-  if (!isOpen || !appointment) return null;
-
-  const aptRecord: AppointmentRecord = {
-    id: appointment.id,
-    appointmentNumber: appointment.appointmentNumber || appointment.id,
-    patientId: appointment.patientId || appointment.id,
-    patientName: appointment.patientName || "Patient",
-    doctorId: appointment.doctorId || 1,
-    doctorName: appointment.doctor || "Doctor",
-    appointmentDate: appointment.date,
-    timeSlot: appointment.time,
-    startTime: appointment.time,
-    time: appointment.time,
-    specialty: appointment.specialty,
-    status: appointment.status,
-    department: appointment.department,
-    chiefComplaint: appointment.reason,
-    notes: appointment.notes,
-  };
-
-  return (
-    <RescheduleAppointmentConfirmationDialog
-      apt={aptRecord}
-      isOpen={isOpen}
-      onClose={onClose}
-      onConfirmReschedule={async (
-        id,
-        newDate,
-        newTimeSlot,
-        reason,
-        remarks,
-      ) => {
-        if (onConfirmReschedule) {
-          await onConfirmReschedule(
-            String(id),
-            newDate,
-            newTimeSlot,
-            reason,
-            remarks || "",
-          );
-        }
-      }}
-    />
   );
 }

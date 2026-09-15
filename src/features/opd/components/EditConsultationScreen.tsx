@@ -1992,5 +1992,3 @@ export function EditConsultationScreen({
     </div>
   );
 }
-
-export default EditConsultationScreen;

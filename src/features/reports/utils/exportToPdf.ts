@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-export interface ExportPdfOptions {
+interface ExportPdfOptions {
   /** The HTML element or element ID to export */
   elementOrId: string | HTMLElement;
   /** File name for the downloaded PDF (default: "report.pdf") */

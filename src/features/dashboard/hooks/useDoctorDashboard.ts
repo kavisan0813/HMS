@@ -63,14 +63,3 @@ export function useDoctorCallToken() {
     },
   });
 }
-
-export function useDoctorCompleteAppointment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (appointmentId: string) =>
-      doctorDashboardApi.completeAppointment(appointmentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: doctorKeys.all });
-    },
-  });
-}

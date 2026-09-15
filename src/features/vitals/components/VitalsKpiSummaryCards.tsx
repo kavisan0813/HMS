@@ -1,8 +1,7 @@
 import { Users, Clock, CheckSquare, Stethoscope } from "lucide-react";
 
 const PP = "Poppins, sans-serif";
-
-export interface VitalsKpiStats {
+interface VitalsKpiStats {
   total: number;
   pending: number;
   recorded: number;
