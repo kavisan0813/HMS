@@ -296,7 +296,8 @@ export const appointmentService = {
         status,
       );
       rawItems = unwrapAppointmentCollection(res);
-    } catch {
+    } catch (err) {
+      console.log(err);
       rawItems = [];
     }
 

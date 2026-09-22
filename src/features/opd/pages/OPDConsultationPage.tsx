@@ -904,7 +904,8 @@ function OPDConsultationPage({
       const secondaryId = record.tokenNo || record.id;
       await apiCallPatient(primaryId, secondaryId);
       triggerToast(`Called patient ${record.patientName || ""}`);
-    } catch {
+    } catch (err) {
+      console.log(err);
       // non-blocking
     } finally {
       await refetch();

@@ -285,7 +285,8 @@ export const encountersApi = {
         const res1 = unwrap<Prescription>(fallback1.data);
         console.log("ADD MEDICATION FALLBACK 1 RESPONSE:", res1);
         return res1;
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           const fallback2 = await apiClient.post<
             ApiEnvelope<Prescription> | Prescription
@@ -369,7 +370,8 @@ export const encountersApi = {
         ApiEnvelope<FinalizePrescriptionResponse> | FinalizePrescriptionResponse
       >(`/api/v1/prescriptions/${prescriptionId}/finalize`, payload);
       return unwrap<FinalizePrescriptionResponse>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -386,7 +388,8 @@ export const encountersApi = {
         `/api/v1/encounters/appointment/${appointmentId}/finalize`,
       );
       return unwrap<Encounter>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -434,7 +437,8 @@ export const encountersApi = {
         ApiEnvelope<{ valid: boolean; errors: string[]; warnings: string[] }>
       >(`/api/v1/prescriptions/${prescriptionId}/validate`);
       return unwrap(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -476,7 +480,8 @@ export const encountersApi = {
           instructions?: string;
         }>;
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -498,7 +503,8 @@ export const encountersApi = {
         }>
       >(`/api/v1/encounters/${encounterId}/finalization-check`);
       return unwrap(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -514,7 +520,8 @@ export const encountersApi = {
         ApiEnvelope<Prescription> | Prescription
       >(`/api/v1/encounters/${encounterId}/prescription`);
       return unwrap<Prescription>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -529,7 +536,8 @@ export const encountersApi = {
         `/api/v1/encounters/${encounterId}/diagnoses`,
       );
       return unwrap<unknown[]>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -653,7 +661,8 @@ export const encountersApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/workspace`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -669,7 +678,8 @@ export const encountersApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/consultations/${consultationId}`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -685,7 +695,8 @@ export const encountersApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/consultation`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -703,7 +714,8 @@ export const encountersApi = {
       >(`/api/v1/patients/${mrn}/encounters`);
       const data = unwrap<Array<Record<string, unknown>>>(response.data);
       return Array.isArray(data) ? data : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -755,7 +767,8 @@ export const encountersApi = {
       >(`/api/v1/encounters/${encounterId}/amendments`);
       const data = unwrap<Array<Record<string, unknown>>>(response.data);
       return Array.isArray(data) ? data : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -772,7 +785,8 @@ export const encountersApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/draft`, payload);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },

@@ -140,7 +140,8 @@ export function PatientAppointmentsTab({
     try {
       const data = await patientsApi.getAppointments(patient.mrn);
       setAppointments(data || []);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setAppointments([]);
     } finally {
       setLoading(false);
@@ -304,7 +305,8 @@ export function PatientAppointmentsTab({
         `Appointment ${aptId} rescheduled to ${newDate} at ${newTimeSlot}`,
       );
       loadAppointmentsData();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast(`Failed to reschedule appointment ${aptId}`);
     }
   };
@@ -320,7 +322,8 @@ export function PatientAppointmentsTab({
       });
       triggerToast(`Appointment ${id} cancelled successfully.`);
       loadAppointmentsData();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast(`Failed to cancel appointment ${id}`);
     }
   };

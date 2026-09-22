@@ -6,7 +6,8 @@ function isEventAlreadyTriggered(eventId: string): boolean {
       localStorage.getItem("hms_triggered_notifications:v1") || "[]",
     );
     return list.includes(eventId);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return false;
   }
 }

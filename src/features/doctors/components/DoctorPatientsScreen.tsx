@@ -84,7 +84,8 @@ export function DoctorPatientsScreen() {
     try {
       const result = await patientsApi.getDoctorPatients(100);
       setPatients(processDoctorPatients(result));
-    } catch {
+    } catch (err) {
+      console.log(err);
       setError("Failed to load patients. Please try again.");
       setPatients([]);
     } finally {
@@ -123,7 +124,8 @@ export function DoctorPatientsScreen() {
       setIsLoading(true);
       const response = await patientsApi.getPatientByMrn(patientRow.mrn);
       setSelectedPatient(mapApiPatientToPatientRecord(response));
-    } catch {
+    } catch (err) {
+      console.log(err);
       setSelectedPatient({
         id: patientRow.id,
         mrn: patientRow.mrn,

@@ -518,7 +518,8 @@ export function DoctorProfileScreen({
         return fresh;
       }
       return doctor || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return doctor || null;
     }
   }, [doctorId, doctor]);
@@ -529,7 +530,8 @@ export function DoctorProfileScreen({
     try {
       const days = await doctorProfileService.getWeeklySchedule(id);
       setWeeklySchedule(days);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setWeeklySchedule([]);
     }
   }, []);
@@ -541,7 +543,8 @@ export function DoctorProfileScreen({
       try {
         const data = await doctorProfileService.getDailyAvailability(id, date);
         setDailyAvailability(data?.slots || []);
-      } catch {
+      } catch (err) {
+        console.log(err);
         setDailyAvailability([]);
       }
     },
@@ -554,7 +557,8 @@ export function DoctorProfileScreen({
     try {
       const list = await doctorProfileService.listAppointments(id);
       setAppointments(list);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setAppointments([]);
     }
   }, []);
@@ -565,7 +569,8 @@ export function DoctorProfileScreen({
     try {
       const list = await doctorsService.getScheduleExceptions(id);
       setExceptions(list);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setExceptions([]);
     }
   }, []);
@@ -592,7 +597,8 @@ export function DoctorProfileScreen({
           },
         ),
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       queueSummaryRef.current = {};
       setQueueItems([]);
     } finally {
@@ -789,7 +795,8 @@ export function DoctorProfileScreen({
         loadAvailability(availDate),
         loadAppointments(),
       ]);
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Saved locally; server refresh failed.");
     }
   };
@@ -829,7 +836,8 @@ export function DoctorProfileScreen({
           status: "Inactive",
           availability: "Out of Office",
         });
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to deactivate doctor. Please try again.");
       setDeactivateDialogOpen(false);
     } finally {
@@ -868,7 +876,8 @@ export function DoctorProfileScreen({
           status: "Active",
           availability: "Available Today",
         });
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to activate doctor. Please try again.");
       setActivateDialogOpen(false);
     } finally {
@@ -917,7 +926,8 @@ export function DoctorProfileScreen({
       }
       exceptionFormDispatch({ type: "CLOSE" });
       await loadExceptions();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to save schedule exception.");
     } finally {
       exceptionFormDispatch({ type: "SET_SAVING", isSaving: false });
@@ -934,7 +944,8 @@ export function DoctorProfileScreen({
       );
       triggerToast("Schedule exception cancelled.");
       await loadExceptions();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to cancel schedule exception.");
     }
   };
@@ -948,7 +959,8 @@ export function DoctorProfileScreen({
       );
       triggerToast("Schedule exception deleted.");
       await loadExceptions();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to delete schedule exception.");
     }
   };
@@ -965,7 +977,8 @@ export function DoctorProfileScreen({
           : "Next patient called.",
       );
       await loadQueue();
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to call next patient.");
     } finally {
       setIsCallingNext(false);

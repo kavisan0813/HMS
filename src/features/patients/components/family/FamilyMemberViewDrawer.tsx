@@ -21,7 +21,8 @@ function calculateAge(dob?: string, ageVal?: number): number {
       computedAge--;
     }
     return Math.max(0, computedAge);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return 0;
   }
 }

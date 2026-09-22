@@ -134,13 +134,15 @@ export function StaffProfilePage({ currentRole }: { currentRole: Role }) {
         try {
           const response = await usersApi.adminGetUserById(userId);
           data = response.data || null;
-        } catch {
+        } catch (err) {
+          console.log(err);
           // If non-admin (Nurse, Receptionist, Accountant), admin endpoint will 403.
           // Fall back to authService.getProfile() / auth/me or current authStore user:
           try {
             const meRes = await authService.getProfile();
             data = meRes.data as unknown as UserDetailData;
-          } catch {
+          } catch (err) {
+            console.log(err);
             data = user as unknown as UserDetailData;
           }
         }
@@ -154,7 +156,8 @@ export function StaffProfilePage({ currentRole }: { currentRole: Role }) {
               data = { ...(data || {}), ...parsed } as UserDetailData;
             }
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // Ignore
         }
 
@@ -312,7 +315,8 @@ export function StaffProfilePage({ currentRole }: { currentRole: Role }) {
         `staff_profile_custom_${userId}`,
         JSON.stringify(editForm),
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore
     }
 

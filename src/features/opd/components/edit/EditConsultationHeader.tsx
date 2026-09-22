@@ -30,7 +30,8 @@ export const EditConsultationHeader: React.FC<EditConsultationHeaderProps> = ({
     } else {
       try {
         navigate(-1);
-      } catch {
+      } catch (err) {
+        console.log(err);
         window.history.back();
       }
     }

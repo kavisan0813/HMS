@@ -686,7 +686,8 @@ export function RegisterPatientScreen({
         pendingDob = parsed?.dateOfBirth || parsed?.dob || "";
         pendingGender = parsed?.gender || "";
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       /* ignore */
     }
 
@@ -749,7 +750,8 @@ export function RegisterPatientScreen({
             pendingDob = parsed?.dateOfBirth || parsed?.dob || "";
             pendingGender = parsed?.gender || "";
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           /* ignore */
         }
 
@@ -1275,7 +1277,8 @@ export function RegisterPatientScreen({
             ...payload,
           });
           mrn = updated.mrn || primaryMrn;
-        } catch {
+        } catch (err) {
+          console.log(err);
           const created = (await createPatient.mutateAsync(payload)) as {
             mrn?: string;
             MRNId?: string;

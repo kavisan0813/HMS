@@ -198,7 +198,8 @@ export function StartConsultationPage({
         "hms-active-consultation-id",
         String(activeConsultationId),
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       // ignore
     }
 
@@ -401,7 +402,8 @@ export function StartConsultationPage({
                     medicines: existingMeds,
                   }));
                 }
-              } catch {
+              } catch (err) {
+                console.log(err);
                 // non-blocking
               }
             }
@@ -767,7 +769,8 @@ export function StartConsultationPage({
           advice: formData.advice,
         });
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // non-blocking
     } finally {
       setTimeout(() => setIsDraftSaved(false), 2500);
@@ -933,7 +936,8 @@ export function StartConsultationPage({
               JSON.stringify(validMeds),
             );
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore
         }
       }

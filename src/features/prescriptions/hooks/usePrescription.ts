@@ -154,7 +154,8 @@ export function usePrescriptionActions(showToast: (msg: string) => void) {
       } else {
         showToast(`Failed to load print layout for ${rxId}`);
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       showToast(`Failed to print prescription ${rxId}`);
     }
   };
@@ -187,7 +188,8 @@ export function usePrescriptionActions(showToast: (msg: string) => void) {
       window.open(url, "_blank");
       setTimeout(() => URL.revokeObjectURL(url), 5000);
       showToast(`Prescription ${rxId} ready for download`);
-    } catch {
+    } catch (err) {
+      console.log(err);
       showToast(`Failed to download prescription ${rxId}`);
     }
   };

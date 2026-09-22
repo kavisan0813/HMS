@@ -482,7 +482,8 @@ export function RecordPatientVitalsScreen({
         if (names.length > 0) {
           setMasterDepartments(names);
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to appointment depts
       }
     };
@@ -765,7 +766,8 @@ export function RecordPatientVitalsScreen({
                 ...(fullPatient as unknown as Record<string, unknown>),
               };
             }
-          } catch {
+          } catch (err) {
+            console.log(err);
             // Ignore patient profile fallback error
           }
         }
@@ -892,7 +894,8 @@ export function RecordPatientVitalsScreen({
           prev.map((a) => (String(a.id) === aptIdStr ? updatedApt : a)),
         );
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Graceful fallback to existing apt data
     }
 

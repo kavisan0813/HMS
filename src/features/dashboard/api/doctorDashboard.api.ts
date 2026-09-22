@@ -50,7 +50,8 @@ export const doctorDashboardApi = {
       const res =
         await apiClient.get<DashboardApiResponse<DoctorTodayAppointments>>(url);
       return unwrap(res);
-    } catch {
+    } catch (err) {
+      console.log(err);
       const res = await apiClient.get<
         DashboardApiResponse<DoctorTodayAppointments>
       >("/api/v1/doctor/dashboard/today-appointments");

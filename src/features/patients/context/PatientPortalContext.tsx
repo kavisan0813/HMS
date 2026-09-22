@@ -69,7 +69,8 @@ function calculateAge(dob?: string, ageVal?: number): number {
       computedAge--;
     }
     return Math.max(0, computedAge);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return 0;
   }
 }
@@ -98,7 +99,8 @@ function mapApiToFamilyMember(
         customSaved = { ...customSaved, ...JSON.parse(stored) };
       }
     }
-  } catch {
+  } catch (err) {
+    console.log(err);
     // Ignore
   }
 
@@ -242,7 +244,8 @@ export function PatientPortalProvider({ children }: { children: ReactNode }) {
             null
           );
         });
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setFamilyMembers([]);
       } finally {
         if (!cancelled) setIsLoading(false);

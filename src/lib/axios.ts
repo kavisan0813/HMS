@@ -61,7 +61,8 @@ async function customFetch<T = unknown>(
         const parsed = JSON.parse(rawStorage);
         token = parsed?.tokens?.accessToken || null;
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore parse errors
     }
   }
@@ -221,7 +222,8 @@ async function customFetch<T = unknown>(
         try {
           localStorage.removeItem("hms-auth-storage:v1");
           localStorage.removeItem("hms-user:v1");
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore
         }
 

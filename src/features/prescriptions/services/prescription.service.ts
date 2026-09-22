@@ -314,7 +314,8 @@ export const prescriptionService = {
 
       prescriptionStoreActions.setPrescriptions(mapped);
       return mapped;
-    } catch {
+    } catch (err) {
+      console.log(err);
       try {
         const records = await prescriptionApi.getPrescriptions(mrn);
         const mapped = records.map((rx) =>
@@ -325,7 +326,8 @@ export const prescriptionService = {
         );
         prescriptionStoreActions.setPrescriptions(mapped);
         return mapped;
-      } catch {
+      } catch (err) {
+        console.log(err);
         prescriptionStoreActions.setPrescriptions([]);
         return [];
       }
@@ -350,7 +352,8 @@ export const prescriptionService = {
         return unified;
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     } finally {
       prescriptionStoreActions.setLoading(false);
@@ -368,7 +371,8 @@ export const prescriptionService = {
         return unified;
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },

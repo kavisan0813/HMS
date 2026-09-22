@@ -229,7 +229,8 @@ export const doctorsApi = {
         response = await apiClient.get<
           DoctorApiResponse<unknown[]> | unknown[]
         >(endpoint);
-      } catch {
+      } catch (err) {
+        console.log(err);
         response = await apiClient.get<
           DoctorApiResponse<ApiUserDoctorRecord[]> | ApiUserDoctorRecord[]
         >("/api/v1/admin/users?role=DOCTOR");
@@ -315,8 +316,8 @@ export const doctorsApi = {
         authMeData =
           (response.data as DoctorApiResponse<ApiUserDoctorRecord>)?.data ||
           (response.data as ApiUserDoctorRecord);
-      } catch {
-        // Handled silently
+      } catch (err) {
+        console.log(err);
       }
 
       const mergedUser = {
@@ -375,8 +376,8 @@ export const doctorsApi = {
             break;
           }
         }
-      } catch {
-        // Handled silently
+      } catch (err) {
+        console.log(err);
       }
 
       const baseMapped = mapApiUserToDoctorRecord(mergedUser);
@@ -433,8 +434,8 @@ export const doctorsApi = {
         if (data && (data.userId || data.id || data.fullName || data.name)) {
           return mapApiUserToDoctorRecord(data);
         }
-      } catch {
-        // Handled silently
+      } catch (err) {
+        console.log(err);
       }
       throw new Error(`User ${id} not found in response`);
     };
@@ -470,8 +471,8 @@ export const doctorsApi = {
           }
           return mapDoctorSummaryToDoctorRecord(data);
         }
-      } catch {
-        // Handled silently
+      } catch (err) {
+        console.log(err);
       }
 
       // Fallback to searching /api/v1/doctors list
@@ -498,8 +499,8 @@ export const doctorsApi = {
             return rec;
           }
         }
-      } catch {
-        // Handled silently
+      } catch (err) {
+        console.log(err);
       }
 
       throw new Error(`Doctor ${id} not found in response`);
@@ -523,7 +524,8 @@ export const doctorsApi = {
     if (isSelfFetch) {
       try {
         return await fetchMe();
-      } catch {
+      } catch (err) {
+        console.log(err);
         return fallbackRecord();
       }
     }
@@ -531,20 +533,24 @@ export const doctorsApi = {
     if (isAdminRole()) {
       try {
         return await fetchAdmin(numericUserId);
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           return await fetchDoctorFacing();
-        } catch {
+        } catch (err) {
+          console.log(err);
           return fallbackRecord();
         }
       }
     } else {
       try {
         return await fetchDoctorFacing();
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           return await fetchAdmin(numericUserId);
-        } catch {
+        } catch (err) {
+          console.log(err);
           return fallbackRecord();
         }
       }
@@ -616,7 +622,8 @@ export const doctorsApi = {
     if (isAdminRole()) {
       try {
         return await putAdmin(idForAdmin, payload);
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           return await putDoctor(idForDoctor, payload);
         } catch (adminErr) {
@@ -876,7 +883,8 @@ export const doctorsApi = {
         (response.data as DoctorApiResponse<ApiUserDoctorRecord>)?.data ||
         (response.data as ApiUserDoctorRecord);
       return mapApiUserToDoctorRecord(data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       try {
         const response = await apiClient.patch<
           DoctorApiResponse<ApiUserDoctorRecord> | ApiUserDoctorRecord
@@ -885,7 +893,8 @@ export const doctorsApi = {
           (response.data as DoctorApiResponse<ApiUserDoctorRecord>)?.data ||
           (response.data as ApiUserDoctorRecord);
         return mapApiUserToDoctorRecord(data);
-      } catch {
+      } catch (err) {
+        console.log(err);
         await apiClient.put(`/api/v1/doctors/${numericId}`, {
           status: "INACTIVE",
         });

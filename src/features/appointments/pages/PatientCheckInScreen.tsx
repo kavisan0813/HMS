@@ -57,7 +57,8 @@ export function PatientCheckInScreen({
             setSelectedApt(data[0] || null);
           }
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (cancelled) return;
         setAppointments([]);
       }
@@ -109,7 +110,8 @@ export function PatientCheckInScreen({
       setQueuePosition(res.queueNumber ?? 1);
       setEstWaitTime(`${(res.queueNumber ?? 1) * 5} mins`);
       setShowSuccessModal(true);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setShowSuccessModal(false);
     }
   };

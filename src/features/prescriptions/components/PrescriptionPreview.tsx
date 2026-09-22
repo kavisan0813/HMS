@@ -179,7 +179,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                   month: "short",
                   year: "numeric",
                 });
-          } catch {
+          } catch (err) {
+            console.log(err);
             return rawConsultationDate;
           }
         })()
@@ -260,7 +261,8 @@ export const PrescriptionDetailsModal: React.FC<DetailsModalProps> = ({
                   month: "short",
                   year: "numeric",
                 });
-          } catch {
+          } catch (err) {
+            console.log(err);
             return rawNextVisitDate;
           }
         })()

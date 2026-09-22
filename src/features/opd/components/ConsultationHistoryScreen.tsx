@@ -35,7 +35,8 @@ function calculateAge(dobStr: string): number | string {
     const ageDate = new Date(ageDifMs);
     const calculated = Math.abs(ageDate.getUTCFullYear() - 1970);
     return Number.isNaN(calculated) ? "—" : calculated;
-  } catch {
+  } catch (err) {
+    console.log(err);
     return "—";
   }
 }
@@ -244,7 +245,8 @@ export function ConsultationHistoryScreen({
               }
             });
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore
         }
 
@@ -270,7 +272,8 @@ export function ConsultationHistoryScreen({
               }
             });
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore
         }
 
@@ -373,7 +376,8 @@ export function ConsultationHistoryScreen({
                         rawMeds = parsed;
                       }
                     }
-                  } catch {
+                  } catch (err) {
+                    console.log(err);
                     // ignore
                   }
                 }

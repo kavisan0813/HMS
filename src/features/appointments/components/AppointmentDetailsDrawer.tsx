@@ -754,7 +754,8 @@ export function AppointmentDetailsDrawer({
             setApiTimelineEvents([]);
           }
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) {
           setApiTimelineEvents([]);
         }

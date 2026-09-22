@@ -44,7 +44,8 @@ export function AvailabilityScheduleTab({
         const targetId = resolveDoctorId(doctor);
         const data = await doctorsService.getWeeklySchedule(targetId);
         if (!cancelled) setSchedule(data?.weeklySchedule || []);
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setSchedule([]);
       } finally {
         if (!cancelled) setLoading(false);

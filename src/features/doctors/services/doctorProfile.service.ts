@@ -110,7 +110,8 @@ export const doctorProfileService = {
           };
         }
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore
     }
     return record;
@@ -157,7 +158,8 @@ export const doctorProfileService = {
           JSON.stringify(doc),
         );
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore
     }
 
@@ -205,7 +207,8 @@ export const doctorProfileService = {
 
     try {
       return await this.getDoctorProfile(doctorId || userId);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return doc;
     }
   },

@@ -15,7 +15,8 @@ export function getStoredHospitalBranding(): StoredHospitalBranding {
     return parsed && typeof parsed === "object"
       ? (parsed as StoredHospitalBranding)
       : {};
-  } catch {
+  } catch (err) {
+    console.log(err);
     return {};
   }
 }

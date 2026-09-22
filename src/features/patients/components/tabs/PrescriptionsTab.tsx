@@ -25,7 +25,8 @@ function formatIssueDate(rawDate?: string): string {
       month: "short",
       year: "numeric",
     });
-  } catch {
+  } catch (err) {
+    console.log(err);
     return rawDate;
   }
 }

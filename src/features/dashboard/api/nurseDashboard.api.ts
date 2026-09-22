@@ -49,7 +49,8 @@ export const nurseDashboardApi = {
         `/api/v1/nurse/queue?date=${today}&page=${page}&size=${size}`,
       );
       return unwrap(res);
-    } catch {
+    } catch (err) {
+      console.log(err);
       const fallbackData = await vitalsApi.getNurseQueue(undefined, page, size);
       return {
         content: fallbackData as unknown as NurseQueue["content"],

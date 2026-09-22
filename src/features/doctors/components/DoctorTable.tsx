@@ -19,7 +19,7 @@ import type {
 } from "../types/doctors.types";
 import { usePermissions } from "../../../permissions/usePermissions";
 import { PP } from "../constants/doctors.constants";
-import UserAvatar from "../../../common/components/UserAvatar";
+import { UserAvatar } from "../../../common/components/UserAvatar";
 import { DataTable, type Column } from "../../../common/components/DataTable";
 
 function getAvailabilityBadgeStyle(avail: DoctorAvailability) {

@@ -220,7 +220,8 @@ export const usersApi = {
           if (fallbackUsers.length > 0) {
             usersList = fallbackUsers;
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore fallback error
         }
       }

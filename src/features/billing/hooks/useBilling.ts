@@ -477,8 +477,8 @@ function loadBillingConfig(): BillingConfiguration | null {
   try {
     const raw = localStorage.getItem(BILLING_CONFIG_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {
-    // ignore
+  } catch (err) {
+    console.log(err);
   }
   return null;
 }

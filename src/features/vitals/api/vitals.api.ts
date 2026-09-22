@@ -85,7 +85,8 @@ export const vitalsApi = {
         return data;
       }
       return [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return this.getWaitingPatients();
     }
   },
@@ -108,7 +109,8 @@ export const vitalsApi = {
       >(`/api/v1/nurse/queue?date=${today}&page=${page}&size=${size}`);
 
       return response.data?.data || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -301,7 +303,8 @@ export const vitalsApi = {
         NurseVitalsApiResponse<unknown> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/vitals`);
       return response.data;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },

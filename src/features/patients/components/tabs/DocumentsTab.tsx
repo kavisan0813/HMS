@@ -100,7 +100,8 @@ export function PatientDocumentsTab({ patient, canEdit }: DocumentsTabProps) {
       setShowUploadModal(false);
       setFormTitle("");
       setSelectedFile(null);
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to upload document. Please try again.");
     } finally {
       setIsUploading(false);
@@ -112,7 +113,8 @@ export function PatientDocumentsTab({ patient, canEdit }: DocumentsTabProps) {
       await patientsApi.deleteDocument(mrn, docId);
       setDocuments((prev) => prev.filter((d) => d.id !== docId));
       triggerToast(`Document "${title}" deleted.`);
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast("Failed to delete document.");
     } finally {
       setDeletingDocId(null);

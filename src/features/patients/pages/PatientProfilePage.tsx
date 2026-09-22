@@ -111,7 +111,8 @@ function formatDate(dateStr?: string | null): string {
       month: "short",
       day: "numeric",
     });
-  } catch {
+  } catch (err) {
+    console.log(err);
     return dateStr;
   }
 }
@@ -283,7 +284,8 @@ export function PatientProfilePage({
         if (rxSumRes.status === "fulfilled" && rxSumRes.value) {
           setRxSummary(rxSumRes.value);
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Handle silently
       }
     }
@@ -351,7 +353,8 @@ export function PatientProfilePage({
       if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birth.getDate()))
         age--;
       return `${age >= 0 ? age : "—"} Y`;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return "—";
     }
   };

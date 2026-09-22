@@ -216,7 +216,8 @@ export const consultationApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/vitals`);
       raw = unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       // 2. Try GET /api/v1/encounters/{id}/workspace
       const ws = await consultationApi
         .getWorkspace(encounterId)
@@ -230,7 +231,8 @@ export const consultationApi = {
             ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
           >(`/api/v1/nurse/appointments/${encounterId}/vitals`);
           raw = unwrap<Record<string, unknown>>(nurseVitals.data);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // 4. Resolve encounter ID via createEncounter(appointmentId)
           const encRes = await consultationApi
             .createEncounter(encounterId)
@@ -382,7 +384,8 @@ export const consultationApi = {
         >(`/api/v1/encounters/${consultationId}/consultation`);
         const data = unwrap<Consultation>(response.data);
         if (data) return data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback: GET /api/v1/consultations/{consultationId}
         const response = await apiClient.get<
           ApiEnvelope<Consultation> | Consultation
@@ -391,7 +394,8 @@ export const consultationApi = {
         if (data) return data;
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -409,7 +413,8 @@ export const consultationApi = {
         content?: Encounter;
       }>(`/api/v1/encounters/${encounterId}`);
       return response.data?.data || response.data?.content || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -426,7 +431,8 @@ export const consultationApi = {
       }>(`/api/v1/encounters/${encounterId}/diagnoses`);
       const list = response.data?.data || response.data;
       return Array.isArray(list) ? list : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -443,7 +449,8 @@ export const consultationApi = {
         ApiEnvelope<EncounterPrescription> | EncounterPrescription
       >(`/api/v1/encounters/${encounterId}/prescription`);
       return unwrap<EncounterPrescription>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -476,7 +483,8 @@ export const consultationApi = {
             | { success: boolean; status: string }
           >(`/api/v1/queue/${appointmentId}/call`);
           return unwrap(response.data);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // Handled by handleApiError below
         }
       }
@@ -568,7 +576,8 @@ export const consultationApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/workspace`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -609,7 +618,8 @@ export const consultationApi = {
         missingItems,
         prescriptionOutcome: res.prescriptionOutcome,
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return { ready: true, canFinalize: true, checks: [], missingItems: [] };
     }
   },
@@ -626,7 +636,8 @@ export const consultationApi = {
         data?: { valid: boolean; errors: string[] };
       }>(`/api/v1/prescriptions/${prescriptionId}/validate`);
       return response.data?.data || { valid: true, errors: [] };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return { valid: true, errors: [] };
     }
   },
@@ -662,7 +673,8 @@ export const consultationApi = {
       }>("/api/v1/doctors/me/consultation-queue");
       const list = response.data?.data || response.data;
       return Array.isArray(list) ? list : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -695,7 +707,8 @@ export const consultationApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/consultations/${consultationId}/clinical-notes`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -711,7 +724,8 @@ export const consultationApi = {
       >(`/api/v1/patients/${mrn}/encounters`);
       const list = unwrap<Record<string, unknown>[]>(response.data);
       return Array.isArray(list) ? list : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -781,7 +795,8 @@ export const consultationApi = {
       >(`/api/v1/encounters/${encounterId}/amendments`);
       const list = unwrap<Record<string, unknown>[]>(response.data);
       return Array.isArray(list) ? list : [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -796,7 +811,8 @@ export const consultationApi = {
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
       >(`/api/v1/encounters/${encounterId}/consultation`);
       return unwrap<Record<string, unknown>>(response.data);
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },

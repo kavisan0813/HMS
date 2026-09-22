@@ -212,7 +212,8 @@ export function DoctorProfilePage() {
               });
               return;
             }
-          } catch {
+          } catch (err) {
+            console.log(err);
             // fallback below
           }
         }
@@ -249,7 +250,8 @@ export function DoctorProfilePage() {
               });
               return;
             }
-          } catch {
+          } catch (err) {
+            console.log(err);
             // fallback below
           }
         }

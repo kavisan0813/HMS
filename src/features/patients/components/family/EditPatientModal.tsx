@@ -152,7 +152,8 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             specialNotes: String(rawData.specialNotes || ""),
           }));
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to basic member details already set
       }
     }

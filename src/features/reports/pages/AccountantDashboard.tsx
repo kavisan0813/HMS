@@ -268,7 +268,8 @@ export function AccountantReportsDashboardScreen({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.log(err);
       alert("CSV Export initiated.");
     }
   };

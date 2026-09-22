@@ -41,7 +41,8 @@ export const ConsultationHeader: React.FC<ConsultationHeaderProps> = ({
     } else {
       try {
         navigate(-1);
-      } catch {
+      } catch (err) {
+        console.log(err);
         window.history.back();
       }
     }

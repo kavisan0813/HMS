@@ -955,7 +955,8 @@ export function PatientAppointmentsScreen({
       });
       loadAppointments(activePatient);
       triggerToast(`Appointment ${id} has been cancelled.`);
-    } catch {
+    } catch (err) {
+      console.log(err);
       triggerToast(`Failed to cancel appointment ${id}.`);
     }
   };

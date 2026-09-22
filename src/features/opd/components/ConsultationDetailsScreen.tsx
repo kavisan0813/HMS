@@ -538,7 +538,8 @@ export function ConsultationDetailsScreen({
                   medicationList = parsed;
                 }
               }
-            } catch {
+            } catch (err) {
+              console.log(err);
               // ignore
             }
           }
@@ -738,7 +739,8 @@ export function ConsultationDetailsScreen({
                     const calc = Math.abs(ageDate.getUTCFullYear() - 1970);
                     if (!Number.isNaN(calc) && calc >= 0) return calc;
                   }
-                } catch {
+                } catch (err) {
+                  console.log(err);
                   // ignore
                 }
               }

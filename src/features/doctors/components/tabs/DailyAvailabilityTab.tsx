@@ -34,7 +34,8 @@ export function DailyAvailabilityTab({ doctor }: DailyAvailabilityTabProps) {
         const targetId = resolveDoctorId(doctor);
         const data = await doctorsService.getDailyAvailability(targetId, date);
         if (!cancelled && data) setSlots(data.slots || []);
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setSlots([]);
       } finally {
         if (!cancelled) setLoading(false);

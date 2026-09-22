@@ -140,7 +140,8 @@ export const consultationService = {
         if (vitals) {
           consultationStoreActions.setVitals(vitals);
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Vitals may not exist yet for new encounters — continue
       }
 
@@ -344,7 +345,8 @@ export const consultationService = {
       if (hasValidRxId && rxId && advicePayload) {
         try {
           await encountersApi.savePrescriptionAdvice(rxId, advicePayload);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // non-blocking
         }
       }
@@ -353,7 +355,8 @@ export const consultationService = {
       if (hasValidRxId && rxId) {
         try {
           await encountersApi.validatePrescription(rxId);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // Validation failure is non-blocking
         }
       }
@@ -364,7 +367,8 @@ export const consultationService = {
           await encountersApi.finalizePrescription(rxId, {
             confirmation: true,
           });
-        } catch {
+        } catch (err) {
+          console.log(err);
           // Prescription finalize failure is non-blocking
         }
       }
@@ -387,7 +391,8 @@ export const consultationService = {
         // Step 19: Finalization check (non-blocking)
         try {
           await encountersApi.getFinalizationCheck(encounterId);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // non-blocking
         }
 
@@ -435,7 +440,8 @@ export const consultationService = {
                   encounterFinalized = true;
                   break;
                 }
-              } catch {
+              } catch (err) {
+                console.log(err);
                 // non-blocking
               }
             }
@@ -524,7 +530,8 @@ export const consultationService = {
       // 1. Try fetching workspace assuming targetId is encounterId
       try {
         workspace = await consultationApi.getWorkspace(targetId);
-      } catch {
+      } catch (err) {
+        console.log(err);
         workspace = null;
       }
 
@@ -536,7 +543,8 @@ export const consultationService = {
             realEncounterId = encRes.encounterId;
             workspace = await consultationApi.getWorkspace(realEncounterId);
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           workspace = null;
         }
       }

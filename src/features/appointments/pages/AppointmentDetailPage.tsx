@@ -322,7 +322,8 @@ export function AppointmentDetailPage() {
             setError("Appointment not found.");
           }
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setError("Failed to load appointment details.");
       } finally {
         setLoading(false);

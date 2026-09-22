@@ -31,7 +31,8 @@ export function AssignedPatientsTab({
         const data: DoctorAppointment[] =
           await doctorsService.listDoctorAppointments(targetId);
         if (!cancelled) setAppointments(data || []);
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setAppointments([]);
       } finally {
         if (!cancelled) setLoading(false);

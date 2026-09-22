@@ -146,7 +146,8 @@ export const departmentsApi = {
             res = await apiClient.get<unknown>(
               `/api/v1/admin/department-specialties${queryString}`,
             );
-          } catch {
+          } catch (err) {
+            console.log(err);
             res = await apiClient.get<unknown>(
               `/api/v1/admin/department-specialties${queryString}`,
             );
@@ -332,7 +333,8 @@ export const departmentsApi = {
               | ApiDepartmentSpecialtiesItem
               | { data: ApiDepartmentSpecialtiesItem }
             >("/api/v1/admin/department-specialties", formattedPayload);
-          } catch {
+          } catch (err) {
+            console.log(err);
             res = await apiClient.post<
               | ApiDepartmentSpecialtiesItem
               | { data: ApiDepartmentSpecialtiesItem }
@@ -407,7 +409,8 @@ export const departmentsApi = {
               `/api/v1/admin/departments-specialties/${departmentId}`,
               formattedPayload,
             );
-          } catch {
+          } catch (err) {
+            console.log(err);
             res = await apiClient.put<
               | ApiDepartmentSpecialtiesItem
               | { data: ApiDepartmentSpecialtiesItem }

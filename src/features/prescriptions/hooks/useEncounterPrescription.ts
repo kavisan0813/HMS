@@ -45,7 +45,8 @@ async function fetchEncounterPrescription(
         `hms-completed-meds:${encounterId}`,
       );
       if (rawCached) cachedMeds = JSON.parse(rawCached);
-    } catch {
+    } catch (err) {
+      console.log(err);
       cachedMeds = [];
     }
 

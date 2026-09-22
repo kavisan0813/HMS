@@ -49,7 +49,8 @@ export function PatientOnboardingRoute() {
             ? "complete"
             : "incomplete",
         );
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setState("incomplete");
       }
     };

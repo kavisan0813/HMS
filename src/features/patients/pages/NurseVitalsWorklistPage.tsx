@@ -116,7 +116,8 @@ export function NurseVitalsWorklistPage() {
         if (freshVitals) {
           setDetailsVitals(freshVitals);
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to submittedData or default
       }
     }
