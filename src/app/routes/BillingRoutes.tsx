@@ -1,16 +1,18 @@
 import { Route } from "react-router";
 import { ROUTES } from "./routes";
 import { RouteGuard } from "../../permissions/guards";
-import { BillingManagementPage } from "../../features/billing/pages/BillingManagementPage";
-import { CreateInvoiceWorkspacePage } from "../../features/billing/pages/CreateInvoiceWorkspacePage";
-import { CollectPaymentWorkspacePage } from "../../features/billing/pages/CollectPaymentWorkspacePage";
-import { InvoicePrintPreviewPage } from "../../features/billing/pages/InvoicePrintPreviewPage";
-import { BillingConfigurationPage } from "../../features/billing/pages/BillingConfigurationPage";
-import { InvoiceDetailsPage } from "../../features/billing/pages/InvoiceDetailsPage";
-import { PaymentHistoryPage } from "../../features/billing/pages/PaymentHistoryPage";
-import { DailyBillingReportPage } from "../../features/reports/pages/DailyBillingReport";
-import { ReceptionistPaymentCollectionPage } from "../../features/billing/pages/ReceptionistPaymentCollectionPage";
-import { PatientMyBillsPage } from "../../features/billing/pages/PatientMyBillsPage";
+import {
+  BillingManagementPage,
+  CreateInvoiceWorkspacePage,
+  CollectPaymentWorkspacePage,
+  InvoicePrintPreviewPage,
+  BillingConfigurationPage,
+  InvoiceDetailsPage,
+  PaymentHistoryPage,
+  DailyBillingReportPage,
+  ReceptionistPaymentCollectionPage,
+  PatientMyBillsPage,
+} from "./lazyPages";
 
 export function BillingRoutes() {
   return (

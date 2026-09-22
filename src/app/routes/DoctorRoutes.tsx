@@ -9,8 +9,7 @@ import { OpdConsultationCenterScreen } from "../../features/opd/pages/OPDConsult
 import { StartConsultationPage as StartOpdConsultationWorkspaceScreen } from "../../features/opd/pages/StartConsultationPage";
 import { PrescriptionManagementPage } from "../../features/prescriptions/pages/PrescriptionManagementPage";
 import { DoctorProfileRoute } from "../../features/doctors/pages/DoctorProfileRoute";
-// DoctorsRouteDispatcher is exported from routeConfig
-import { DoctorsRouteDispatcher } from "./routeConfig";
+import { DoctorsRouteDispatcher } from "../../features/doctors/routes/DoctorsRouteDispatcher";
 
 export function DoctorRoutes() {
   return (

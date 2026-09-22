@@ -1,5 +1,4 @@
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// Dynamic imports are used inside exportElementToPdf to keep heavy PDF generation libraries out of the initial bundle
 
 interface ExportPdfOptions {
   /** The HTML element or element ID to export */
@@ -58,6 +57,12 @@ export async function exportElementToPdf(
         `Target element '${typeof elementOrId === "string" ? elementOrId : "DOM Element"}' was not found.`,
       );
     }
+
+    // Dynamically load html2canvas and jsPDF only when export is invoked
+    const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+      import("jspdf"),
+      import("html2canvas"),
+    ]);
 
     // Capture target element via html2canvas
     const canvas = await html2canvas(targetElement, {

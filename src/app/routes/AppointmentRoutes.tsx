@@ -1,16 +1,18 @@
 import { Route } from "react-router";
 import { ROUTES } from "./routes";
 import { RouteGuard } from "../../permissions/guards";
-import { AppointmentManagementCenterScreen } from "../../features/appointments/pages/AppointmentManagementCenterScreen";
-import { BookAppointmentScreen } from "../../features/appointments/pages/BookAppointmentScreen";
-import { AppointmentDetailPage } from "../../features/appointments/pages/AppointmentDetailPage";
-import { PatientCheckInScreen } from "../../features/appointments/pages/PatientCheckInScreen";
-import { QueueManagementScreen } from "../../features/appointments/pages/QueueManagementScreen";
-import { RecordPatientVitalsScreen } from "../../features/vitals/pages/VitalsManagementScreen";
-import { OpdConsultationCenterScreen } from "../../features/opd/pages/OPDConsultationPage";
-import { StartConsultationPage as StartOpdConsultationWorkspaceScreen } from "../../features/opd/pages/StartConsultationPage";
-import { PrescriptionManagementPage } from "../../features/prescriptions/pages/PrescriptionManagementPage";
-import { EncounterPrescriptionPage } from "../../features/prescriptions/pages/EncounterPrescriptionPage";
+import {
+  AppointmentManagementCenterScreen,
+  BookAppointmentScreen,
+  AppointmentDetailPage,
+  PatientCheckInScreen,
+  QueueManagementScreen,
+  RecordPatientVitalsScreen,
+  OpdConsultationCenterScreen,
+  StartOpdConsultationWorkspaceScreen,
+  PrescriptionManagementPage,
+  EncounterPrescriptionPage,
+} from "./lazyPages";
 
 export function AppointmentRoutes() {
   return (

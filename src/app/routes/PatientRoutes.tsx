@@ -1,34 +1,24 @@
 import { Route } from "react-router";
 import { ROUTES } from "./routes";
 import { RouteGuard } from "../../permissions/guards";
-import { PatientListPageRoute } from "../../features/patients/routes/PatientListPageRoute";
-import { RegisterPatientScreen } from "../../features/patients/pages/RegisterPatientScreen";
 import { PatientOnboardingRoute } from "../../features/patients/routes/PatientOnboardingRoute";
-import { PatientAppointmentsScreen } from "../../features/patients/pages/PatientAppointmentsScreen";
-import { PatientMedicalRecordsScreen } from "../../features/patients/pages/PatientMedicalRecordsScreen";
-import { PrescriptionManagementPage } from "../../features/prescriptions/pages/PrescriptionManagementPage";
-import { PatientNotificationsPage } from "../../features/notification/pages/PatientNotificationsPage";
-import { PatientProfileRoute } from "../../features/patients/routes/PatientProfileRoute";
-import { PatientMyProfileRoute } from "../../features/patients/routes/PatientMyProfileRoute";
-import { DoctorAssignedPatientsRoute } from "../../features/patients/routes/DoctorAssignedPatientsRoute";
-import { NurseVitalsWorklistPage } from "../../features/patients/pages/NurseVitalsWorklistPage";
-import { BillingManagementPage } from "../../features/billing/pages/BillingManagementPage";
-import { PatientDoctorSearchScreen } from "../../features/patients/pages/PatientDoctorSearchScreen";
-import { PatientQueueStatusScreen } from "../../features/patients/pages/PatientQueueStatusScreen";
-import { PatientMyBillsPage } from "../../features/billing/pages/PatientMyBillsPage";
-import { useAuthStore } from "../../features/auth/store/auth.store";
-
-// We need the wrapper and dispatcher
-import { FamilyMembersRouteWrapper } from "./routeConfig"; // We'll export this from routeConfig
-
-function PatientBillingRouteDispatcher() {
-  const role = useAuthStore((s) => s.user?.role);
-  const isPatient = String(role || "").toUpperCase() === "PATIENT";
-  if (isPatient) {
-    return <PatientMyBillsPage />;
-  }
-  return <BillingManagementPage />;
-}
+import { FamilyMembersRouteWrapper } from "../../features/patients/routes/FamilyMembersRouteWrapper";
+import { PatientBillingRouteDispatcher } from "../../features/patients/routes/PatientBillingRouteDispatcher";
+import {
+  PatientListPageRoute,
+  RegisterPatientScreen,
+  PatientAppointmentsScreen,
+  PatientMedicalRecordsScreen,
+  PrescriptionManagementPage,
+  PatientNotificationsPage,
+  PatientProfileRoute,
+  PatientMyProfileRoute,
+  DoctorAssignedPatientsRoute,
+  NurseVitalsWorklistPage,
+  BillingManagementPage,
+  PatientDoctorSearchScreen,
+  PatientQueueStatusScreen,
+} from "./lazyPages";
 
 export function PatientRoutes() {
   return (
