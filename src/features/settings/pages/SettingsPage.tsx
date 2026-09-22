@@ -1,8 +1,12 @@
-import { useRef, useState } from "react";
+import { useRef, useState, lazy, Suspense } from "react";
 import { HospitalInformationPage } from "./HospitalInformationPage";
 import { UserRolesPermissionsPage } from "./UserRolesPermissionsPage";
 import { AppointmentConfigurationPage } from "./AppointmentConfigurationPage";
-import { BillingConfigurationPage } from "../../billing/pages/BillingConfigurationPage";
+const BillingConfigurationPage = lazy(() =>
+  import("../../billing/pages/BillingConfigurationPage").then((m) => ({
+    default: m.BillingConfigurationPage,
+  })),
+);
 import { NotificationCommunicationPage } from "../../notification/pages/NotificationCommunicationPage";
 import { SecuritySettingsPage } from "./SecuritySettingsPage";
 import { BackupMaintenancePage } from "./BackupMaintenancePage";
@@ -171,7 +175,15 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
             activeMenu === "appointments" ? (
             <AppointmentConfigurationPage />
           ) : activeMenu === "billing-config" || activeMenu === "billing" ? (
-            <BillingConfigurationPage />
+            <Suspense
+              fallback={
+                <div className="flex min-h-75 items-center justify-center text-sm text-slate-500">
+                  Loading billing configuration...
+                </div>
+              }
+            >
+              <BillingConfigurationPage />
+            </Suspense>
           ) : activeMenu === "notification-settings" ||
             activeMenu === "notifications" ? (
             <NotificationCommunicationPage />

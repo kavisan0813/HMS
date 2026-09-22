@@ -1,9 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, lazy, Suspense } from "react";
 import { usePatientPortal } from "../context/usePatientPortal";
 import { useAuthStore } from "../../auth/store/auth.store";
 import { patientsApi } from "../api/patient.api";
-import { RegisterPatientScreen } from "../pages/RegisterPatientScreen";
 import { FamilyMembersManagement } from "../pages/FamilyMembersManagement";
+
+const RegisterPatientScreen = lazy(() =>
+  import("../pages/RegisterPatientScreen").then((m) => ({
+    default: m.RegisterPatientScreen,
+  })),
+);
 
 export function FamilyMembersRouteWrapper() {
   const [registering, setRegistering] = useState(false);
@@ -28,16 +33,24 @@ export function FamilyMembersRouteWrapper() {
 
   if (registering) {
     return (
-      <RegisterPatientScreen
-        isFamilyMode
-        primaryPatientMrn={primaryMrn}
-        onBack={() => {
-          setRegistering(false);
-          portal?.refresh();
-        }}
-        onRegistered={() => portal?.refresh()}
-        onViewProfile={handleViewProfile}
-      />
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading family member registration...
+          </div>
+        }
+      >
+        <RegisterPatientScreen
+          isFamilyMode
+          primaryPatientMrn={primaryMrn}
+          onBack={() => {
+            setRegistering(false);
+            portal?.refresh();
+          }}
+          onRegistered={() => portal?.refresh()}
+          onViewProfile={handleViewProfile}
+        />
+      </Suspense>
     );
   }
 

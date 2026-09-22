@@ -31,7 +31,6 @@ import {
   getTodayDateString,
   normalizeDateString,
 } from "../../../lib/time-utils";
-
 import type { AppointmentRecord } from "../types/appointment.types";
 import type { UserRole } from "../types/appointment-screen.types";
 import { DockableQueueWorkspace } from "../components/DockableQueueWorkspace";
@@ -45,28 +44,7 @@ import { Avatar } from "../components/Avatar";
 import { CheckInConfirmationModal } from "../../reception/components/CheckInConfirmationModal";
 import { AppointmentDatePickerFilter } from "../components/AppointmentDatePickerFilter";
 import { useAuthStore } from "../../auth/store/auth.store";
-
-export interface Props {
-  onPatientSelect?: (id: number | string) => void;
-  onStartConsultation?: (
-    apt?: AppointmentRecord | null | string | number,
-  ) => void;
-  onBookAppointmentClick?: () => void;
-  onReceptionQueueClick?: () => void;
-  userRole?: UserRole;
-  doctorId?: number | string;
-  onBack?: () => void;
-  onConfirmSuccess?: (uhid: string | number) => void;
-  onRegisterNewPatientClick?: () => void;
-  onViewPatientProfileClick?: (uhid: string | number) => void;
-  initialUhid?: string;
-  initialAptId?: string;
-  onCheckInSuccess?: (uhid: string | number) => void;
-  onViewQueueClick?: (uhid?: string | number) => void;
-  onCheckInClick?: (token?: string | number, uhid?: string | number) => void;
-  onPatientSearchClick?: () => void;
-  onRegisterPatientClick?: () => void;
-}
+import type { Props } from "../components/Appointment/Appoinment";
 
 interface FilterState {
   searchQuery: string;

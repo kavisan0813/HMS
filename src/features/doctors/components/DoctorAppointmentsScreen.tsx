@@ -1,5 +1,13 @@
-import { AppointmentManagementCenterScreen } from "../../appointments/pages/AppointmentManagementCenterScreen";
+import { lazy, Suspense } from "react";
 import { useAuthStore } from "../../auth/store/auth.store";
+
+const AppointmentManagementCenterScreen = lazy(() =>
+  import("../../appointments/pages/AppointmentManagementCenterScreen").then(
+    (m) => ({
+      default: m.AppointmentManagementCenterScreen,
+    }),
+  ),
+);
 
 export function DoctorAppointmentsScreen({
   onStartConsultation,
@@ -15,10 +23,18 @@ export function DoctorAppointmentsScreen({
       : undefined);
 
   return (
-    <AppointmentManagementCenterScreen
-      userRole="Doctor"
-      doctorId={doctorId}
-      onStartConsultation={() => onStartConsultation?.(1)}
-    />
+    <Suspense
+      fallback={
+        <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+          Loading appointments...
+        </div>
+      }
+    >
+      <AppointmentManagementCenterScreen
+        userRole="Doctor"
+        doctorId={doctorId}
+        onStartConsultation={() => onStartConsultation?.(1)}
+      />
+    </Suspense>
   );
 }

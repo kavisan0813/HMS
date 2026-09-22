@@ -226,3 +226,81 @@ export const PatientQueueStatusScreen = lazy(() =>
     }),
   ),
 );
+
+// ==========================================
+// Doctor Pages
+// ==========================================
+export const DoctorScheduleScreen = lazy(() =>
+  import("../../features/doctors/components/DoctorScheduleScreen").then(
+    (m) => ({
+      default: m.DoctorScheduleScreen,
+    }),
+  ),
+);
+
+export const DoctorQueueScreen = lazy(() =>
+  import("../../features/doctors/components/DoctorQueueScreen").then((m) => ({
+    default: m.DoctorQueueScreen,
+  })),
+);
+
+export const DoctorPatientsScreen = lazy(() =>
+  import("../../features/doctors/components/DoctorPatientsScreen").then(
+    (m) => ({
+      default: m.DoctorPatientsScreen,
+    }),
+  ),
+);
+
+export const DoctorAppointmentsScreen = lazy(() =>
+  import("../../features/doctors/components/DoctorAppointmentsScreen").then(
+    (m) => ({
+      default: m.DoctorAppointmentsScreen,
+    }),
+  ),
+);
+
+export const DoctorProfileRoute = lazy(() =>
+  import("../../features/doctors/pages/DoctorProfileRoute").then((m) => ({
+    default: m.DoctorProfileRoute,
+  })),
+);
+
+// ==========================================
+// Administration Pages
+// ==========================================
+export const ReportsDashboardScreen = lazy(() =>
+  import("../../features/reports/pages/ReportsDashboardPage").then((m) => ({
+    default: m.ReportsDashboardPage,
+  })),
+);
+
+export const SettingsPage = lazy(() =>
+  import("../../features/settings/pages/SettingsPage").then((m) => ({
+    default: m.SettingsPage,
+  })),
+);
+
+export const UserProfileRoute = lazy(() =>
+  import("../../features/patients/routes/UserProfileRoute").then((m) => ({
+    default: m.UserProfileRoute,
+  })),
+);
+
+export const UserManagementCenterScreen = lazy(
+  () => import("../../features/users/pages/UserManagement"),
+);
+
+export const AuditLogManagementPage = lazy(() =>
+  import("../../features/auditlog/pages/AuditLogManagementPage").then((m) => ({
+    default: m.AuditLogManagementPage,
+  })),
+);
+
+export const NotificationCenterPage = lazy(() =>
+  import("../../features/notification/pages/NotificationCenterPage").then(
+    (m) => ({
+      default: m.NotificationCenterPage,
+    }),
+  ),
+);

@@ -1,4 +1,4 @@
-import { useReducer, useEffect, useState } from "react";
+import { useReducer, useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router";
 import {
   Users,
@@ -14,7 +14,11 @@ import { apiClient } from "../../../lib/axios";
 import { ROUTES } from "../../../app/routes/routes";
 import { DataTable } from "../../../common/components/DataTable";
 import { FamilyMemberViewDrawer } from "../components/family/FamilyMemberViewDrawer";
-import { RegisterPatientScreen } from "./RegisterPatientScreen";
+const RegisterPatientScreen = lazy(() =>
+  import("./RegisterPatientScreen").then((m) => ({
+    default: m.RegisterPatientScreen,
+  })),
+);
 import { RemoveMemberConfirmDialog } from "../components/family/RemoveMemberConfirmDialog";
 
 const PP = "'Poppins', system-ui, sans-serif";
@@ -346,13 +350,21 @@ export function FamilyMembersManagement({
 
   if (editPatientMember) {
     return (
-      <RegisterPatientScreen
-        isFamilyMode={true}
-        isEditMode={true}
-        editMember={editPatientMember}
-        onBack={() => setEditPatientMember(null)}
-        onRegistered={(m) => handlePatientSaved(m.patientName)}
-      />
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading member edit form...
+          </div>
+        }
+      >
+        <RegisterPatientScreen
+          isFamilyMode={true}
+          isEditMode={true}
+          editMember={editPatientMember}
+          onBack={() => setEditPatientMember(null)}
+          onRegistered={(m) => handlePatientSaved(m.patientName)}
+        />
+      </Suspense>
     );
   }
 

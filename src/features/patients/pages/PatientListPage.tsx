@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { ROUTES } from "../../../app/routes/routes";
 import { ChevronRight, RefreshCw, UserPlus, Calendar } from "lucide-react";
@@ -11,14 +11,23 @@ import type { Role } from "../utils/patientPermissions";
 import { PatientTable } from "../components/PatientTable";
 import type { PatientFilterValues } from "../components/PatientFilters";
 import { PatientProfilePage } from "./PatientProfilePage";
-import { RegisterPatientScreen } from "./RegisterPatientScreen";
+const RegisterPatientScreen = lazy(() =>
+  import("./RegisterPatientScreen").then((m) => ({
+    default: m.RegisterPatientScreen,
+  })),
+);
 import { EditPatientScreen } from "./EditPatientScreen";
 import {
   DeactivatePatientDialog,
   ActivatePatientDialog,
 } from "../components/PatientStatusDialogs";
 import { BookAppointmentDrawer } from "../../appointments/components/BookAppointmentDrawer";
-import { BookAppointmentScreen } from "../../appointments/pages/BookAppointmentScreen";
+
+const BookAppointmentScreen = lazy(() =>
+  import("../../appointments/pages/BookAppointmentScreen").then((m) => ({
+    default: m.BookAppointmentScreen,
+  })),
+);
 
 const DEFAULT_FILTERS: PatientFilterValues = {
   searchQuery: "",
@@ -240,41 +249,57 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
 
   if (registering) {
     return (
-      <RegisterPatientScreen
-        onBack={() => setRegistering(false)}
-        onViewProfile={(mrn) => {
-          setRegistering(false);
-          fetchPatients();
-          patientsApi
-            .getPatientByMrn(mrn)
-            .then((data) =>
-              setViewingPatient(mapApiPatientToPatientRecord(data)),
-            )
-            .catch(() => {});
-        }}
-      />
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading patient registration...
+          </div>
+        }
+      >
+        <RegisterPatientScreen
+          onBack={() => setRegistering(false)}
+          onViewProfile={(mrn) => {
+            setRegistering(false);
+            fetchPatients();
+            patientsApi
+              .getPatientByMrn(mrn)
+              .then((data) =>
+                setViewingPatient(mapApiPatientToPatientRecord(data)),
+              )
+              .catch(() => {});
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (bookingAppt) {
     return (
-      <BookAppointmentScreen
-        role={
-          currentRole.toLowerCase() as
-            | "super-admin"
-            | "admin"
-            | "doctor"
-            | "nurse"
-            | "receptionist"
-            | "accountant"
-            | "patient"
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading booking workspace...
+          </div>
         }
-        onBack={() => setBookingAppt(false)}
-        onBookSuccess={() => {
-          setBookingAppt(false);
-          fetchPatients();
-        }}
-      />
+      >
+        <BookAppointmentScreen
+          role={
+            currentRole.toLowerCase() as
+              | "super-admin"
+              | "admin"
+              | "doctor"
+              | "nurse"
+              | "receptionist"
+              | "accountant"
+              | "patient"
+          }
+          onBack={() => setBookingAppt(false)}
+          onBookSuccess={() => {
+            setBookingAppt(false);
+            fetchPatients();
+          }}
+        />
+      </Suspense>
     );
   }
 

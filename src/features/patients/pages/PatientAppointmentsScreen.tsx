@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useReducer } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useReducer,
+  lazy,
+  Suspense,
+} from "react";
 import { useNavigate } from "react-router";
 import {
   Plus,
@@ -25,7 +32,11 @@ import { usePatientPortal } from "../context/usePatientPortal";
 import type { FamilyMember } from "./FamilyMembersManagement";
 import { PatientCancelAppointmentDialog } from "../components/PatientDialogs";
 import { RescheduleAppointmentConfirmationDialog } from "../../appointments/components/RescheduleAppointmentConfirmationDialog";
-import { BookAppointmentScreen } from "../../appointments/pages/BookAppointmentScreen";
+const BookAppointmentScreen = lazy(() =>
+  import("../../appointments/pages/BookAppointmentScreen").then((m) => ({
+    default: m.BookAppointmentScreen,
+  })),
+);
 import { appointmentService } from "../../appointments/services/appointment.service";
 import { appointmentsApi } from "../../appointments/api/appointments.api";
 import { DataTable } from "../../../common/components/DataTable";
@@ -700,79 +711,89 @@ export function PatientAppointmentsScreen({
 
   if (listState.viewMode === "book") {
     return (
-      <BookAppointmentScreen
-        role="patient"
-        initialMrn={
-          activePatient?.mrn ||
-          (activePatient?.id ? String(activePatient.id) : undefined)
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading appointment booking...
+          </div>
         }
-        onBack={() => dispatch({ type: "SET_VIEW_MODE", viewMode: "list" })}
-        onBookSuccess={(
-          createdAppt?: AppointmentRecord,
-          openDetailsDrawer?: boolean,
-        ) => {
-          dispatch({ type: "SET_VIEW_MODE", viewMode: "list" });
-          loadAppointments(activePatient);
-          triggerToast("Appointment booked successfully!");
-
-          if (openDetailsDrawer && createdAppt) {
-            const formatted: PatientAppointment = {
-              id: String(
-                createdAppt.id ||
-                  createdAppt.appointmentNumber ||
-                  "APT-CONFIRMED",
-              ),
-              patientName:
-                createdAppt.patientName || activePatient?.name || "Patient",
-              date:
-                createdAppt.appointmentDate || createdAppt.date || "2026-08-25",
-              time: createdAppt.startTime || createdAppt.time || "10:30 AM",
-              doctor:
-                createdAppt.doctorName ||
-                (typeof createdAppt.doctor === "string"
-                  ? createdAppt.doctor
-                  : (
-                      createdAppt.doctor as
-                        | { fullName?: string; name?: string }
-                        | undefined
-                    )?.fullName ||
-                    (createdAppt.doctor as { name?: string } | undefined)
-                      ?.name ||
-                    "Doctor"),
-              specialty:
-                createdAppt.specialty || createdAppt.departmentName || "OPD",
-              department:
-                createdAppt.departmentName ||
-                (typeof createdAppt.department === "string"
-                  ? createdAppt.department
-                  : (
-                      createdAppt.department as
-                        | { departmentName?: string; name?: string }
-                        | undefined
-                    )?.departmentName ||
-                    (createdAppt.department as { name?: string } | undefined)
-                      ?.name ||
-                    "OPD"),
-              visitType:
-                createdAppt.visitType === "Follow-up OPD"
-                  ? "Follow-up OPD"
-                  : "In-Person OPD",
-              status: "Scheduled",
-              roomLocation: "Wing A, OPD Room 102",
-              reason: createdAppt.reason || "General Consultation",
-              notes:
-                createdAppt.symptoms ||
-                createdAppt.notes ||
-                "No additional remarks",
-              consultationStatus: "Scheduled",
-              prescriptionStatus: "Pending",
-              billingStatus: "Pending",
-              billingAmount: "$65.00",
-            };
-            setSelectedDetails(formatted);
+      >
+        <BookAppointmentScreen
+          role="patient"
+          initialMrn={
+            activePatient?.mrn ||
+            (activePatient?.id ? String(activePatient.id) : undefined)
           }
-        }}
-      />
+          onBack={() => dispatch({ type: "SET_VIEW_MODE", viewMode: "list" })}
+          onBookSuccess={(
+            createdAppt?: AppointmentRecord,
+            openDetailsDrawer?: boolean,
+          ) => {
+            dispatch({ type: "SET_VIEW_MODE", viewMode: "list" });
+            loadAppointments(activePatient);
+            triggerToast("Appointment booked successfully!");
+
+            if (openDetailsDrawer && createdAppt) {
+              const formatted: PatientAppointment = {
+                id: String(
+                  createdAppt.id ||
+                    createdAppt.appointmentNumber ||
+                    "APT-CONFIRMED",
+                ),
+                patientName:
+                  createdAppt.patientName || activePatient?.name || "Patient",
+                date:
+                  createdAppt.appointmentDate ||
+                  createdAppt.date ||
+                  "2026-08-25",
+                time: createdAppt.startTime || createdAppt.time || "10:30 AM",
+                doctor:
+                  createdAppt.doctorName ||
+                  (typeof createdAppt.doctor === "string"
+                    ? createdAppt.doctor
+                    : (
+                        createdAppt.doctor as
+                          | { fullName?: string; name?: string }
+                          | undefined
+                      )?.fullName ||
+                      (createdAppt.doctor as { name?: string } | undefined)
+                        ?.name ||
+                      "Doctor"),
+                specialty:
+                  createdAppt.specialty || createdAppt.departmentName || "OPD",
+                department:
+                  createdAppt.departmentName ||
+                  (typeof createdAppt.department === "string"
+                    ? createdAppt.department
+                    : (
+                        createdAppt.department as
+                          | { departmentName?: string; name?: string }
+                          | undefined
+                      )?.departmentName ||
+                      (createdAppt.department as { name?: string } | undefined)
+                        ?.name ||
+                      "OPD"),
+                visitType:
+                  createdAppt.visitType === "Follow-up OPD"
+                    ? "Follow-up OPD"
+                    : "In-Person OPD",
+                status: "Scheduled",
+                roomLocation: "Wing A, OPD Room 102",
+                reason: createdAppt.reason || "General Consultation",
+                notes:
+                  createdAppt.symptoms ||
+                  createdAppt.notes ||
+                  "No additional remarks",
+                consultationStatus: "Scheduled",
+                prescriptionStatus: "Pending",
+                billingStatus: "Pending",
+                billingAmount: "$65.00",
+              };
+              setSelectedDetails(formatted);
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 

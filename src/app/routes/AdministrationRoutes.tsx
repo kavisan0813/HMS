@@ -1,12 +1,14 @@
 import { Route } from "react-router";
 import { ROUTES } from "./routes";
 import { RouteGuard } from "../../permissions/guards";
-import { ReportsDashboardPage as ReportsDashboardScreen } from "../../features/reports/pages/ReportsDashboardPage";
-import { SettingsPage } from "../../features/settings/pages/SettingsPage";
-import { UserProfileRoute } from "../../features/patients/routes/UserProfileRoute";
-import UserManagementCenterScreen from "../../features/users/pages/UserManagement";
-import { AuditLogManagementPage } from "../../features/auditlog/pages/AuditLogManagementPage";
-import { NotificationCenterPage } from "../../features/notification/pages/NotificationCenterPage";
+import {
+  ReportsDashboardScreen,
+  SettingsPage,
+  UserProfileRoute,
+  UserManagementCenterScreen,
+  AuditLogManagementPage,
+  NotificationCenterPage,
+} from "./lazyPages";
 
 export function AdministrationRoutes() {
   return (
