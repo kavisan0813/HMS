@@ -250,7 +250,6 @@ export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
   const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") =>
     dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending,] = useTransition();
   const isLoading = isPending || showLoadingDemo;

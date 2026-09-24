@@ -1,6 +1,5 @@
 import React, { lazy } from "react";
 import { useReports } from "../hooks/useReports";
-import type { DoctorKpiKey } from "../types/reports.types";
 
 // Admin pages
 const AdminReportsDashboardScreen = lazy(() =>
@@ -60,11 +59,7 @@ const DoctorDoctorReportScreen = lazy(() =>
     default: m.DoctorDoctorReportScreen,
   })),
 );
-const DoctorDashboardKpiDetailScreen = lazy(() =>
-  import("./DoctorKpiDetail").then((m) => ({
-    default: m.DoctorDashboardKpiDetailScreen,
-  })),
-);
+
 
 // Receptionist pages
 const ReceptionistReportsDashboardScreen = lazy(() =>

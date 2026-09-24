@@ -15,9 +15,9 @@ import {
   Eye,
   Printer,
   ChevronLeft,
+  ChevronRight,
   ChevronRight as ChevronRightIcon,
   AlertCircle,
-  ArrowLeft,
 } from "lucide-react";
 import {
   useDoctorSelfDailyAppointmentsDashboard,

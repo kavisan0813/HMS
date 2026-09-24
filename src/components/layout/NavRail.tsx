@@ -36,7 +36,6 @@ export function NavRail({
   onSelect,
   role,
   theme = "light",
-  onThemeToggle,
 }: {
   active: NavId;
   onSelect: (id: NavId) => void;
