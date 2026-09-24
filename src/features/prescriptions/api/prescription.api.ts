@@ -188,7 +188,8 @@ export const prescriptionApi = {
     id: string | number,
   ): Promise<ApiPatientPrescription | PrescriptionDetailResponse | null> => {
     const num = Number(id);
-    const isNumericDbId = /^\d+$/.test(String(id)) && num > 0 && num < 10000000000;
+    const isNumericDbId =
+      /^\d+$/.test(String(id)) && num > 0 && num < 10000000000;
     const endpoints: string[] = [];
     if (isNumericDbId) {
       endpoints.push(`/api/v1/encounters/${id}/prescription`);
@@ -205,7 +206,8 @@ export const prescriptionApi = {
         const data = response.data?.data || response.data;
         if (data && typeof data === "object") {
           return data as unknown as
-            ApiPatientPrescription | PrescriptionDetailResponse;
+            | ApiPatientPrescription
+            | PrescriptionDetailResponse;
         }
       } catch {
         // try next fallback

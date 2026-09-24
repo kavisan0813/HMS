@@ -579,7 +579,7 @@ const UserManagement: React.FC = () => {
 
   return (
     <div
-      className="flex-1 overflow-y-auto space-y-6"
+      className="flex-1 overflow-y-auto bg-[#F1F5F9] min-h-screen p-6 space-y-6"
       style={{ fontFamily: RB }}
     >
       {/* Toast Notification */}
@@ -637,7 +637,7 @@ const UserManagement: React.FC = () => {
       {userMgmtTab === "departments" ? (
         <DepartmentsSpecialtiesWorkspace />
       ) : (
-        <div className="bg-slate-50/50 rounded-2xl shadow-sm border border-gray-200 min-h-175 overflow-hidden flex flex-col font-medium transition-opacity duration-200 w-full space-y-6 relative p-6">
+        <div className="space-y-6 w-full">
           {errorMsg && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-xs flex items-center justify-between">
               <span>{errorMsg}</span>

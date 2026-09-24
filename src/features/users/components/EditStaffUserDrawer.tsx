@@ -32,6 +32,7 @@ const RB = "Roboto, sans-serif";
 
 export interface EditableStaffUser {
   id: string;
+  userId?: number | string;
   empId: string;
   fullName: string;
   email: string;
@@ -282,21 +283,27 @@ export function EditStaffUserDrawer({
       setLoadWarning(null);
 
       const candidates = [
+        user.userId ? String(user.userId) : null,
         user.id,
         user.doctorId ? String(user.doctorId) : null,
       ].filter(Boolean) as string[];
 
+      // Deduplicate candidates
+      const uniqueCandidates = Array.from(new Set(candidates));
+
       let detail: UserDetailData | null = null;
-      for (const candidate of candidates) {
+      for (const candidate of uniqueCandidates) {
         detail = await loadUserDetails(candidate);
         if (detail) break;
       }
 
-      if (!detail && user.email) {
+      if (!detail && (user.email || user.empId)) {
         try {
           const allUsers = await usersApi.adminGetUsers();
           const matchedUser = allUsers.data?.find(
-            (u) => u.email === user.email,
+            (u) =>
+              (user.email && u.email?.toLowerCase() === user.email.toLowerCase()) ||
+              (user.empId && (u as { employeeId?: string }).employeeId === user.empId),
           );
           if (matchedUser && matchedUser.id) {
             detail = await loadUserDetails(String(matchedUser.id));
@@ -320,14 +327,13 @@ export function EditStaffUserDrawer({
     return () => {
       isCancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    departments,
-    deptNameToId,
-    user,
     user?.id,
-    hospitalSchedule,
+    user?.userId,
     user?.doctorId,
     user?.email,
+    user?.empId,
   ]);
 
   useEffect(() => {

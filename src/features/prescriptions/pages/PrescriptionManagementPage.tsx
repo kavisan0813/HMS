@@ -90,7 +90,7 @@ export const PrescriptionManagementPage: React.FC<{
 
   return (
     <div
-      className="flex-1 bg-[#F1F5F9] overflow-y-auto flex flex-col font-sans relative pb-20"
+      className="flex-1 bg-[#F1F5F9] overflow-y-auto flex flex-col font-sans relative p-6 space-y-6 pb-20"
       style={{ fontFamily: RB }}
     >
       {/* Toast Notification */}
@@ -108,63 +108,59 @@ export const PrescriptionManagementPage: React.FC<{
         onNewPrescription={onNewPrescription}
       />
 
-      <div
-        className={`${role === "patient" ? "p-6 space-y-6" : "px-6 space-y-6"}`}
-      >
-        {/* KPI Cards */}
-        <PrescriptionSummaryCard role={role} prescriptions={prescriptions} />
+      {/* KPI Cards */}
+      <PrescriptionSummaryCard role={role} prescriptions={prescriptions} />
 
-        {/* Filter Toolbar (Only for Doctor/Admin, Patient filters are embedded directly inside DataTable) */}
-        {role !== "patient" && (
-          <PrescriptionFilters
-            role={role}
-            searchTerm={filters.searchTerm}
-            setSearchTerm={(val) => setFilterValue("searchTerm", val)}
-            selectedStatus={filters.status}
-            setSelectedStatus={(val) => setFilterValue("status", val)}
-            selectedDept={filters.dept}
-            setSelectedDept={(val) => setFilterValue("dept", val)}
-            dateRange={filters.dateRange}
-            setDateRange={(val) => setFilterValue("dateRange", val)}
-            onReset={handleResetAll}
-            onApply={handleApply}
-          />
-        )}
+      {/* Filter Toolbar (Only for Doctor/Admin, Patient filters are embedded directly inside DataTable) */}
+      {role !== "patient" && (
+        <PrescriptionFilters
+          role={role}
+          searchTerm={filters.searchTerm}
+          setSearchTerm={(val) => setFilterValue("searchTerm", val)}
+          selectedStatus={filters.status}
+          setSelectedStatus={(val) => setFilterValue("status", val)}
+          selectedDept={filters.dept}
+          setSelectedDept={(val) => setFilterValue("dept", val)}
+          dateRange={filters.dateRange}
+          setDateRange={(val) => setFilterValue("dateRange", val)}
+          onReset={handleResetAll}
+          onApply={handleApply}
+        />
+      )}
 
-        {/* Data list / table */}
-        {loading ? (
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
-            <PrescriptionLoader />
-          </div>
-        ) : role !== "patient" && prescriptions.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
-            <PrescriptionEmptyState onReset={handleResetAll} />
-          </div>
-        ) : (
-          <PrescriptionTable
-            role={role}
-            prescriptions={prescriptions}
-            onView={(rx) => {
-              setFullViewRx(rx);
-              loadDetails(rx.id);
-            }}
-            onEdit={onNewPrescription}
-            onPrint={(rx) => setPrintPreviewRx(rx)}
-            onDownload={handleDownload}
-            onDuplicate={handleDuplicate}
-            onViewConsultation={onViewConsultation}
-            searchTerm={filters.searchTerm}
-            setSearchTerm={(val) => setFilterValue("searchTerm", val)}
-            selectedStatus={filters.status}
-            setSelectedStatus={(val) => setFilterValue("status", val)}
-            selectedDept={filters.dept}
-            setSelectedDept={(val) => setFilterValue("dept", val)}
-            dateRange={filters.dateRange}
-            setDateRange={(val) => setFilterValue("dateRange", val)}
-            onReset={handleResetAll}
-          />
-        )}
-      </div>
+      {/* Data list / table */}
+      {loading ? (
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
+          <PrescriptionLoader />
+        </div>
+      ) : role !== "patient" && prescriptions.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm">
+          <PrescriptionEmptyState onReset={handleResetAll} />
+        </div>
+      ) : (
+        <PrescriptionTable
+          role={role}
+          prescriptions={prescriptions}
+          onView={(rx) => {
+            setFullViewRx(rx);
+            loadDetails(rx.id);
+          }}
+          onEdit={onNewPrescription}
+          onPrint={(rx) => setPrintPreviewRx(rx)}
+          onDownload={handleDownload}
+          onDuplicate={handleDuplicate}
+          onViewConsultation={onViewConsultation}
+          searchTerm={filters.searchTerm}
+          setSearchTerm={(val) => setFilterValue("searchTerm", val)}
+          selectedStatus={filters.status}
+          setSelectedStatus={(val) => setFilterValue("status", val)}
+          selectedDept={filters.dept}
+          setSelectedDept={(val) => setFilterValue("dept", val)}
+          dateRange={filters.dateRange}
+          setDateRange={(val) => setFilterValue("dateRange", val)}
+          onReset={handleResetAll}
+        />
+      )}
 
       {/* Print Preview Modal */}
       {printPreviewRx && (

@@ -871,43 +871,43 @@ export function StartConsultationPage({
             const rxData = (rxObj?.data as Record<string, unknown>) || {};
             const rxIdResolved =
               createdRx?.id ??
-              createdRx?.prescriptionId ??
               rxData.id ??
+              createdRx?.prescriptionId ??
               rxData.prescriptionId ??
               null;
 
             console.log("RESOLVED PRESCRIPTION ID:", rxIdResolved);
-            // CRITICAL FIX: Only accept rxIdResolved if it is NOT equal to targetEncId
-            if (
-              rxIdResolved != null &&
-              String(rxIdResolved) !== String(targetEncId)
-            ) {
+
+            const numericDbId = Number(rxIdResolved);
+            if (Number.isFinite(numericDbId) && numericDbId > 0) {
+              rxIdToUse = numericDbId;
+            } else if (rxIdResolved != null && String(rxIdResolved).trim() !== "") {
               rxIdToUse = rxIdResolved as string | number;
             } else {
-              console.warn(
-                "Prescription creation did not return a distinct prescription ID:",
+              console.error(
+                "Prescription creation did not return a valid prescription DB ID:",
                 createdRx,
               );
               rxIdToUse = null;
             }
           } catch (e) {
             console.error("Could not create prescription for medicines:", e);
-            rxIdToUse = null; // NEVER fallback to targetEncId!
+            rxIdToUse = null;
           }
         }
       }
 
       if (validMeds.length > 0) {
-        // CRITICAL FIX: Only call saveMedications if we have a valid prescription ID
-        if (rxIdToUse && String(rxIdToUse) !== String(activeEncounterId)) {
+        if (rxIdToUse) {
           try {
+            console.log("SAVING MEDICATIONS FOR PRESCRIPTION DB ID:", rxIdToUse);
             await saveMedications(rxIdToUse, formData.medicines);
           } catch (medErr) {
             console.error("MEDICATION SAVE FAILED:", medErr);
           }
         } else {
           console.warn(
-            "Skipping saveMedications: No valid prescription ID available (encounter has no linked prescription).",
+            "Skipping saveMedications: No valid prescription ID available (prescription creation returned no valid ID).",
           );
         }
 
@@ -1184,15 +1184,15 @@ export function StartConsultationPage({
         </div>
       )}
 
-      <ConsultationHeader
-        roleLabel="Doctor"
-        pageTitle="Start Outpatient Consultation"
-        subtitle="Record symptoms, evaluate vitals, diagnosis, prescribe medicines and finalize session."
-        breadcrumbs={[{ label: "Workspace", active: true }]}
-        onBack={onBack ? onBack : () => navigate(-1)}
-      />
-
       <div className="p-6 space-y-6 flex-1">
+        <ConsultationHeader
+          roleLabel="Doctor"
+          pageTitle="Start Outpatient Consultation"
+          subtitle="Record symptoms, evaluate vitals, diagnosis, prescribe medicines and finalize session."
+          breadcrumbs={[{ label: "Workspace", active: true }]}
+          onBack={onBack ? onBack : () => navigate(-1)}
+        />
+
         {validationErrors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3 text-red-700">
             <AlertCircle size={20} className="shrink-0 mt-0.5" />

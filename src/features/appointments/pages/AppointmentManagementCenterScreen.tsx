@@ -4,9 +4,7 @@ import { ROUTES } from "../../../app/routes/routes";
 import {
   CheckCircle2,
   ChevronRight,
-  Search,
   Filter,
-  X,
   Plus,
   Eye,
   RotateCcw,
@@ -14,7 +12,6 @@ import {
   Ban,
   Calendar as CalendarIcon,
   Stethoscope,
-  User,
   UserPlus,
   Clock,
   Calendar,
@@ -113,7 +110,6 @@ export function AppointmentManagementCenterScreen({
   const [dateFilter, setDateFilter] = useState<string>(todayDateStr);
   const normalizedRole = String(userRole || "").toUpperCase();
   const isDoctor = normalizedRole === "DOCTOR";
-  const isNurse = normalizedRole === "NURSE";
 
   const [filters, dispatch] = useReducer(filterReducer, {
     searchQuery: "",
@@ -375,6 +371,131 @@ export function AppointmentManagementCenterScreen({
       );
     }
   };
+
+  const appointmentFilterToolbar = (
+    <div className="flex items-center gap-2 flex-wrap text-xs">
+      <AppointmentDatePickerFilter
+        selectedDate={dateFilter}
+        onChange={setDateFilter}
+      />
+
+      <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
+        <Filter size={12} className="text-slate-400" />
+        <span className="text-slate-500 font-medium text-[11px]">
+          Status:
+        </span>
+        <select
+          aria-label="Select option"
+          value={filters.statusFilter}
+          onChange={(e) => setFilter("statusFilter", e.target.value)}
+          className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
+        >
+          <option value="All">All Statuses</option>
+          <option value="Booked">Booked</option>
+          <option value="Checked-In">Checked-In</option>
+          <option value="Waiting for Vitals">Waiting for Vitals</option>
+          <option value="Waiting for Doctor">Waiting for Doctor</option>
+          <option value="Called">Called</option>
+          <option value="In Consultation">In Consultation</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="No Show">No Show</option>
+        </select>
+      </div>
+
+      {userRole !== "Doctor" && (
+        <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
+          <Stethoscope size={12} className="text-slate-400" />
+          <span className="text-slate-500 font-medium text-[11px]">
+            Doctor:
+          </span>
+          <select
+            aria-label="Select option"
+            value={filters.doctorFilter}
+            onChange={(e) => setFilter("doctorFilter", e.target.value)}
+            className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
+          >
+            <option value="All">All Doctors</option>
+            {doctorsList.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
+        <Building2 size={12} className="text-slate-400" />
+        <span className="text-slate-500 font-medium text-[11px]">
+          Dept:
+        </span>
+        <select
+          aria-label="Select option"
+          value={filters.deptFilter}
+          onChange={(e) => {
+            const selectedDeptVal = e.target.value;
+            setFilter("deptFilter", selectedDeptVal);
+            if (
+              selectedDeptVal !== "All" &&
+              filters.doctorFilter !== "All"
+            ) {
+              const doctorInDept = appointments.some(
+                (a) =>
+                  a.department === selectedDeptVal &&
+                  a.doctorName === filters.doctorFilter,
+              );
+              if (!doctorInDept) {
+                setFilter("doctorFilter", "All");
+              }
+            }
+          }}
+          className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
+        >
+          <option value="All">All Departments</option>
+          {deptOptions.map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
+        <Building2 size={12} className="text-slate-400" />
+        <span className="text-slate-500 font-medium text-[11px]">
+          Visit Type:
+        </span>
+        <select
+          aria-label="Select option"
+          value={filters.visitTypeFilter}
+          onChange={(e) => setFilter("visitTypeFilter", e.target.value)}
+          className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
+        >
+          <option value="All">All Visit Types</option>
+          <option value="First Visit">First Visit</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Walk-In">Walk-In</option>
+        </select>
+      </div>
+
+      <button
+        onClick={() => {
+          setFilter("searchQuery", "");
+          setFilter("statusFilter", "All");
+          setFilter("doctorFilter", "All");
+          setFilter("deptFilter", "All");
+          setDateFilter(todayDateStr);
+          setFilter("visitTypeFilter", "All");
+          triggerToast("Filters reset.");
+        }}
+        className="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+        title="Reset Filters"
+      >
+        <RotateCcw size={12} /> Clear Filters
+      </button>
+    </div>
+  );
 
   return (
     <div
@@ -875,338 +996,179 @@ export function AppointmentManagementCenterScreen({
             ))}
           </div>
 
-          {/* ── 4. MAIN WORKSPACE CONTAINER: APPOINTMENT DATA TABLE WITH MERGED TOOLBAR ── */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden flex flex-col p-5 space-y-4">
-            {/* MERGED SEARCH & FILTER CONTROLS TOOLBAR INSIDE TABLE CONTAINER */}
-            <div className="bg-slate-50/80 border border-[#E5E7EB] rounded-xl p-3 space-y-2.5 shadow-2xs">
-              {/* Search Input */}
-              <div className="relative w-full">
-                <Search
-                  size={15}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-                <input
-                  aria-label="Input field"
-                  type="text"
-                  value={filters.searchQuery}
-                  onChange={(e) => setFilter("searchQuery", e.target.value)}
-                  placeholder=" Search by Patient Name, MRN, Appointment ID..."
-                  className="w-full pl-9 pr-8 py-2 text-xs bg-white border border-[#E5E7EB] rounded-xl text-[#111827] outline-none focus:border-[#0D47A1] focus:ring-1 focus:ring-[#0D47A1] shadow-2xs transition-all placeholder:text-slate-400"
-                />
-                {filters.searchQuery && (
-                  <button
-                    aria-label="Close"
-                    onClick={() => setFilter("searchQuery", "")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-
-              {/* Filter Controls Row */}
-              <div className="flex items-center gap-2 flex-wrap text-xs pt-1 border-t border-slate-200/70">
-                <AppointmentDatePickerFilter
-                  selectedDate={dateFilter}
-                  onChange={setDateFilter}
-                />
-
-                <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
-                  <Filter size={12} className="text-slate-400" />
-                  <span className="text-slate-500 font-medium text-[11px]">
-                    Status:
-                  </span>
-                  <select
-                    aria-label="Select option"
-                    value={filters.statusFilter}
-                    onChange={(e) => setFilter("statusFilter", e.target.value)}
-                    className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="Booked">Booked</option>
-                    <option value="Checked-In">Checked-In</option>
-                    <option value="Waiting for Vitals">
-                      Waiting for Vitals
-                    </option>
-                    <option value="Waiting for Doctor">
-                      Waiting for Doctor
-                    </option>
-                    <option value="Called">Called</option>
-                    <option value="In Consultation">In Consultation</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="No Show">No Show</option>
-                  </select>
-                </div>
-
-                {userRole !== "Doctor" && (
-                  <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
-                    <Stethoscope size={12} className="text-slate-400" />
-                    <span className="text-slate-500 font-medium text-[11px]">
-                      Doctor:
-                    </span>
-                    <select
-                      aria-label="Select option"
-                      value={filters.doctorFilter}
-                      onChange={(e) =>
-                        setFilter("doctorFilter", e.target.value)
-                      }
-                      className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
-                    >
-                      <option value="All">All Doctors</option>
-                      {doctorsList.map((d) => (
-                        <option key={d} value={d}>
-                          {d}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
-                  <Building2 size={12} className="text-slate-400" />
-                  <span className="text-slate-500 font-medium text-[11px]">
-                    Dept:
-                  </span>
-                  <select
-                    aria-label="Select option"
-                    value={filters.deptFilter}
-                    onChange={(e) => {
-                      const selectedDeptVal = e.target.value;
-                      setFilter("deptFilter", selectedDeptVal);
-                      if (
-                        selectedDeptVal !== "All" &&
-                        filters.doctorFilter !== "All"
-                      ) {
-                        const doctorInDept = appointments.some(
-                          (a) =>
-                            a.department === selectedDeptVal &&
-                            a.doctorName === filters.doctorFilter,
-                        );
-                        if (!doctorInDept) {
-                          setFilter("doctorFilter", "All");
-                        }
-                      }
-                    }}
-                    className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
-                  >
-                    <option value="All">All Departments</option>
-                    {deptOptions.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 bg-white border border-[#E5E7EB] px-2.5 py-1 rounded-lg">
-                  <Building2 size={12} className="text-slate-400" />
-                  <span className="text-slate-500 font-medium text-[11px]">
-                    Visit Type:
-                  </span>
-                  <select
-                    aria-label="Select option"
-                    value={filters.visitTypeFilter}
-                    onChange={(e) =>
-                      setFilter("visitTypeFilter", e.target.value)
-                    }
-                    className="bg-transparent font-semibold text-[#0D47A1] text-xs outline-none cursor-pointer"
-                  >
-                    <option value="All">All Visit Types</option>
-                    <option value="First Visit">First Visit</option>
-                    <option value="Follow-up">Follow-up</option>
-                    <option value="Walk-In">Walk-In</option>
-                  </select>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setFilter("searchQuery", "");
-                    setFilter("statusFilter", "All");
-                    setFilter("doctorFilter", "All");
-                    setFilter("deptFilter", "All");
-                    setDateFilter(todayDateStr);
-                    setFilter("visitTypeFilter", "All");
-                    triggerToast("Filters reset.");
-                  }}
-                  className="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer shrink-0"
-                  title="Reset Filters"
-                >
-                  <RotateCcw size={12} /> Clear Filters
-                </button>
-              </div>
-            </div>
-
-            {/* ── 4. MAIN WORKSPACE GRID: ENTERPRISE DATA TABLE + RIGHT CONTEXT PANEL ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Main Table Column */}
-              <div className="lg:col-span-4 space-y-6">
-                <DataTable
-                  data={filteredAppointments}
-                  columns={[
-                    {
-                      key: "patientName",
-                      label: "PATIENT",
-                      sortable: true,
-                      getValue: (apt) => apt.patientName,
-                      render: (apt) => (
-                        <div
-                          tabIndex={0}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.preventDefault();
-                              (e.currentTarget as HTMLElement).click();
-                            }
-                          }}
-                          role="button"
-                          onClick={() => onPatientSelect?.(apt.patientId)}
-                          className="flex items-center gap-2 cursor-pointer hover:underline"
-                        >
-                          <Avatar name={apt.patientName} size="sm" />
-                          <div>
-                            <span
-                              className="font-bold text-[#111827] block"
-                              style={{ fontFamily: PP }}
-                            >
-                              {apt.patientName}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
-                              {apt.patientPhone}
-                            </span>
-                          </div>
-                        </div>
-                      ),
-                    },
-                    {
-                      key: "appointmentNumber",
-                      label: "APPOINTMENT ID",
-                      sortable: true,
-                      getValue: (apt) => apt.appointmentNumber || apt.id,
-                      render: (apt) => (
-                        <span className="font-mono font-bold text-[#0D47A1]">
-                          {apt.appointmentNumber || apt.id}
-                        </span>
-                      ),
-                    },
-                    {
-                      key: "mrn",
-                      label: "MRN",
-                      sortable: true,
-                      getValue: (apt) => apt.mrn,
-                      render: (apt) => (
-                        <span className="font-mono text-[#0D47A1] font-bold">
-                          {apt.mrn}
-                        </span>
-                      ),
-                    },
-                    {
-                      key: "doctorName",
-                      label: "DOCTOR",
-                      sortable: true,
-                      visible: !isDoctor,
-                      getValue: (apt) =>
-                        typeof apt.doctorName === "string"
-                          ? apt.doctorName
-                          : (
-                              apt.doctorName as unknown as Record<
-                                string,
-                                string
-                              >
-                            )?.name || "",
-                      render: (apt) => (
+          {/* ── 4. MAIN APPOINTMENTS DATA TABLE ── */}
+          <DataTable
+                data={filteredAppointments}
+                columns={[
+                  {
+                    key: "patientName",
+                    label: "PATIENT",
+                    sortable: true,
+                    getValue: (apt) => apt.patientName,
+                    render: (apt) => (
+                      <div
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            (e.currentTarget as HTMLElement).click();
+                          }
+                        }}
+                        role="button"
+                        onClick={() => onPatientSelect?.(apt.patientId)}
+                        className="flex items-center gap-2 cursor-pointer hover:underline"
+                      >
+                        <Avatar name={apt.patientName} size="sm" />
                         <div>
-                          <div className="font-semibold text-[#111827]">
-                            {typeof apt.doctorName === "string"
-                              ? apt.doctorName
-                              : (
-                                  apt.doctorName as unknown as Record<
-                                    string,
-                                    string
-                                  >
-                                )?.name ||
-                                (
-                                  apt.doctorName as unknown as Record<
-                                    string,
-                                    string
-                                  >
-                                )?.fullName ||
-                                "—"}
-                          </div>
-                          <div className="text-[10px] text-slate-400">
-                            {apt.opdRoom}
-                          </div>
+                          <span
+                            className="font-bold text-[#111827] block"
+                            style={{ fontFamily: PP }}
+                          >
+                            {apt.patientName}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            {apt.patientPhone}
+                          </span>
                         </div>
-                      ),
-                    },
-                    {
-                      key: "department",
-                      label: "DEPARTMENT",
-                      sortable: true,
-                      visible: !isDoctor,
-                      getValue: (apt) =>
-                        typeof apt.department === "string"
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "appointmentNumber",
+                    label: "APPOINTMENT ID",
+                    sortable: true,
+                    getValue: (apt) => apt.appointmentNumber || apt.id,
+                    render: (apt) => (
+                      <span className="font-mono font-bold text-[#0D47A1]">
+                        {apt.appointmentNumber || apt.id}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "mrn",
+                    label: "MRN",
+                    sortable: true,
+                    getValue: (apt) => apt.mrn,
+                    render: (apt) => (
+                      <span className="font-mono text-[#0D47A1] font-bold">
+                        {apt.mrn}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "doctorName",
+                    label: "DOCTOR",
+                    sortable: true,
+                    visible: !isDoctor,
+                    getValue: (apt) =>
+                      typeof apt.doctorName === "string"
+                        ? apt.doctorName
+                        : (
+                            apt.doctorName as unknown as Record<
+                              string,
+                              string
+                            >
+                          )?.name || "",
+                    render: (apt) => (
+                      <div>
+                        <div className="font-semibold text-[#111827]">
+                          {typeof apt.doctorName === "string"
+                            ? apt.doctorName
+                            : (
+                                apt.doctorName as unknown as Record<
+                                  string,
+                                  string
+                                >
+                              )?.name ||
+                              (
+                                apt.doctorName as unknown as Record<
+                                  string,
+                                  string
+                                >
+                              )?.fullName ||
+                              "—"}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {apt.opdRoom}
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: "department",
+                    label: "DEPARTMENT",
+                    sortable: true,
+                    visible: !isDoctor,
+                    getValue: (apt) =>
+                      typeof apt.department === "string"
+                        ? apt.department
+                        : apt.department?.departmentName ||
+                          apt.department?.name ||
+                          "",
+                    render: (apt) => (
+                      <span className="text-xs text-slate-600 font-medium">
+                        {typeof apt.department === "string"
                           ? apt.department
                           : apt.department?.departmentName ||
                             apt.department?.name ||
+                            "—"}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "appointmentTime",
+                    label: "APPOINTMENT TIME",
+                    sortable: true,
+                    getValue: (apt) =>
+                      to24Hour(
+                        apt.time ||
+                          apt.appointmentTime ||
+                          apt.scheduledTime ||
+                          "00:00",
+                      ),
+                    render: (apt) => (
+                      <span className="font-semibold text-[#111827]">
+                        {formatTime(
+                          apt.time ||
+                            apt.appointmentTime ||
+                            apt.scheduledTime ||
                             "",
-                      render: (apt) => (
-                        <span className="font-medium text-slate-700">
-                          {typeof apt.department === "string"
-                            ? apt.department
-                            : apt.department?.departmentName ||
-                              apt.department?.name ||
-                              ""}
-                        </span>
-                      ),
-                    },
-                    {
-                      key: "timeSlot",
-                      label: "APPOINTMENT TIME",
-                      sortable: true,
-                      getValue: (apt) => apt.timeSlot || "",
-                      render: (apt) => (
-                        <span className="font-mono text-[#0D47A1] font-bold">
-                          {formatTime(apt.timeSlot)}
-                        </span>
-                      ),
-                    },
-                    {
-                      key: "status",
-                      label: "STATUS",
-                      sortable: true,
-                      getValue: (apt) => apt.status,
-                      render: (apt) => <StatusBadge status={apt.status} />,
-                    },
-                    {
-                      key: "actions",
-                      label: "ACTIONS",
-                      sortable: false,
-                      align: "right",
-                      render: (apt) => (
-                        <div
-                          className="flex items-center justify-end gap-1.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {isNurse ? (
-                            <div className="flex items-center justify-end gap-1.5">
-                              {onPatientSelect && (
-                                <button
-                                  onClick={() => onPatientSelect(apt.patientId)}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold border border-slate-200 hover:bg-slate-200 transition-colors flex items-center gap-1 cursor-pointer"
-                                  title="View Patient Profile"
-                                >
-                                  <User size={12} /> Profile
-                                </button>
-                              )}
+                        )}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: "status",
+                    label: "STATUS",
+                    sortable: true,
+                    getValue: (apt) => apt.status,
+                    render: (apt) => <StatusBadge status={apt.status} />,
+                  },
+                  {
+                    key: "actions",
+                    label: "ACTIONS",
+                    sortable: false,
+                    render: (apt) => (
+                      <div className="flex items-center gap-1.5 justify-end">
+                        {userRole === "Nurse" ? (
+                          <div className="flex items-center gap-1.5">
+                            {apt.status === "Waiting for Vitals" && (
                               <button
-                                onClick={() => setDetailsApt(apt)}
-                                className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#0D47A1] text-[10px] font-bold border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
-                                title="View Appointment Details"
+                                onClick={() => {
+                                  if (onPatientSelect) {
+                                    onPatientSelect(apt.patientId);
+                                  } else {
+                                    triggerToast(
+                                      `Opening vitals record for patient ${apt.patientName}`,
+                                    );
+                                  }
+                                }}
+                                className="px-2 py-1 rounded-lg bg-teal-50 text-[#009688] text-[10px] font-bold border border-teal-200 hover:bg-teal-100 transition-colors flex items-center gap-1 cursor-pointer"
+                                title="Record Vitals"
                               >
-                                <Eye size={12} /> View
+                                <Stethoscope size={12} /> Record Vitals
                               </button>
-                            </div>
-                          ) : isDoctor ? (
+                            )}
                             <button
                               onClick={() => setDetailsApt(apt)}
                               className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#0D47A1] text-[10px] font-bold border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
@@ -1214,92 +1176,101 @@ export function AppointmentManagementCenterScreen({
                             >
                               <Eye size={12} /> View
                             </button>
-                          ) : (
-                            <>
-                              {(apt.status === "Scheduled" ||
-                                apt.status === "Booked" ||
-                                apt.status === "BOOKED" ||
-                                apt.status === "Confirmed" ||
-                                apt.status === "CONFIRMED") && (
-                                <button
-                                  onClick={() => handleCheckInPatient(apt)}
-                                  className="px-2 py-1 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 shadow-xs bg-[#0D47A1] text-white hover:bg-[#0c3d8a] cursor-pointer"
-                                  title="Check-In Patient"
-                                >
-                                  <CheckCircle2 size={12} /> Check-In
-                                </button>
-                              )}
-
-                              {(apt.status === "Booked" ||
-                                apt.status === "Confirmed" ||
-                                apt.status === "BOOKED" ||
-                                apt.status === "CONFIRMED" ||
-                                apt.status === "Scheduled") && (
-                                <button
-                                  onClick={() => setRescheduleApt(apt)}
-                                  className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-teal-50 text-[#009688] transition-colors cursor-pointer"
-                                  title="Reschedule Appointment"
-                                >
-                                  <CalendarIcon size={14} />
-                                </button>
-                              )}
-
-                              {apt.status !== "Completed" &&
-                                apt.status !== "Cancelled" &&
-                                apt.status !== "No Show" &&
-                                apt.status !== "COMPLETED" &&
-                                apt.status !== "CANCELLED" &&
-                                apt.status !== "NO_SHOW" && (
-                                  <button
-                                    onClick={() => setCancelApt(apt)}
-                                    className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-red-50 text-[#EF4444] transition-colors cursor-pointer"
-                                    title="Cancel Appointment"
-                                  >
-                                    <Ban size={14} />
-                                  </button>
-                                )}
-
+                          </div>
+                        ) : isDoctor ? (
+                          <button
+                            onClick={() => setDetailsApt(apt)}
+                            className="px-2.5 py-1 rounded-lg bg-blue-50 text-[#0D47A1] text-[10px] font-bold border border-blue-200 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
+                            title="View Appointment Details"
+                          >
+                            <Eye size={12} /> View
+                          </button>
+                        ) : (
+                          <>
+                            {(apt.status === "Scheduled" ||
+                              apt.status === "Booked" ||
+                              apt.status === "BOOKED" ||
+                              apt.status === "Confirmed" ||
+                              apt.status === "CONFIRMED") && (
                               <button
-                                onClick={() => setDetailsApt(apt)}
-                                className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-blue-50 text-[#0D47A1] transition-colors cursor-pointer"
-                                title="View Appointment Details"
+                                onClick={() => handleCheckInPatient(apt)}
+                                className="px-2 py-1 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 shadow-xs bg-[#0D47A1] text-white hover:bg-[#0c3d8a] cursor-pointer"
+                                title="Check-In Patient"
                               >
-                                <Eye size={14} />
+                                <CheckCircle2 size={12} /> Check-In
                               </button>
-                            </>
-                          )}
-                        </div>
-                      ),
-                    },
-                  ]}
-                  getRowId={(apt) => apt.id}
-                  title={
-                    <>
-                      <Calendar size={16} className="text-[#0D47A1]" />
-                      {userRole === "Doctor"
-                        ? "Today's Doctor Consultation Appointments"
-                        : "Today's Reception Appointment Workload"}
-                    </>
-                  }
-                  headerBadge={
-                    <span className="text-xs text-[#64748B]">
-                      Showing{" "}
-                      <strong className="text-[#111827]">
-                        {filteredAppointments.length}
-                      </strong>{" "}
-                      appointments
-                    </span>
-                  }
-                  searchable={true}
-                  searchPlaceholder=" Search appointments by patient name, MRN, ID, doctor..."
-                  emptyTitle="No appointments scheduled today."
-                  emptySubtitle="All consultation visits for today are completed or no appointments match filters."
-                  emptyIcon={<Calendar size={32} />}
-                  pagination={true}
-                />
-              </div>
-            </div>
-          </div>
+                            )}
+
+                            {(apt.status === "Booked" ||
+                              apt.status === "Confirmed" ||
+                              apt.status === "BOOKED" ||
+                              apt.status === "CONFIRMED" ||
+                              apt.status === "Scheduled") && (
+                              <button
+                                onClick={() => setRescheduleApt(apt)}
+                                className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-teal-50 text-[#009688] transition-colors cursor-pointer"
+                                title="Reschedule Appointment"
+                              >
+                                <CalendarIcon size={14} />
+                              </button>
+                            )}
+
+                            {apt.status !== "Completed" &&
+                              apt.status !== "Cancelled" &&
+                              apt.status !== "No Show" &&
+                              apt.status !== "COMPLETED" &&
+                              apt.status !== "CANCELLED" &&
+                              apt.status !== "NO_SHOW" && (
+                                <button
+                                  onClick={() => setCancelApt(apt)}
+                                  className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-red-50 text-[#EF4444] transition-colors cursor-pointer"
+                                  title="Cancel Appointment"
+                                >
+                                  <Ban size={14} />
+                                </button>
+                              )}
+
+                            <button
+                              onClick={() => setDetailsApt(apt)}
+                              className="p-1.5 rounded-lg border border-[#E5E7EB] hover:bg-blue-50 text-[#0D47A1] transition-colors cursor-pointer"
+                              title="View Appointment Details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    ),
+                  },
+                ]}
+                getRowId={(apt) => apt.id}
+                title={
+                  <>
+                    <Calendar size={16} className="text-[#0D47A1]" />
+                    {userRole === "Doctor"
+                      ? "Today's Doctor Consultation Appointments"
+                      : "Today's Reception Appointment Workload"}
+                  </>
+                }
+                headerBadge={
+                  <span className="text-xs text-[#64748B]">
+                    Showing{" "}
+                    <strong className="text-[#111827]">
+                      {filteredAppointments.length}
+                    </strong>{" "}
+                    appointments
+                  </span>
+                }
+                searchable={true}
+                searchPlaceholder="Search by Patient Name, MRN, Appointment ID, Doctor..."
+                searchValue={filters.searchQuery}
+                onSearchChange={(val) => setFilter("searchQuery", val)}
+                toolbar={appointmentFilterToolbar}
+                emptyTitle="No appointments scheduled today."
+                emptySubtitle="All consultation visits for today are completed or no appointments match filters."
+                emptyIcon={<Calendar size={32} />}
+            pagination={true}
+          />
         </>
       )}
 

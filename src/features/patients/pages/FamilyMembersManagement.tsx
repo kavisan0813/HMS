@@ -8,6 +8,7 @@ import {
   Eye,
   Edit3,
   UserX,
+  ArrowLeft,
 } from "lucide-react";
 import type { FamilyMember } from "../types/family.types";
 import { apiClient } from "../../../lib/axios";
@@ -354,11 +355,24 @@ export function FamilyMembersManagement({
     );
   }
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
-    <div className="space-y-6 pb-12">
+    <div className="p-6 space-y-6 pb-12">
       {/* ── HEADER TITLE BLOCK ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+          <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+              style={{ fontFamily: RB }}
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
           <div className="flex items-center gap-2.5 mb-1">
             <h1
               className="text-xl font-bold text-[#111827]"

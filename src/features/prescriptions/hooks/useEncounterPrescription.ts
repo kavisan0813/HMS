@@ -121,7 +121,7 @@ export function useEncounterPrescription(
     queryKey: encounterPrescriptionKeys.detail(encounterId || ""),
     queryFn: () => fetchEncounterPrescription(encounterId!),
     enabled: queryEnabled,
-    staleTime: 30_000,
-    retry: 1,
+    staleTime: 60_000,
+    retry: false,
   });
 }

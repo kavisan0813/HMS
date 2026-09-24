@@ -1192,31 +1192,7 @@ export function DailyRevenueReportScreen({
         </div>
 
         {/* Global Search Bar */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm mb-4">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-            <input
-              aria-label="Input field"
-              type="text"
-              value={state.searchQuery}
-              onChange={(e) =>
-                dispatch({ type: "SET_SEARCH", payload: e.target.value })
-              }
-              placeholder="Search Invoice ID, Patient, MRN, Doctor, Department..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
-            />
-            {state.searchQuery && (
-              <button
-                onClick={() => dispatch({ type: "SET_SEARCH", payload: "" })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] hover:text-[#111827]"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Global Filter Bar with Calendar Toolbar */}
+        {/* Filter & Search Bar */}
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-5 shadow-sm mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#E5E7EB]">
             <div
@@ -1426,19 +1402,42 @@ export function DailyRevenueReportScreen({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
-            <button
-              onClick={handleResetFilters}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
-            >
-              Reset Filters
-            </button>
-            <button
-              onClick={handleApplyFilters}
-              className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-            >
-              Apply Filters
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
+            <div className="relative w-full sm:w-72 md:w-80">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+              <input
+                aria-label="Input field"
+                type="text"
+                value={state.searchQuery}
+                onChange={(e) =>
+                  dispatch({ type: "SET_SEARCH", payload: e.target.value })
+                }
+                placeholder="Search Invoice ID, Patient, MRN, Doctor, Department..."
+                className="w-full pl-10 pr-16 py-2 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
+              />
+              {state.searchQuery && (
+                <button
+                  onClick={() => dispatch({ type: "SET_SEARCH", payload: "" })}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] hover:text-[#111827]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <button
+                onClick={handleResetFilters}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
+              >
+                Reset Filters
+              </button>
+              <button
+                onClick={handleApplyFilters}
+                className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+              >
+                Apply Filters
+              </button>
+            </div>
           </div>
         </div>
 

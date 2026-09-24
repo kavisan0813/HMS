@@ -66,7 +66,7 @@ export function DoctorPatientsScreen() {
     : error;
 
   const fetchPatients = async () => {
-    const id = doctorIdRef.current;
+    const id = doctorIdRef.current || doctorId;
     if (!id) {
       setError("Doctor profile not found. Please contact administrator.");
       setIsLoading(false);
@@ -75,7 +75,7 @@ export function DoctorPatientsScreen() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await patientsApi.getDoctorPatients(100);
+      const result = await patientsApi.getDoctorPatients(id);
       setPatients(processDoctorPatients(result));
     } catch {
       setError("Failed to load patients. Please try again.");
@@ -93,7 +93,7 @@ export function DoctorPatientsScreen() {
     let cancelled = false;
 
     patientsApi
-      .getDoctorPatients(100)
+      .getDoctorPatients(doctorId)
       .then((result) => {
         if (!cancelled) setPatients(processDoctorPatients(result));
       })

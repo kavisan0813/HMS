@@ -1054,6 +1054,33 @@ export function RecordPatientVitalsScreen({
 
       {/* UNIFIED QUEUE WORKSPACE CARD (Search + Filters + Data-Grid Table) */}
       <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-4">
+        {/* TABLE TITLE BAR */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100">
+          <div>
+            <h2
+              className="text-base font-bold text-[#111827] flex items-center gap-2"
+              style={{ fontFamily: PP }}
+            >
+              Vitals Queue
+            </h2>
+            <p
+              className="text-xs text-[#64748B] mt-0.5"
+              style={{ fontFamily: RB }}
+            >
+              Real-time patient vitals triage and waiting roster.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="text-xs text-[#64748B]">
+              Showing{" "}
+              <strong className="text-[#111827]">
+                {filteredAppointments.length}
+              </strong>{" "}
+              queue entries
+            </span>
+          </div>
+        </div>
+
         {/* SEARCH & FILTERS MINIMAL CONTAINER BOX */}
         <div className="bg-slate-50/80 border border-[#E5E7EB] rounded-lg p-2 space-y-1.5 shadow-2xs">
           {/* Single Row: Search Input + Filter Dropdowns + Reset Button */}

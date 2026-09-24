@@ -110,11 +110,11 @@ const WorkspaceHeader = ({
   onStartConsultation,
   currentPatient,
 }: WorkspaceHeaderProps) => (
-  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
     <div className="flex items-center gap-3">
       <button
         onClick={onBackToDirectory}
-        className="p-2 rounded-xl border border-[#E5E7EB] hover:bg-slate-50 text-slate-600 transition-colors"
+        className="p-2 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-50 text-slate-600 transition-colors"
         title="Back to Directory"
       >
         <ArrowLeft size={18} />
@@ -128,7 +128,7 @@ const WorkspaceHeader = ({
             ? "Nurse / Appointment Management / Patient Queue"
             : isDoctor
               ? "Doctor / Appointment Management / Queue Management"
-              : "Reception / Queue Workspace"}
+              : ""}
         </div>
         <h1
           className="text-xl font-bold text-[#111827] flex items-center gap-2"
@@ -584,19 +584,19 @@ const WorkspaceQueueTable = ({
                       {(q.status === "Scheduled" ||
                         q.status === "Booked" ||
                         q.status === "BOOKED") && (
-                        <button
-                          onClick={() =>
-                            onUpdateStatus(
-                              q.id,
-                              "Checked-In",
-                              "Patient checked in successfully.",
-                            )
-                          }
-                          className="px-2.5 py-1 rounded-lg bg-[#0D47A1] text-white text-[11px] font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1 shadow-xs"
-                        >
-                          <CheckCircle2 size={12} /> Check-In Patient
-                        </button>
-                      )}
+                          <button
+                            onClick={() =>
+                              onUpdateStatus(
+                                q.id,
+                                "Checked-In",
+                                "Patient checked in successfully.",
+                              )
+                            }
+                            className="px-2.5 py-1 rounded-lg bg-[#0D47A1] text-white text-[11px] font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1 shadow-xs"
+                          >
+                            <CheckCircle2 size={12} /> Check-In Patient
+                          </button>
+                        )}
 
                       {q.status === "Waiting for Doctor" && (
                         <button
@@ -717,9 +717,9 @@ export function DockableQueueWorkspace({
           navigate(
             ROUTES.DOCTOR_CONSULTATION_ID
               ? ROUTES.DOCTOR_CONSULTATION_ID.replace(
-                  ":consultationId",
-                  String(encId),
-                )
+                ":consultationId",
+                String(encId),
+              )
               : `/doctor/consultation/${encId}`,
           );
         } else {
@@ -735,9 +735,9 @@ export function DockableQueueWorkspace({
           navigate(
             ROUTES.DOCTOR_CONSULTATION_ID
               ? ROUTES.DOCTOR_CONSULTATION_ID.replace(
-                  ":consultationId",
-                  String(fallbackId),
-                )
+                ":consultationId",
+                String(fallbackId),
+              )
               : `/doctor/consultation/${fallbackId}`,
           );
         }

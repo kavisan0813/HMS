@@ -7,6 +7,7 @@ export const doctorToEditUser = (doc: DoctorRecord): EditableStaffUser => {
 
   return {
     id: userId ? String(userId) : doctorId ? String(doctorId) : "",
+    userId,
     empId: doc.empId,
     fullName: doc.name.replace(/^Dr\.\s*/, ""),
     email: doc.email,
@@ -15,5 +16,7 @@ export const doctorToEditUser = (doc: DoctorRecord): EditableStaffUser => {
     department: doc.department,
     status: doc.status,
     doctorId,
+    photoUrl: doc.photoUrl || doc.photo,
+    photo: doc.photo || doc.photoUrl,
   };
 };

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import {
   Printer,
   Download,
-  ChevronRight,
   CreditCard,
   FileText,
   Clock,
@@ -227,34 +226,10 @@ export function DailyBillingReportPage() {
   };
 
   return (
-    <div className="w-full max-w-none bg-[#F1F5F9] min-h-screen px-4 sm:px-6 lg:px-8 xl:px-10 py-6 pb-28 space-y-6">
+    <div className="w-full flex-1 bg-[#F1F5F9] min-h-screen p-4 md:p-6 pb-28 md:pb-32 space-y-6">
       {/* 1. PAGE HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
         <div>
-          <div
-            className="flex items-center gap-2 text-xs text-[#64748B] mb-1 font-medium"
-            style={{ fontFamily: RB }}
-          >
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate("/billing")}
-            >
-              Home
-            </button>
-            <ChevronRight size={12} />
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate("/billing")}
-            >
-              Billing & Payment
-            </button>
-            <ChevronRight size={12} />
-            <span className="text-[#0D47A1] font-semibold">
-              Daily Billing Report
-            </span>
-          </div>
           <h1
             className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight"
             style={{ fontFamily: PP }}
@@ -795,23 +770,6 @@ export function DailyBillingReportPage() {
             </button>
           </div>
         </div>
-      </div>
-
-      {/* BOTTOM STICKY BAR */}
-      <div className="sticky bottom-0 -mx-4 md:-mx-6 -mb-4 md:-mb-6 bg-white/95 backdrop-blur-md border-t border-[#E5E7EB] p-3.5 px-6 z-40 flex items-center justify-between shadow-lg">
-        <button
-          onClick={() => navigate("/billing")}
-          className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-100"
-        >
-          Back to Billing Dashboard
-        </button>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-6 py-2 rounded-xl bg-[#0D47A1] text-white text-xs font-bold hover:bg-blue-900 transition-colors shadow-sm"
-          style={{ fontFamily: PP }}
-        >
-          <Printer size={15} /> Print Report
-        </button>
       </div>
     </div>
   );

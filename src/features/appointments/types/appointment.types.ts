@@ -97,6 +97,7 @@ export interface LinkedPatient {
 }
 
 export interface AppointmentRecord {
+  scheduledTime?: string;
   specialty: string;
   time: string;
   tokenNumber?: string;

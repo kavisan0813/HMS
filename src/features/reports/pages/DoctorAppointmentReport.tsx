@@ -5,7 +5,6 @@ import {
   RefreshCw,
   Filter,
   Search,
-  ChevronRight,
   Users,
   UserCheck,
   Activity,
@@ -340,12 +339,12 @@ export function DoctorDailyAppointmentReportScreen({
       // 2. Appointment Status Filter
       const matchesStatus =
         statusFilter === "All Statuses" ||
-        item.status.toLowerCase() === statusFilter.toLowerCase();
+        (item.status || "").toLowerCase() === statusFilter.toLowerCase();
 
       // 3. Visit Type Filter
       const matchesVisit =
         visitTypeFilter === "All Visit Types" ||
-        item.visitType.toLowerCase() === visitTypeFilter.toLowerCase();
+        (item.visitType || "").toLowerCase() === visitTypeFilter.toLowerCase();
 
       // 4. Shift Filter
       const timeStr = item.appointmentTime || "";
@@ -386,16 +385,19 @@ export function DoctorDailyAppointmentReportScreen({
   const kpi = (() => {
     const totalReg = filteredAppointments.length;
     const completedCount = filteredAppointments.filter(
-      (a) => a.status === "Completed"
+      (a) => (a.status || "").toLowerCase() === "completed"
     ).length;
     const pendingCount = filteredAppointments.filter(
-      (a) => a.status === "Scheduled" || a.status === "In Progress"
+      (a) => {
+        const s = (a.status || "").toLowerCase();
+        return s === "scheduled" || s === "in progress";
+      }
     ).length;
     const cancelledCount = filteredAppointments.filter(
-      (a) => a.status === "Cancelled"
+      (a) => (a.status || "").toLowerCase() === "cancelled"
     ).length;
     const followUpCount = filteredAppointments.filter(
-      (a) => a.visitType.toLowerCase().includes("follow")
+      (a) => (a.visitType || "").toLowerCase().includes("follow")
     ).length;
 
     return {
@@ -414,10 +416,10 @@ export function DoctorDailyAppointmentReportScreen({
   // Donut & Chart Data
   const apptStatusData = useMemo(() => {
     if (filteredAppointments.length > 0) {
-      const completed = filteredAppointments.filter((a) => a.status === "Completed").length;
-      const inProgress = filteredAppointments.filter((a) => a.status === "In Progress").length;
-      const scheduled = filteredAppointments.filter((a) => a.status === "Scheduled").length;
-      const cancelled = filteredAppointments.filter((a) => a.status === "Cancelled").length;
+      const completed = filteredAppointments.filter((a) => (a.status || "").toLowerCase() === "completed").length;
+      const inProgress = filteredAppointments.filter((a) => (a.status || "").toLowerCase() === "in progress").length;
+      const scheduled = filteredAppointments.filter((a) => (a.status || "").toLowerCase() === "scheduled").length;
+      const cancelled = filteredAppointments.filter((a) => (a.status || "").toLowerCase() === "cancelled").length;
 
       const list = [
         { name: "Completed", value: completed, color: "#66BB6A" },
@@ -475,10 +477,10 @@ export function DoctorDailyAppointmentReportScreen({
 
   const visitTypeData = useMemo(() => {
     if (filteredAppointments.length > 0) {
-      const newPatients = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("new")).length;
-      const followUp = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("follow")).length;
-      const checkup = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("check")).length;
-      const walkIn = filteredAppointments.filter((a) => a.visitType.toLowerCase().includes("walk")).length;
+      const newPatients = filteredAppointments.filter((a) => (a.visitType || "").toLowerCase().includes("new")).length;
+      const followUp = filteredAppointments.filter((a) => (a.visitType || "").toLowerCase().includes("follow")).length;
+      const checkup = filteredAppointments.filter((a) => (a.visitType || "").toLowerCase().includes("check")).length;
+      const walkIn = filteredAppointments.filter((a) => (a.visitType || "").toLowerCase().includes("walk")).length;
 
       return [
         { visitType: "New Patient", count: newPatients },
@@ -501,59 +503,36 @@ export function DoctorDailyAppointmentReportScreen({
       style={{ fontFamily: RB }}
     >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Doctor
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Daily Appointment Report
-                </span>
-              </nav>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Daily Appointment Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-                  Doctor Access Scoped
-                </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack || (() => window.history.back())}
+                className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer shadow-2xs"
+                title="Go Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1
+                    className="text-2xl font-bold text-[#111827]"
+                    style={{ fontFamily: PP }}
+                  >
+                    Daily Appointment Report
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
+                    Doctor Access Scoped
+                  </span>
+                </div>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Monitor your appointments, consultation schedule, and daily performance metrics.
+                </p>
               </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor your appointments, consultation schedule, and daily performance metrics.
-              </p>
             </div>
 
             {/* Header Actions */}
             <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => (onBack ? onBack() : window.history.back())}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition shadow-sm cursor-pointer mr-1"
-                style={{ fontFamily: PP }}
-              >
-                <ArrowLeft size={14} />
-                Back
-              </button>
-
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -605,7 +584,6 @@ export function DoctorDailyAppointmentReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
@@ -803,30 +781,7 @@ export function DoctorDailyAppointmentReportScreen({
         )}
 
         {/* 2. SEARCH & FILTERS BAR */}
-        <div className="space-y-4">
-          {/* Global Search Bar */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-              <input
-                aria-label="Input field"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search Appointment ID, Patient Name, MRN..."
-                className="w-full pl-10 pr-16 py-2.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-
+        <div>
           {/* Doctor Filter Bar */}
           <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -954,19 +909,40 @@ export function DoctorDailyAppointmentReportScreen({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
-              <button
-                onClick={handleResetFilters}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
-              >
-                Reset Filters
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-              >
-                Apply Filters
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
+              <div className="relative w-full sm:w-72 md:w-80">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+                <input
+                  aria-label="Input field"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Appointment ID, Patient Name, MRN..."
+                  className="w-full pl-10 pr-16 py-2 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  onClick={handleResetFilters}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
+                >
+                  Reset Filters
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>

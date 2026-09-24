@@ -15,7 +15,6 @@ import {
   DollarSign,
   FileText,
   CheckCircle2,
-  ChevronRight,
   Plus,
   Copy,
   X,
@@ -106,23 +105,23 @@ type BillingFormAction =
   | { type: "SET_PATIENT_SEARCH"; payload: string }
   | { type: "SET_SHOW_SEARCH_DROPDOWN"; payload: boolean }
   | {
-      type: "SELECT_PATIENT";
-      payload: { patient: Patient | null; search: string };
-    }
+    type: "SELECT_PATIENT";
+    payload: { patient: Patient | null; search: string };
+  }
   | { type: "SELECT_BILLING_RECORD"; payload: BillListItem | null }
   | {
-      type: "SET_PATIENT_CATEGORY";
-      payload: "General" | "Insurance" | "Corporate" | "VIP";
-    }
+    type: "SET_PATIENT_CATEGORY";
+    payload: "General" | "Insurance" | "Corporate" | "VIP";
+  }
   | { type: "SET_LINE_ITEMS"; payload: BillingLineItem[] }
   | {
-      type: "UPDATE_LINE_ITEM";
-      payload: {
-        id: string;
-        field: keyof BillingLineItem;
-        val: string | number;
-      };
-    }
+    type: "UPDATE_LINE_ITEM";
+    payload: {
+      id: string;
+      field: keyof BillingLineItem;
+      val: string | number;
+    };
+  }
   | { type: "ADD_LINE_ITEM"; payload: BillingLineItem }
   | { type: "DUPLICATE_LINE_ITEM"; payload: BillingLineItem }
   | { type: "REMOVE_LINE_ITEM"; payload: string }
@@ -132,14 +131,14 @@ type BillingFormAction =
   | { type: "SET_ADDITIONAL_CHARGES"; payload: number }
   | { type: "SET_BILLING_REMARKS"; payload: string }
   | {
-      type: "LOAD_BILL_WORKSPACE";
-      payload: {
-        lineItems?: BillingLineItem[];
-        discountType?: "Fixed" | "Percentage";
-        discountValue?: number;
-        billingRemarks?: string;
-      };
+    type: "LOAD_BILL_WORKSPACE";
+    payload: {
+      lineItems?: BillingLineItem[];
+      discountType?: "Fixed" | "Percentage";
+      discountValue?: number;
+      billingRemarks?: string;
     };
+  };
 
 function billingFormReducer(
   state: BillingFormState,
@@ -452,11 +451,11 @@ export function CreateInvoiceWorkspacePage() {
     if (appointment || selectedBillingRecord) {
       const fee = Number(
         appointment?.doctor?.consultationFee ||
-          appointment?.feeAmount ||
-          selectedBillingRecord?.consultationFee ||
-          selectedBillingRecord?.summary?.grossAmount ||
-          selectedBillingRecord?.summary?.netAmount ||
-          0,
+        appointment?.feeAmount ||
+        selectedBillingRecord?.consultationFee ||
+        selectedBillingRecord?.summary?.grossAmount ||
+        selectedBillingRecord?.summary?.netAmount ||
+        0,
       );
       queueMicrotask(() => {
         dispatch({
@@ -518,8 +517,8 @@ export function CreateInvoiceWorkspacePage() {
   const previouslyPaid = useMemo(() => {
     return Number(
       billWorkspace?.summary?.paidAmount ??
-        selectedBillingRecord?.summary?.paidAmount ??
-        0,
+      selectedBillingRecord?.summary?.paidAmount ??
+      0,
     );
   }, [billWorkspace, selectedBillingRecord]);
 
@@ -678,9 +677,9 @@ export function CreateInvoiceWorkspacePage() {
                     item.serviceName === "OPD Consultation Fee"
                       ? "SERV_CONSULT_GEN"
                       : "SERV_" +
-                        item.serviceName
-                          .toUpperCase()
-                          .replace(/[^A-Z0-9]/g, "_"),
+                      item.serviceName
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, "_"),
                   itemName: item.serviceName,
                   description: `${item.category} service: ${item.serviceName}`,
                   quantity: item.quantity,
@@ -727,9 +726,9 @@ export function CreateInvoiceWorkspacePage() {
                           item.serviceName === "OPD Consultation Fee"
                             ? "SERV_CONSULT_GEN"
                             : "SERV_" +
-                              item.serviceName
-                                .toUpperCase()
-                                .replace(/[^A-Z0-9]/g, "_"),
+                            item.serviceName
+                              .toUpperCase()
+                              .replace(/[^A-Z0-9]/g, "_"),
                         itemName: item.serviceName,
                         description: `${item.category} service: ${item.serviceName} (Updated)`,
                         quantity: item.quantity,
@@ -746,9 +745,9 @@ export function CreateInvoiceWorkspacePage() {
                         item.serviceName === "OPD Consultation Fee"
                           ? "SERV_CONSULT_GEN"
                           : "SERV_" +
-                            item.serviceName
-                              .toUpperCase()
-                              .replace(/[^A-Z0-9]/g, "_"),
+                          item.serviceName
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9]/g, "_"),
                       itemName: item.serviceName,
                       description: `${item.category} service: ${item.serviceName}`,
                       quantity: item.quantity,
@@ -939,7 +938,7 @@ export function CreateInvoiceWorkspacePage() {
   return (
     <div className="w-full bg-[#F1F5F9] min-h-screen p-4 md:p-6 pb-28 space-y-6">
       {/* 1. PAGE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <button
             type="button"
@@ -950,43 +949,21 @@ export function CreateInvoiceWorkspacePage() {
             <ArrowLeft size={16} />
             Back
           </button>
-          <div
-            className="flex items-center gap-2 text-xs text-[#64748B] mb-1 font-medium"
-            style={{ fontFamily: RB }}
-          >
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate("/billing")}
-            >
-              Home
-            </button>
-            <ChevronRight size={12} />
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate("/billing")}
-            >
-              Billing & Payment
-            </button>
-            <ChevronRight size={12} />
-            <span className="text-[#0D47A1] font-semibold">Create Invoice</span>
-          </div>
           <h1
-            className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight"
+            className="text-xl font-bold text-[#111827]"
             style={{ fontFamily: PP }}
           >
             Create Invoice Workspace
           </h1>
           <p
-            className="text-xs md:text-sm text-[#64748B] mt-0.5"
+            className="text-xs text-[#64748B] mt-0.5"
             style={{ fontFamily: RB }}
           >
             Generate an invoice for completed consultation services, calculate
             charges, collect payment information and prepare the final bill.
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => navigate("/billing")}
             className="px-4 py-2.5 rounded-xl bg-white border border-[#E5E7EB] text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
@@ -1168,18 +1145,17 @@ export function CreateInvoiceWorkspacePage() {
                               </span>
                             )}
                             <span
-                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                                String(bill.paymentStatus).toUpperCase() ===
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${String(bill.paymentStatus).toUpperCase() ===
                                 "PAID"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                  : String(bill.paymentStatus).toUpperCase() ===
-                                        "PARTIALLY_PAID" ||
-                                      String(
-                                        bill.paymentStatus,
-                                      ).toUpperCase() === "PARTIAL_PAID"
-                                    ? "bg-blue-50 text-blue-700 border-blue-100"
-                                    : "bg-amber-50 text-amber-700 border-amber-100"
-                              }`}
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                                : String(bill.paymentStatus).toUpperCase() ===
+                                  "PARTIALLY_PAID" ||
+                                  String(
+                                    bill.paymentStatus,
+                                  ).toUpperCase() === "PARTIAL_PAID"
+                                  ? "bg-blue-50 text-blue-700 border-blue-100"
+                                  : "bg-amber-50 text-amber-700 border-amber-100"
+                                }`}
                             >
                               {String(bill.paymentStatus || "Unpaid").replace(
                                 /_/g,
@@ -1820,11 +1796,10 @@ export function CreateInvoiceWorkspacePage() {
                       const v = e.currentTarget.valueAsNumber;
                       handleAmountReceivedChange(Number.isFinite(v) ? v : 0);
                     }}
-                    className={`w-full px-3 py-2 rounded-xl border ${
-                      isOverpayment || isNegativePayment
-                        ? "border-red-400 bg-red-50/50"
-                        : "border-[#E5E7EB] bg-slate-50"
-                    } font-bold text-[#111827] focus:bg-white focus:border-[#0D47A1] focus:outline-none`}
+                    className={`w-full px-3 py-2 rounded-xl border ${isOverpayment || isNegativePayment
+                      ? "border-red-400 bg-red-50/50"
+                      : "border-[#E5E7EB] bg-slate-50"
+                      } font-bold text-[#111827] focus:bg-white focus:border-[#0D47A1] focus:outline-none`}
                   />
                 </span>
                 {isOverpayment && (
@@ -2013,15 +1988,6 @@ export function CreateInvoiceWorkspacePage() {
         </div>
       </div>
 
-      {/* BOTTOM STICKY ACTION BAR */}
-      <div className="sticky bottom-0 -mx-4 md:-mx-6 -mb-4 md:-mb-6 bg-white/95 backdrop-blur-md border-t border-[#E5E7EB] p-3.5 px-6 z-40 flex items-center justify-between shadow-lg">
-        <button
-          onClick={() => navigate("/billing")}
-          className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-100 cursor-pointer"
-        >
-          Back to Billing
-        </button>
-      </div>
 
       {/* SUCCESS MODAL */}
       {showSuccessModal && (

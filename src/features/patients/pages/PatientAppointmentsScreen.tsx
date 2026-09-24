@@ -5,7 +5,6 @@ import {
   Filter,
   Download,
   RefreshCw,
-  ChevronRight,
   Eye,
   X,
   Calendar,
@@ -14,6 +13,7 @@ import {
   CheckCircle2,
   XCircle,
   Building2,
+  ArrowLeft,
 } from "lucide-react";
 import type {
   PatientAppointment,
@@ -32,7 +32,6 @@ import { DataTable } from "../../../common/components/DataTable";
 import type { ApiResponse } from "../../auth/types/auth.types";
 import { to24Hour } from "../../../lib/time-utils";
 import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
-import { ROUTES } from "../../../app/routes/routes";
 
 function formatDisplayTime(timeStr?: string): string {
   if (!timeStr) return "09:00 AM";
@@ -964,6 +963,10 @@ export function PatientAppointmentsScreen({
     filterDispatch({ type: "RESET_FILTERS" });
   };
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div
       className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#F1F5F9]"
@@ -983,29 +986,13 @@ export function PatientAppointmentsScreen({
           <div className="flex items-center gap-1.5 text-[11px] text-[#64748B] mb-1.5">
             <button
               type="button"
-              onClick={() => navigate(ROUTES.DASHBOARD)}
-              className="hover:text-[#0D47A1] transition-colors font-medium cursor-pointer"
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+              style={{ fontFamily: RB }}
             >
-              Patient Portal
+              <ArrowLeft size={16} />
+              Back
             </button>
-            <ChevronRight size={12} className="text-slate-400" />
-            {activePatient?.name && (
-              <>
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      `/patients/profile/${activePatient.mrn || activePatient.id}`,
-                    )
-                  }
-                  className="hover:text-[#0D47A1] transition-colors font-medium cursor-pointer"
-                >
-                  {activePatient.name}
-                </button>
-                <ChevronRight size={12} className="text-slate-400" />
-              </>
-            )}
-            <span className="font-semibold text-[#0D47A1]">Appointments</span>
           </div>
           <h1
             className="text-xl font-bold text-[#111827]"

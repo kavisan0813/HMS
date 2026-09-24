@@ -290,7 +290,9 @@ export function ConsultationDetailsScreen({
 
     async function loadRealEncounterData() {
       try {
-        setLoading(true);
+        if (!initialRecord) {
+          setLoading(true);
+        }
         const rawEncIdStr = String(targetEncId).trim();
         const encIdNum = Number(rawEncIdStr.replace(/\D+/g, "")) || Number(targetEncId) || 0;
         if (encIdNum <= 0) return;
@@ -1037,7 +1039,7 @@ export function ConsultationDetailsScreen({
     return () => {
       isMounted = false;
     };
-  }, [encounterId, consultationId, initialRecord, reloadCounter]);
+  }, [encounterId, consultationId, reloadCounter, initialRecord]);
 
   const patientInitials = (record.patientName || "PT")
     .split(" ")
@@ -1088,39 +1090,63 @@ export function ConsultationDetailsScreen({
   return (
     <div className="flex-1 bg-[#F1F5F9] overflow-y-auto flex flex-col font-sans relative pb-24">
       {/* ── BREADCRUMB & HEADER SECTION ── */}
-      <div className="bg-white border-b border-[#E5E7EB] px-6 py-4 no-print">
+      <div className="border-b border-[#E5E7EB] px-6 py-4 no-print">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1
-                className="text-2xl font-bold text-[#111827]"
-                style={{ fontFamily: PP }}
-              >
-                Consultation Details
-              </h1>
-              <span
-                className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-[#66BB6A] border border-green-200"
-                style={{ fontFamily: PP }}
-              >
-                {record.status}
-              </span>
-            </div>
-            <p
-              className="text-sm text-[#64748B] mt-0.5"
-              style={{ fontFamily: RB }}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onBack || (() => window.history.back())}
+              className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer shadow-2xs"
+              title="Go Back"
             >
-              Review completed consultation records.
-            </p>
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1
+                  className="text-2xl font-bold text-[#111827]"
+                  style={{ fontFamily: PP }}
+                >
+                  Consultation Details
+                </h1>
+                <span
+                  className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-[#66BB6A] border border-green-200"
+                  style={{ fontFamily: PP }}
+                >
+                  {record.status}
+                </span>
+              </div>
+              <p
+                className="text-sm text-[#64748B] mt-0.5"
+                style={{ fontFamily: RB }}
+              >
+                Review completed consultation records.
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={onBack ? onBack : () => navigate(-1)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#E5E7EB] bg-white text-[#111827] hover:bg-slate-50 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+              onClick={() => (onBack ? onBack() : navigate(-1))}
+              className="px-4 py-2 border border-[#E5E7EB] bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-colors shadow-sm cursor-pointer"
               style={{ fontFamily: PP }}
             >
-              <ArrowLeft size={14} />
-              Back
+              Cancel
+            </button>
+            <button
+              onClick={handlePrint}
+              className="px-4 py-2 border border-[#E5E7EB] bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+              style={{ fontFamily: PP }}
+            >
+              <Printer size={15} className="text-[#009688]" />
+              Print Prescription
+            </button>
+            <button
+              onClick={handleStartEdit}
+              className="px-4 py-2 bg-[#0D47A1] hover:bg-[#0a3880] text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              style={{ fontFamily: PP }}
+            >
+              <Edit3 size={15} />
+              Edit Consultation
             </button>
           </div>
         </div>
@@ -2095,41 +2121,6 @@ export function ConsultationDetailsScreen({
               </span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ── STICKY FOOTER ACTION BAR ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#E5E7EB] px-6 py-3 shadow-lg flex items-center justify-between no-print">
-        <div className="text-xs text-[#64748B]" style={{ fontFamily: RB }}>
-          Consultation Record{" "}
-          <strong className="text-[#0D47A1]">{record.id}</strong> ·{" "}
-          {record.patientName}
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => (onBack ? onBack() : navigate(-1))}
-            className="px-4 py-2 border border-[#E5E7EB] bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-colors shadow-sm cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePrint}
-            className="px-4 py-2 border border-[#E5E7EB] bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <Printer size={15} className="text-[#009688]" />
-            Print Prescription
-          </button>
-          <button
-            onClick={handleStartEdit}
-            className="px-4 py-2 bg-[#0D47A1] hover:bg-[#0a3880] text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <Edit3 size={15} />
-            Edit Consultation
-          </button>
         </div>
       </div>
 

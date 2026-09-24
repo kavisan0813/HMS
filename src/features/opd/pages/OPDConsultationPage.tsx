@@ -238,8 +238,8 @@ function mapQueueItemToConsultation(
     (typeof rawItem.department === "string"
       ? (rawItem.department as string)
       : ((rawItem.department as Record<string, unknown>)
-          ?.departmentName as string) ||
-        ((rawItem.department as Record<string, unknown>)?.name as string)) ||
+        ?.departmentName as string) ||
+      ((rawItem.department as Record<string, unknown>)?.name as string)) ||
     (rawItem.deptName as string) ||
     (rawItem.dept as string) ||
     (rawItem.specialty as string) ||
@@ -300,11 +300,11 @@ function mapQueueItemToConsultation(
   return {
     id: String(
       item.appointmentId ||
-        (rawItem.appointmentId as number) ||
-        (rawItem.appointment as Record<string, unknown>)?.id ||
-        rawItem.id ||
-        rawItem.queueId ||
-        "",
+      (rawItem.appointmentId as number) ||
+      (rawItem.appointment as Record<string, unknown>)?.id ||
+      rawItem.id ||
+      rawItem.queueId ||
+      "",
     ),
     appointmentId:
       item.appointmentId ||
@@ -332,14 +332,14 @@ function mapQueueItemToConsultation(
       item.patient?.age && item.patient.age > 0
         ? item.patient.age
         : calculateAge(
-            item.patient?.dateOfBirth ||
-              (patientObj.dateOfBirth as string) ||
-              (rawItem.dob as string),
-          ),
+          item.patient?.dateOfBirth ||
+          (patientObj.dateOfBirth as string) ||
+          (rawItem.dob as string),
+        ),
     gender: normalizeGender(
       item.patient?.gender ||
-        (patientObj.gender as string) ||
-        (rawItem.gender as string),
+      (patientObj.gender as string) ||
+      (rawItem.gender as string),
     ),
     phone,
     doctor: doctorName,
@@ -1117,20 +1117,30 @@ function OPDConsultationPage({
   }
 
   return (
-    <div className="flex-1 bg-[#F1F5F9] overflow-y-auto flex flex-col font-sans">
+    <div className="flex-1 bg-[#F1F5F9] overflow-y-auto flex flex-col font-sans p-6 space-y-6">
       {/* ── BREADCRUMB & HEADER SECTION ── */}
       <ConsultationHeader
-        roleLabel={resolvedRole === "admin" ? "Hospital Admin" : "Doctor"}
+        roleLabel={
+          userRoleUpper === "NURSE"
+            ? "Nurse"
+            : resolvedRole === "admin"
+              ? "Hospital Admin"
+              : "Doctor"
+        }
         moduleLabel="OPD Consultation Management"
         pageTitle={
-          resolvedRole === "admin"
-            ? "OPD Consultation Monitoring"
-            : "OPD Consultation Management"
+          userRoleUpper === "NURSE"
+            ? "OPD Consultation Management"
+            : resolvedRole === "admin"
+              ? "OPD Consultation Monitoring"
+              : "OPD Consultation Management"
         }
         subtitle={
-          resolvedRole === "admin"
-            ? "Monitor outpatient consultation workflow and doctor activities."
-            : "Manage outpatient consultations and patient visits efficiently."
+          userRoleUpper === "NURSE"
+            ? "Manage and monitor outpatient consultations, patient queue and doctor activities."
+            : resolvedRole === "admin"
+              ? "Monitor outpatient consultation workflow and doctor activities."
+              : "Manage outpatient consultations and patient visits efficiently."
         }
         breadcrumbs={[]}
         onBack={() => navigate(-1)}
@@ -1138,7 +1148,7 @@ function OPDConsultationPage({
           resolvedRole === "admin" ? (
             <>
 
-             <button
+              <button
                 onClick={() => setShowSummaryModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-[#111827] hover:bg-slate-50 text-sm font-semibold transition-colors shadow-sm"
                 style={{ fontFamily: PP }}
@@ -1191,87 +1201,85 @@ function OPDConsultationPage({
         }
       />
 
-      <div className="p-6 space-y-6 flex-1">
-        {queueError && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            Unable to load consultation queue:{" "}
-            {queueError instanceof Error
-              ? queueError.message
-              : "Please refresh and try again."}
-          </div>
-        )}
-        {toastMsg && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {toastMsg}
-          </div>
-        )}
-        {/* ── SUMMARY KPI CARDS ── */}
-        <ConsultationKPICards
-          role={resolvedRole}
-          consultations={consultations}
-          tabCounts={tabCounts}
+      {queueError && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Unable to load consultation queue:{" "}
+          {queueError instanceof Error
+            ? queueError.message
+            : "Please refresh and try again."}
+        </div>
+      )}
+      {toastMsg && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {toastMsg}
+        </div>
+      )}
+      {/* ── SUMMARY KPI CARDS ── */}
+      <ConsultationKPICards
+        role={resolvedRole}
+        consultations={consultations}
+        tabCounts={tabCounts}
+      />
+
+      {/* LEFT & CENTER CONTENT */}
+      <div className="space-y-6">
+        {/* CONSULTATION STATUS TABS */}
+        <ConsultationTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          tabs={tabs}
         />
 
-        {/* LEFT & CENTER CONTENT */}
-        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
-          {/* CONSULTATION STATUS TABS */}
-          <ConsultationTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabs={tabs}
-          />
-
-          {/* ENTERPRISE DATA TABLE WITH EMBEDDED SEARCH & FILTERS */}
-          <ConsultationTable
-            role={resolvedRole}
-            filteredConsultations={filteredConsultations}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            filterDate={filters.filterDate}
-            onDateChange={(value) => setFilter("filterDate", value)}
-            filterDoctor={filters.filterDoctor}
-            onDoctorChange={(value) => setFilter("filterDoctor", value)}
-            filterDepartment={filters.filterDepartment}
-            onDepartmentChange={(value) => setFilter("filterDepartment", value)}
-            filterStatus={filters.filterStatus}
-            onStatusChange={(value) => setFilter("filterStatus", value)}
-            filterVisitType={filters.filterVisitType}
-            onVisitTypeChange={(value) => setFilter("filterVisitType", value)}
-            doctorOptions={doctorOptions}
-            departmentOptions={departmentOptions}
-            visibleFilters={
-              resolvedRole !== "doctor"
-                ? ["status", "visitType", "doctor", "department"]
-                : ["status", "visitType"]
-            }
-            onStartConsultation={
-              resolvedRole === "doctor"
-                ? (id) => {
-                    const record = consultations.find((c) => c.id === id);
-                    if (record) handleStartConsultation(record);
-                  }
-                : undefined
-            }
-            onOpenConsultation={
-              resolvedRole === "doctor" ? handleOpenConsultation : undefined
-            }
-            onCallPatient={
-              resolvedRole === "doctor" ? handleCallPatient : undefined
-            }
-            onCancelConsultation={undefined}
-            onViewDetails={handleViewPrescriptionDetails}
-            onViewHistory={onViewHistory}
-            onPatientSelect={onPatientSelect}
-            onPrint={(item) =>
-              void alert(`Printed Operational Summary for ${item.id}`)
-            }
-            onResetFilters={handleResetFilters}
-            canStartConsultation={resolvedRole === "doctor"}
-            canPrint={can("CONSULTATION_PRINT")}
-            calledPatientIds={calledPatientIds}
-          />
-        </div>
+        {/* ENTERPRISE DATA TABLE WITH EMBEDDED SEARCH & FILTERS */}
+        <ConsultationTable
+          role={resolvedRole}
+          filteredConsultations={filteredConsultations}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterDate={filters.filterDate}
+          onDateChange={(value) => setFilter("filterDate", value)}
+          filterDoctor={filters.filterDoctor}
+          onDoctorChange={(value) => setFilter("filterDoctor", value)}
+          filterDepartment={filters.filterDepartment}
+          onDepartmentChange={(value) => setFilter("filterDepartment", value)}
+          filterStatus={filters.filterStatus}
+          onStatusChange={(value) => setFilter("filterStatus", value)}
+          filterVisitType={filters.filterVisitType}
+          onVisitTypeChange={(value) => setFilter("filterVisitType", value)}
+          doctorOptions={doctorOptions}
+          departmentOptions={departmentOptions}
+          visibleFilters={
+            resolvedRole !== "doctor"
+              ? ["status", "visitType", "doctor", "department"]
+              : ["status", "visitType"]
+          }
+          onStartConsultation={
+            resolvedRole === "doctor"
+              ? (id) => {
+                const record = consultations.find((c) => c.id === id);
+                if (record) handleStartConsultation(record);
+              }
+              : undefined
+          }
+          onOpenConsultation={
+            resolvedRole === "doctor" ? handleOpenConsultation : undefined
+          }
+          onCallPatient={
+            resolvedRole === "doctor" ? handleCallPatient : undefined
+          }
+          onCancelConsultation={undefined}
+          onViewDetails={handleViewPrescriptionDetails}
+          onViewHistory={onViewHistory}
+          onPatientSelect={onPatientSelect}
+          onPrint={(item) =>
+            void alert(`Printed Operational Summary for ${item.id}`)
+          }
+          onResetFilters={handleResetFilters}
+          canStartConsultation={resolvedRole === "doctor"}
+          canPrint={can("CONSULTATION_PRINT")}
+          calledPatientIds={calledPatientIds}
+        />
       </div>
       {/* ── TODAY'S SUMMARY MODAL (Admin only) ── */}
       <OperationalSummaryModal

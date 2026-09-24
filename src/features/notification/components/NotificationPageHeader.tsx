@@ -1,11 +1,12 @@
+import { useNavigate } from "react-router";
 import {
-  ChevronRight,
   CheckCircle2,
   RefreshCw,
   Settings,
   Download,
+  ArrowLeft,
 } from "lucide-react";
-import { PP } from "../constants/notifications.constants";
+import { PP, RB } from "../constants/notifications.constants";
 
 export interface NotificationPageHeaderProps {
   currentRole: string;
@@ -26,16 +27,19 @@ export function NotificationPageHeader({
   canExport,
   onExport,
 }: NotificationPageHeaderProps) {
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
       <div>
-        <div className="flex items-center gap-2 text-xs text-[#64748B] mb-1">
-          <span>Hospital</span>
-          <ChevronRight className="w-3.5 h-3.5" />
-          <span className="font-medium text-[#0D47A1]">
-            Notification Center
-          </span>
-        </div>
+        <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+            style={{ fontFamily: RB }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
         <div className="flex items-center gap-3">
           <h1
             style={{ fontFamily: PP }}

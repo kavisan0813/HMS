@@ -15,7 +15,6 @@ import { DoctorReportsDashboardScreen } from "./DoctorDashboard";
 import { DoctorDailyAppointmentReportScreen } from "./DoctorAppointmentReport";
 import { DoctorPatientReportScreen } from "./DoctorPatientReport";
 import { DoctorDoctorReportScreen } from "./DoctorSelfReport";
-import { DoctorDashboardKpiDetailScreen } from "./DoctorKpiDetail";
 
 // Receptionist pages
 import { ReceptionistReportsDashboardScreen } from "./ReceptionistDashboard";
@@ -29,7 +28,6 @@ import { AccountantDailyRevenueReportScreen } from "./AccountantRevenueReport";
 import { AccountantBillingReportScreen } from "./AccountantBillingReport";
 import { AccountantDashboardKpiDetailScreen } from "./AccountantKpiDetail";
 
-import type { DoctorKpiKey } from "../types/reports.types";
 
 export function ReportsDashboardPage() {
   const {
@@ -52,21 +50,7 @@ export function ReportsDashboardPage() {
     if (activeView === "doctor-performance" || activeView === "REP-004") {
       return <DoctorDoctorReportScreen onBack={handleBack} />;
     }
-    if (activeKpi) {
-      return (
-        <DoctorDashboardKpiDetailScreen
-          onBack={handleBack}
-          initialKpiKey={activeKpi as DoctorKpiKey}
-          onOpenReport={handleOpenReport}
-        />
-      );
-    }
-    return (
-      <DoctorReportsDashboardScreen
-        onOpenReport={handleOpenReport}
-        onOpenKpiDetail={handleOpenKpi}
-      />
-    );
+    return <DoctorReportsDashboardScreen onOpenReport={handleOpenReport} />;
   }
 
   // Receptionist role

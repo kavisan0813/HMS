@@ -4,7 +4,6 @@ import {
   RefreshCw,
   Filter,
   Search,
-  ChevronRight,
   Users,
   UserCheck,
   Activity,
@@ -352,19 +351,19 @@ export function DoctorPatientReportScreen({
       // 1. Search filter
       const matchesSearch =
         !query ||
-        mapped.patientName.toLowerCase().includes(query) ||
-        mapped.mrn.toLowerCase().includes(query) ||
-        mapped.mobileNumber.includes(query);
+        (mapped.patientName || "").toLowerCase().includes(query) ||
+        (mapped.mrn || "").toLowerCase().includes(query) ||
+        (mapped.mobileNumber || "").includes(query);
 
       // 2. Visit Type filter
       const matchesVisit =
         visitTypeFilter === "All Visit Types" ||
-        mapped.visitType.toLowerCase() === visitTypeFilter.toLowerCase();
+        (mapped.visitType || "").toLowerCase() === visitTypeFilter.toLowerCase();
 
       // 3. Consult Status filter
       const matchesStatus =
         consultStatusFilter === "All Statuses" ||
-        mapped.status.toLowerCase() === consultStatusFilter.toLowerCase();
+        (mapped.status || "").toLowerCase() === consultStatusFilter.toLowerCase();
 
       // 4. Date Range filter
       const extractDateStr = (rec: DoctorPatientRecord): string | null => {
@@ -391,16 +390,23 @@ export function DoctorPatientReportScreen({
   const kpi = (() => {
     const totalPatients = filteredPatients.length;
     const newPatients = filteredPatients.filter((p) =>
-      p.visitType.toLowerCase().includes("new"),
+      (p.visitType || "").toLowerCase().includes("new"),
     ).length;
     const returningPatients = filteredPatients.filter(
-      (p) =>
-        p.visitType.toLowerCase().includes("follow") ||
-        p.visitType.toLowerCase().includes("routine") ||
-        p.visitType.toLowerCase().includes("walk"),
+      (p) => {
+        const vt = (p.visitType || "").toLowerCase();
+        return (
+          vt.includes("follow") ||
+          vt.includes("routine") ||
+          vt.includes("walk")
+        );
+      },
     ).length;
     const completedConsults = filteredPatients.filter(
-      (p) => p.status === "Completed" || p.status === "Active",
+      (p) => {
+        const s = (p.status || "").toLowerCase();
+        return s === "completed" || s === "active";
+      },
     ).length;
     const scheduledFollowUps = filteredPatients.filter(
       (p) => p.followUpDate && p.followUpDate !== "N/A",
@@ -457,16 +463,16 @@ export function DoctorPatientReportScreen({
 
   const visitTypeDistData = useMemo(() => {
     const newCount = filteredPatients.filter((p) =>
-      p.visitType.toLowerCase().includes("new"),
+      (p.visitType || "").toLowerCase().includes("new"),
     ).length;
     const followCount = filteredPatients.filter((p) =>
-      p.visitType.toLowerCase().includes("follow"),
+      (p.visitType || "").toLowerCase().includes("follow"),
     ).length;
     const checkupCount = filteredPatients.filter((p) =>
-      p.visitType.toLowerCase().includes("check"),
+      (p.visitType || "").toLowerCase().includes("check"),
     ).length;
     const walkInCount = filteredPatients.filter((p) =>
-      p.visitType.toLowerCase().includes("walk"),
+      (p.visitType || "").toLowerCase().includes("walk"),
     ).length;
 
     return [
@@ -504,60 +510,37 @@ export function DoctorPatientReportScreen({
       style={{ fontFamily: RB }}
     >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Doctor
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Patient Report
-                </span>
-              </nav>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Patient Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-                  Doctor Scoped
-                </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack || (() => window.history.back())}
+                className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer shadow-2xs"
+                title="Go Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1
+                    className="text-2xl font-bold text-[#111827]"
+                    style={{ fontFamily: PP }}
+                  >
+                    Patient Report
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
+                    Doctor Scoped
+                  </span>
+                </div>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Analyze your patient demographics, consultations, and follow-up
+                  activities.
+                </p>
               </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Analyze your patient demographics, consultations, and follow-up
-                activities.
-              </p>
             </div>
 
             {/* Header Actions */}
             <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => (onBack ? onBack() : window.history.back())}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition shadow-sm cursor-pointer mr-1"
-                style={{ fontFamily: PP }}
-              >
-                <ArrowLeft size={14} />
-                Back
-              </button>
-
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -609,8 +592,6 @@ export function DoctorPatientReportScreen({
             </div>
           </div>
         </div>
-      </div>
-
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
         {/* 1. TOP 6 DOCTOR PATIENT KPI CARDS */}
@@ -826,30 +807,7 @@ export function DoctorPatientReportScreen({
         )}
 
         {/* 2. SEARCH & FILTERS BAR */}
-        <div className="space-y-4">
-          {/* Global Search Bar */}
-          <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-              <input
-                aria-label="Input field"
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search Patient Name, MRN, Mobile Number..."
-                className="w-full pl-10 pr-16 py-2.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-
+        <div>
           {/* Doctor Filter Bar */}
           <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
@@ -976,19 +934,40 @@ export function DoctorPatientReportScreen({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
-              <button
-                onClick={handleResetFilters}
-                className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
-              >
-                Reset Filters
-              </button>
-              <button
-                onClick={handleRefresh}
-                className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-              >
-                Apply Filters
-              </button>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
+              <div className="relative w-full sm:w-72 md:w-80">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+                <input
+                  aria-label="Input field"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Patient Name, MRN, Mobile Number..."
+                  className="w-full pl-10 pr-16 py-2 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  onClick={handleResetFilters}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
+                >
+                  Reset Filters
+                </button>
+                <button
+                  onClick={handleRefresh}
+                  className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1487,48 +1466,6 @@ export function DoctorPatientReportScreen({
                     <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-            </div>
-
-            {/* 6. RECENT PATIENT ACTIVITIES TIMELINE */}
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
-              <h3
-                className="text-base font-bold text-[#111827] mb-4"
-                style={{ fontFamily: PP }}
-              >
-                Recent Patient Activity Timeline
-              </h3>
-              <div className="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-[#E5E7EB]">
-                {(
-                  [] as Array<{
-                    id: string;
-                    title: string;
-                    time: string;
-                    action?: string;
-                    date?: string;
-                    detail?: string;
-                  }>
-                ).map((act) => (
-                  <div
-                    key={act.id}
-                    className="flex items-start gap-4 relative z-10"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-white border-2 border-[#009688] flex items-center justify-center text-[#009688] shrink-0">
-                      <Activity className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="bg-[#F1F5F9] rounded-xl p-3 border border-[#E5E7EB] flex-1 text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-[#111827]">
-                          {act.action}
-                        </span>
-                        <span className="text-[11px] text-[#64748B]">
-                          {act.date} • {act.time}
-                        </span>
-                      </div>
-                      <p className="text-[#64748B]">{act.detail}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

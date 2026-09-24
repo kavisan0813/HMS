@@ -160,11 +160,11 @@ export function VitalsDetailsScreen({
       style={{ fontFamily: RB }}
     >
       {/* HEADER & BACK NAVIGATION */}
-      <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm flex items-center justify-between">
+      <div className=" flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-[#E5E7EB] flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-xl bg-slate-50 hover:bg-slate-100 border border-[#E5E7EB] flex items-center justify-center  bg-white text-slate-600 transition-colors cursor-pointer"
             title="Back to Vitals Queue"
           >
             <ArrowLeft size={18} />
@@ -182,13 +182,24 @@ export function VitalsDetailsScreen({
           </div>
         </div>
 
-        <button
-          onClick={onBack}
-          className="px-4 py-2 rounded-xl border border-[#E5E7EB] bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-          style={{ fontFamily: PP }}
-        >
-          <ArrowLeft size={14} /> Back
-        </button>
+        <div className="flex items-center gap-2">
+            {onEditVitals && (
+              <button
+                onClick={onEditVitals}
+                className="px-5 py-2.5 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+                style={{ fontFamily: PP }}
+              >
+                <Edit size={14} /> Edit / Amend Vitals
+              </button>
+            )}
+            <button
+              onClick={handlePrintAction}
+              className="px-5 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              style={{ fontFamily: PP }}
+            >
+              <Printer size={14} /> Print Vitals
+            </button>
+          </div>
       </div>
 
       {/* STICKY PATIENT SUMMARY STRIP */}
@@ -676,36 +687,6 @@ export function VitalsDetailsScreen({
                 )}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* STICKY FOOTER */}
-        <div className="w-full bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-md flex items-center justify-between gap-3 sticky bottom-4 z-40">
-          <button
-            onClick={onBack}
-            className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#64748B] hover:bg-slate-100 transition-colors flex items-center gap-1.5 cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <ArrowLeft size={14} /> Back to Queue
-          </button>
-
-          <div className="flex items-center gap-2">
-            {onEditVitals && (
-              <button
-                onClick={onEditVitals}
-                className="px-5 py-2.5 rounded-xl bg-[#009688] hover:bg-[#00796b] text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-                style={{ fontFamily: PP }}
-              >
-                <Edit size={14} /> Edit / Amend Vitals
-              </button>
-            )}
-            <button
-              onClick={handlePrintAction}
-              className="px-5 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-              style={{ fontFamily: PP }}
-            >
-              <Printer size={14} /> Print Vitals
-            </button>
           </div>
         </div>
       </div>

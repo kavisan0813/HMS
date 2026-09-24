@@ -52,53 +52,6 @@ import type {
 const PP = "Poppins, system-ui, sans-serif";
 const RB = "Roboto, system-ui, sans-serif";
 
-function CircularProgress({
-  percentage,
-  size = 54,
-  strokeWidth = 6,
-}: {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-}) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative inline-flex items-center justify-center">
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#E5E7EB"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke="#009688"
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          className="transition-colors duration-500 ease-out"
-        />
-      </svg>
-      <span
-        className="absolute text-xs font-bold text-[#111827]"
-        style={{ fontFamily: RB }}
-      >
-        {percentage}%
-      </span>
-    </div>
-  );
-}
-
 export interface DoctorConsultationRecord {
   id: string;
   patientName: string;
@@ -197,72 +150,65 @@ const DoctorDashboardHeader = ({
   isRefreshing: boolean;
   onRefresh: () => void;
 }) => (
-  <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-            <span className="hover:text-[#0D47A1] cursor-pointer">Doctor</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#0D47A1] font-semibold">Reports</span>
-          </nav>
-          <div className="flex items-center gap-3">
-            <h1
-              className="text-2xl font-bold text-[#111827]"
-              style={{ fontFamily: PP }}
-            >
-              Doctor Reports Dashboard
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-              Doctor Access Level
-            </span>
-          </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
-            Monitor your appointments, consultations, and patient activity
-            analytics.
-          </p>
+  <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-3">
+          <h1
+            className="text-2xl font-bold text-[#111827]"
+            style={{ fontFamily: PP }}
+          >
+            Doctor Reports Dashboard
+          </h1>
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
+            Doctor Access Level
+          </span>
+        </div>
+        <p className="text-xs text-[#64748B] mt-0.5">
+          Monitor your appointments, consultations, and patient activity
+          analytics.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
+          <Clock className="w-4 h-4 text-[#0D47A1]" />
+          <span>
+            Last Updated:{" "}
+            <strong className="text-[#111827]">
+              {new Date().toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </strong>
+          </span>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
-            <Clock className="w-4 h-4 text-[#0D47A1]" />
-            <span>
-              Last Updated:{" "}
-              <strong className="text-[#111827]">
-                {new Date().toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </strong>
-            </span>
-          </div>
+        <button
+          onClick={onRefresh}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+        >
+          <RefreshCw
+            className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
+          />
+          <span>Refresh</span>
+        </button>
 
-          <button
-            onClick={onRefresh}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </button>
+        <button
+          onClick={() => alert("Exporting Doctor Summary (PDF)...")}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Export PDF</span>
+        </button>
 
-          <button
-            onClick={() => alert("Exporting Doctor Summary (PDF)...")}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export PDF</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-          >
-            <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
-            <span>Print Report</span>
-          </button>
-        </div>
+        <button
+          onClick={() => window.print()}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+        >
+          <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
+          <span>Print Report</span>
+        </button>
       </div>
     </div>
   </div>
@@ -303,31 +249,8 @@ const DoctorFilters = ({
   onReset,
   handlePresetDateChange,
 }: DoctorFiltersProps) => (
-  <div className="space-y-4 mb-6">
-    {/* Global Search Bar */}
-    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-      <div className="relative">
-        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-        <input
-          aria-label="Search field"
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search patient name, MRN, diagnosis or prescription..."
-          className="w-full pl-10 pr-16 py-2.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
-          >
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
-
-    {/* Filter Panel */}
+  <div className="mb-6">
+    {/* Search & Filter Panel */}
     <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
       <div className="flex items-center justify-between mb-3">
         <div
@@ -337,9 +260,9 @@ const DoctorFilters = ({
           <Filter className="w-4 h-4 text-[#009688]" />
           <span>Filter Doctor Practice & Clinical Analytics</span>
         </div>
-        <span className="text-[11px] text-[#64748B] bg-slate-100 px-2.5 py-0.5 rounded-full font-semibold">
+        {/* <span className="text-[11px] text-[#64748B] bg-slate-100 px-2.5 py-0.5 rounded-full font-semibold">
           Doctor Context: Active Logged-in Practice
-        </span>
+        </span> */}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -434,19 +357,40 @@ const DoctorFilters = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
-        <button
-          onClick={onReset}
-          className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
-        >
-          Reset Filters
-        </button>
-        <button
-          onClick={onApply}
-          className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-        >
-          Apply Filters
-        </button>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
+        <div className="relative w-full sm:w-72 md:w-80">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+          <input
+            aria-label="Search field"
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search patient name, MRN, diagnosis or prescription..."
+            className="w-full pl-10 pr-16 py-2 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#64748B] hover:text-[#111827]"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          <button
+            onClick={onReset}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
+          >
+            Reset Filters
+          </button>
+          <button
+            onClick={onApply}
+            className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+          >
+            Apply Filters
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -469,11 +413,10 @@ const DoctorKpiCards = ({
     monthlyConsultations: number;
     scheduledFollowUps: number;
     avgConsultTime: string;
-    patientSatisfaction: number;
   };
   navigate: (path: string) => void;
 }) => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
     {/* Card 1: Today's Appointments */}
     <div
       tabIndex={0}
@@ -580,11 +523,11 @@ const DoctorKpiCards = ({
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          navigate(ROUTES.DOCTOR_MY_SCHEDULE);
+          navigate(ROUTES.DOCTOR_CONSULTATION);
         }
       }}
       role="button"
-      onClick={() => navigate(ROUTES.DOCTOR_MY_SCHEDULE)}
+      onClick={() => navigate(ROUTES.DOCTOR_CONSULTATION)}
       className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
     >
       <div className="flex items-center justify-between mb-2">
@@ -671,18 +614,7 @@ const DoctorKpiCards = ({
     </div>
 
     {/* Card 5: Average Consultation Time */}
-    <div
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          navigate(ROUTES.DOCTOR_MY_SCHEDULE);
-        }
-      }}
-      role="button"
-      onClick={() => navigate(ROUTES.DOCTOR_MY_SCHEDULE)}
-      className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-    >
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-semibold text-[#64748B] group-hover:text-[#009688] transition">
           Avg Consult Time
@@ -699,9 +631,6 @@ const DoctorKpiCards = ({
       </div>
       <div className="flex items-center justify-between text-[11px] text-[#64748B] mb-3">
         <span className="text-[#009688] font-semibold">Per Patient</span>
-        <span className="text-[#0D47A1] font-semibold flex items-center gap-0.5 group-hover:underline">
-          Detail <ChevronRight className="w-3 h-3" />
-        </span>
       </div>
       <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
         <div>
@@ -714,48 +643,12 @@ const DoctorKpiCards = ({
         </div>
       </div>
     </div>
-
-    {/* Card 6: Patient Satisfaction */}
-    <div
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          navigate(ROUTES.DOCTOR_MY_SCHEDULE);
-        }
-      }}
-      role="button"
-      onClick={() => navigate(ROUTES.DOCTOR_MY_SCHEDULE)}
-      className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between cursor-pointer group"
-    >
-      <div>
-        <span className="text-xs font-semibold text-[#64748B] group-hover:text-[#66BB6A] transition">
-          Satisfaction
-        </span>
-        <div
-          className="text-2xl font-bold text-[#111827] mt-1"
-          style={{ fontFamily: PP }}
-        >
-          {kpi.patientSatisfaction}%
-        </div>
-        <p className="text-[11px] text-[#64748B] mt-1">Feedback Score</p>
-        <div className="mt-2 text-[11px] font-semibold text-[#66BB6A] flex items-center gap-0.5 group-hover:underline">
-          Detail <ChevronRight className="w-3 h-3" />
-        </div>
-      </div>
-      <CircularProgress
-        percentage={kpi.patientSatisfaction}
-        size={56}
-        strokeWidth={6}
-      />
-    </div>
   </div>
 );
 
 // 4. Available Doctor Reports Cards
 const AvailableDoctorReports = ({
   onOpenReport,
-  onOpenKpiDetail,
 }: {
   onOpenReport?: (reportId: string) => void;
   onOpenKpiDetail?: (kpiName?: string) => void;
@@ -774,11 +667,11 @@ const AvailableDoctorReports = ({
         </p>
       </div>
       <span className="text-xs font-semibold text-[#0D47A1] bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
-        4 Reports Accessible
+        3 Reports Accessible
       </span>
     </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Report 1: Daily Appointment Report */}
       <div className="border border-[#E5E7EB] rounded-2xl p-4 hover:border-[#0D47A1] hover:shadow-md transition-colors flex flex-col justify-between group bg-white">
         <div>
@@ -879,41 +772,6 @@ const AvailableDoctorReports = ({
             className="inline-flex items-center gap-1 text-xs font-semibold text-[#0D47A1] hover:text-blue-900 transition"
           >
             <span>Open Report</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Report 4: Dashboard KPI Detail */}
-      <div className="border border-[#E5E7EB] rounded-2xl p-4 hover:border-[#009688] hover:shadow-md transition-colors flex flex-col justify-between group bg-white">
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-[#009688]">
-              <Activity className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-semibold text-[#64748B] bg-slate-100 px-2 py-0.5 rounded-full">
-              Analytics
-            </span>
-          </div>
-          <h3
-            className="text-sm font-bold text-[#111827] group-hover:text-[#009688] transition"
-            style={{ fontFamily: PP }}
-          >
-            Dashboard KPI Detail
-          </h3>
-          <p className="text-xs text-[#64748B] mt-1.5 leading-relaxed line-clamp-2">
-            Drill-down insights and granular logs for your active clinical KPIs.
-          </p>
-        </div>
-        <div className="mt-4 pt-3 border-t border-[#E5E7EB] flex items-center justify-between">
-          <span className="text-[11px] text-[#64748B]">
-            Scope: Drill-Down Context
-          </span>
-          <button
-            onClick={() => onOpenKpiDetail?.("Doctor Workload Performance")}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#009688] hover:text-teal-900 transition"
-          >
-            <span>Open Detail</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -1452,10 +1310,8 @@ const DoctorConsultationsTable = ({
 // Main Screen Component
 export function DoctorReportsDashboardScreen({
   onOpenReport,
-  onOpenKpiDetail,
 }: {
   onOpenReport?: (reportId: string) => void;
-  onOpenKpiDetail?: (kpiName?: string) => void;
 }) {
   const navigate = useNavigate();
   const todayStr = getOffsetDateStr(0);
@@ -1521,9 +1377,8 @@ export function DoctorReportsDashboardScreen({
   const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
   const setTrendDays = (val: "7" | "30" | "90") => dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
-  const [isPending, startTransition] = useTransition();
+  const [isPending,] = useTransition();
   const isLoading = isPending || showLoadingDemo;
 
   const singleDateParam =
@@ -1709,7 +1564,6 @@ export function DoctorReportsDashboardScreen({
       avgConsultTime: summary?.averagePatientsPerDay
         ? `${Math.round(summary.averagePatientsPerDay * 10)} min`
         : "12 min",
-      patientSatisfaction: 98,
     };
   }, [dailyDashboard, patientDashboard, filteredConsultations]);
 
@@ -1726,7 +1580,7 @@ export function DoctorReportsDashboardScreen({
 
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* 1. TOP 6 DOCTOR KPI CARDS */}
+        {/* 1. TOP 5 DOCTOR KPI CARDS */}
         {!isLoading && !hasError && (
           <DoctorKpiCards kpi={kpi} navigate={navigate} />
         )}
@@ -1749,38 +1603,6 @@ export function DoctorReportsDashboardScreen({
           onReset={handleResetFilters}
           handlePresetDateChange={handlePresetDateChange}
         />
-
-        {/* Demo State Toggles */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-400 text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate Doctor RBAC analytical states
-          </span>
-        </div>
 
         {/* ERROR STATE */}
         {hasError && (
@@ -1808,8 +1630,8 @@ export function DoctorReportsDashboardScreen({
         {/* LOADING SKELETON STATE */}
         {isLoading && (
           <div className="space-y-6 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {[1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
                   className="bg-white rounded-2xl border border-[#E5E7EB] p-4 h-32 animate-pulse"
@@ -1826,7 +1648,6 @@ export function DoctorReportsDashboardScreen({
             {/* 3. AVAILABLE DOCTOR REPORTS CARDS */}
             <AvailableDoctorReports
               onOpenReport={onOpenReport}
-              onOpenKpiDetail={onOpenKpiDetail}
             />
 
             {/* 3. DASHBOARD CHARTS */}

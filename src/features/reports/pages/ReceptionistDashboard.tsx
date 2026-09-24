@@ -31,7 +31,6 @@ import {
   useReceptionQueuePerformance,
 } from "../../reception/hooks/useReceptionReports";
 import type {
-  ReceptionActivityLogResponse,
   ReceptionAppointmentStatusData,
   ReceptionCheckinAnalyticsData,
   ReceptionQueuePerformanceData,
@@ -213,78 +212,67 @@ const ReceptionDashboardHeader = ({
   isRefreshing,
   onRefresh,
 }: ReceptionDashboardHeaderProps) => (
-  <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-            <span className="hover:text-[#0D47A1] cursor-pointer">
-              Reception
-            </span>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#0D47A1] font-semibold">Reports</span>
-          </nav>
-          <div className="flex items-center gap-3">
-            <h1
-              className="text-2xl font-bold text-[#111827]"
-              style={{ fontFamily: PP }}
-            >
-              Reports Dashboard
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-              Reception Scoped
-            </span>
-          </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
-            Monitor daily reception activities, patient registrations,
-            appointments and queue performance.
-          </p>
-        </div>
-
-        {/* Header Actions */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
-            <Clock className="w-4 h-4 text-[#0D47A1]" />
-            <span>
-              Last Updated:{" "}
-              <strong className="text-[#111827]">
-                {new Date().toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </strong>
-            </span>
-          </div>
-
-          <button
-            onClick={onRefresh}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-          >
-            <RefreshCw
-              className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span>Refresh</span>
-          </button>
-
-          <button
-            onClick={() =>
-              alert("Exporting Reception Reports Dashboard (PDF)...")
-            }
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export PDF</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-          >
-            <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
-            <span>Print Report</span>
-          </button>
-        </div>
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <div className="flex items-center gap-3">
+        <h1
+          className="text-xl font-bold text-[#111827]"
+          style={{ fontFamily: PP }}
+        >
+          Reports Dashboard
+        </h1>
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
+          Reception Scoped
+        </span>
       </div>
+      <p className="text-xs text-[#64748B] mt-0.5">
+        Monitor daily reception activities, patient registrations,
+        appointments and queue performance.
+      </p>
+    </div>
+
+    {/* Header Actions */}
+    <div className="flex items-center gap-3 flex-wrap">
+      <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
+        <Clock className="w-4 h-4 text-[#0D47A1]" />
+        <span>
+          Last Updated:{" "}
+          <strong className="text-[#111827]">
+            {new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </strong>
+        </span>
+      </div>
+
+      <button
+        onClick={onRefresh}
+        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
+      >
+        <RefreshCw
+          className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
+        />
+        <span>Refresh</span>
+      </button>
+
+      <button
+        onClick={() =>
+          alert("Exporting Reception Reports Dashboard (PDF)...")
+        }
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm cursor-pointer"
+      >
+        <Download className="w-3.5 h-3.5" />
+        <span>Export PDF</span>
+      </button>
+
+      <button
+        onClick={() => window.print()}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
+      >
+        <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
+        <span>Print Report</span>
+      </button>
     </div>
   </div>
 );
@@ -1445,74 +1433,7 @@ const ReceptionRegisterTable = ({
   </div>
 );
 
-const ReceptionActivityTimeline = ({
-  activityLogData,
-}: {
-  activityLogData?: ReceptionActivityLogResponse;
-}) => {
-  const items =
-    activityLogData?.content && activityLogData.content.length > 0
-      ? activityLogData.content.map((act, idx) => ({
-          id: `act-api-${idx}`,
-          action: act.title,
-          date: "Selected Date",
-          time: act.time,
-          detail: act.description,
-        }))
-      : [
-          {
-            id: "act-1",
-            action: "Patient Check-In Completed",
-            date: "Today",
-            time: "08:35 AM",
-            detail: "MRN-2026-001 (John Doe) checked in for consultation",
-          },
-          {
-            id: "act-2",
-            action: "New Registration",
-            date: "Today",
-            time: "09:00 AM",
-            detail:
-              "MRN-2026-002 (Jane Smith) registered at Reception counter 1",
-          },
-          {
-            id: "act-3",
-            action: "Walk-In Added to Queue",
-            date: "Today",
-            time: "09:15 AM",
-            detail: "MRN-2026-003 (Robert Johnson) added to General OPD Queue",
-          },
-        ];
 
-  return (
-    <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
-      <h3
-        className="text-base font-bold text-[#111827] mb-4"
-        style={{ fontFamily: PP }}
-      >
-        Recent Reception Activity Logs
-      </h3>
-      <div className="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-[#E5E7EB]">
-        {items.map((act) => (
-          <div key={act.id} className="flex items-start gap-4 relative z-10">
-            <div className="w-7 h-7 rounded-full bg-[#0D47A1] text-white flex items-center justify-center shrink-0">
-              <Activity className="w-3.5 h-3.5" />
-            </div>
-            <div className="bg-[#F1F5F9] rounded-xl p-3 border border-[#E5E7EB] flex-1 text-xs">
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-bold text-[#111827]">{act.action}</span>
-                <span className="text-[11px] text-[#64748B]">
-                  {act.date} - {act.time}
-                </span>
-              </div>
-              <p className="text-[#64748B]">{act.detail}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const ReceptionDashboardFooter = ({ resultCount }: { resultCount: number }) => (
   <div className="mt-8 pt-4 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-2">
@@ -1614,7 +1535,6 @@ export function ReceptionistReportsDashboardScreen(_props?: {
   const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
   const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") => dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
-  const setIsLoading = (val: boolean) => dispatch({ isLoading: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
 
   // Pass singleDateParam only when startDate === endDate (e.g., Today, Yesterday).
@@ -1641,11 +1561,10 @@ export function ReceptionistReportsDashboardScreen(_props?: {
       size: 50,
     },
   );
-  const { data: activityLogData, refetch: refetchLogs } =
-    useReceptionActivityLog({
-      date: singleDateParam,
-      size: 20,
-    });
+  const { refetch: refetchLogs } = useReceptionActivityLog({
+    date: singleDateParam,
+    size: 20,
+  });
   const { data: registrationTrend, refetch: refetchTrend } =
     useReceptionRegistrationTrend({
       from: startDate,
@@ -1815,100 +1734,96 @@ export function ReceptionistReportsDashboardScreen(_props?: {
 
   return (
     <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+      className="flex-1 min-h-screen bg-[#F1F5F9] text-[#111827] p-6 space-y-6 pb-12 font-sans"
       style={{ fontFamily: RB }}
     >
-      {/* Sticky Header */}
+      {/* Header */}
       <ReceptionDashboardHeader
         isRefreshing={isRefreshing}
         onRefresh={handleRefresh}
       />
 
-      {/* Main Full-Width Container */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* 1. TOP SECTION: RECEPTION KPI CARDS */}
-        <ReceptionKpiCards kpi={kpi} navigate={navigate} />
+      {/* 1. TOP SECTION: RECEPTION KPI CARDS */}
+      <ReceptionKpiCards kpi={kpi} navigate={navigate} />
 
-        {/* 2. SECOND SECTION: CONNECTED FILTERS WITH DATE FILTER */}
-        <ReceptionFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          apptStatusFilter={apptStatusFilter}
-          setApptStatusFilter={setApptStatusFilter}
-          checkInStatusFilter={checkInStatusFilter}
-          setCheckInStatusFilter={setCheckInStatusFilter}
-          queueStatusFilter={queueStatusFilter}
-          setQueueStatusFilter={setQueueStatusFilter}
-          visitTypeFilter={visitTypeFilter}
-          setVisitTypeFilter={setVisitTypeFilter}
-          onReset={handleResetFilters}
-          onApply={handleRefresh}
-        />
+      {/* 2. SECOND SECTION: CONNECTED FILTERS WITH DATE FILTER */}
+      <ReceptionFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        apptStatusFilter={apptStatusFilter}
+        setApptStatusFilter={setApptStatusFilter}
+        checkInStatusFilter={checkInStatusFilter}
+        setCheckInStatusFilter={setCheckInStatusFilter}
+        queueStatusFilter={queueStatusFilter}
+        setQueueStatusFilter={setQueueStatusFilter}
+        visitTypeFilter={visitTypeFilter}
+        setVisitTypeFilter={setVisitTypeFilter}
+        onReset={handleResetFilters}
+        onApply={handleRefresh}
+      />
 
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                setIsLoading(!isLoading);
-                setHasError(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setIsLoading(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate Receptionist reports state
+      {/* Demo State Controls */}
+      
+      {/* <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-[#111827]">
+            Demo State Toggles:
           </span>
+          <button
+            onClick={() => {
+              setIsLoading(!isLoading);
+              setHasError(false);
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
+          >
+            Toggle Loading Skeleton
+          </button>
+          <button
+            onClick={() => {
+              setHasError(!hasError);
+              setIsLoading(false);
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
+          >
+            Toggle Error State
+          </button>
         </div>
+        <span className="text-[11px] text-[#64748B]">
+          Simulate Receptionist reports state
+        </span>
+      </div> */}
 
-        {hasError && (
-          <ReceptionDashboardError onRetry={() => setHasError(false)} />
-        )}
-        {isLoading && <ReceptionDashboardLoading />}
-        {!isLoading && !hasError && (
-          <>
-            {/* 3. CHARTS SECTION WITH CONNECTED API DATA */}
-            <ReceptionDashboardCharts
-              trendDays={trendDays}
-              setTrendDays={setTrendDays}
-              filteredActivities={filteredActivities}
-              apptStatus={apptStatus}
-              checkinAnalytics={checkinAnalytics}
-              queuePerformance={queuePerformance}
-              registrationTrend={registrationTrend}
-            />
+      {hasError && (
+        <ReceptionDashboardError onRetry={() => setHasError(false)} />
+      )}
+      {isLoading && <ReceptionDashboardLoading />}
+      {!isLoading && !hasError && (
+        <>
+          {/* 3. CHARTS SECTION WITH CONNECTED API DATA */}
+          <ReceptionDashboardCharts
+            trendDays={trendDays}
+            setTrendDays={setTrendDays}
+            filteredActivities={filteredActivities}
+            apptStatus={apptStatus}
+            checkinAnalytics={checkinAnalytics}
+            queuePerformance={queuePerformance}
+            registrationTrend={registrationTrend}
+          />
 
-            {/* 4. RECEPTION REGISTER DATA TABLE */}
-            <ReceptionRegisterTable filteredActivities={filteredActivities} />
+          {/* 4. RECEPTION REGISTER DATA TABLE */}
+          <ReceptionRegisterTable filteredActivities={filteredActivities} />
 
-            {/* 5. TIMELINE & ACTIVITY LOGS WITH CONNECTED API DATA */}
-            <ReceptionActivityTimeline activityLogData={activityLogData} />
-          </>
-        )}
+        </>
+      )}
 
-        {/* FOOTER */}
-        <ReceptionDashboardFooter resultCount={filteredActivities.length} />
-      </div>
+      {/* FOOTER */}
+      <ReceptionDashboardFooter resultCount={filteredActivities.length} />
     </div>
   );
 }

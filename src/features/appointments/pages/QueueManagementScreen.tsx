@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { PP, RB } from "../constants/appointment.constants";
 import type { ChipVariant } from "../constants/appointment.constants";
 import { Chip } from "../components/Chip";
@@ -11,11 +12,11 @@ import { type QueueManagementScreenProps } from "../types/appointment-screen.typ
 import { usePermissions } from "../../../permissions/usePermissions";
 import { DataTable } from "../../../common/components/DataTable";
 import {
-  ChevronRight,
   RefreshCw,
   UserCheck,
   Search,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { getTodayDateString, normalizeDateString } from "../../../lib/time-utils";
 
@@ -50,11 +51,11 @@ const getStatusChipVariant = (status: string): ChipVariant => {
 };
 
 export function QueueManagementScreen({
-  onBack,
   onCheckInClick,
   onPatientSearchClick,
   onPatientSelect,
 }: QueueManagementScreenProps) {
+  const navigate = useNavigate();
   const { can } = usePermissions();
   const canCheckIn = can("APPOINTMENT_CHECK_IN") || can("CHECKIN_CREATE");
   const canRecordVitals = can("VITALS_CREATE");
@@ -283,6 +284,73 @@ export function QueueManagementScreen({
     setNoShowDialogApt(null);
   };
 
+  const queueFilterToolbar = (
+    <div className="flex items-center justify-between gap-3 flex-wrap text-xs">
+      <div className="flex items-center gap-2 flex-wrap">
+        <select
+          aria-label="Select option"
+          value={selectedDoctor}
+          onChange={(e) => setSelectedDoctor(e.target.value)}
+          className="px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs text-[#0D47A1] font-semibold focus:outline-none"
+        >
+          <option>All Doctors</option>
+          {Array.from(
+            new Set(queueItems.map((i) => i.doctorName).filter(Boolean)),
+          ).map((d) => (
+            <option key={d} value={d}>
+              {d}
+            </option>
+          ))}
+        </select>
+
+        <select
+          aria-label="Select option"
+          value={selectedDept}
+          onChange={(e) => setSelectedDept(e.target.value)}
+          className="px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs text-[#0D47A1] font-semibold focus:outline-none"
+        >
+          <option value="All Departments">All Departments</option>
+          {apiDepts.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          aria-label="Select option"
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          className="px-3 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs text-[#0D47A1] font-semibold focus:outline-none"
+        >
+          <option>All Statuses</option>
+          <option>Scheduled</option>
+          <option>Checked-In</option>
+          <option>Waiting</option>
+          <option>In Consultation</option>
+          <option>Completed</option>
+          <option>No Show</option>
+          <option>Cancelled</option>
+        </select>
+
+        <button
+          onClick={resetFilters}
+          className="px-3 py-1.5 rounded-xl text-xs text-[#EF4444] font-semibold hover:bg-red-50 transition-colors cursor-pointer"
+        >
+          Reset Filters
+        </button>
+      </div>
+
+      <div className="text-xs text-[#64748B] font-medium">
+        Showing{" "}
+        <span className="font-bold text-[#0D47A1]">
+          {filteredQueue.length}
+        </span>{" "}
+        queue entries
+      </div>
+    </div>
+  );
+
   return (
     <div
       className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#F1F5F9]"
@@ -304,20 +372,17 @@ export function QueueManagementScreen({
       )}
 
       {/* ── HEADER & BREADCRUMBS & PRIMARY ACTIONS ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-[#64748B] mb-1">
-            <button
-              onClick={onBack}
-              className="hover:text-[#0D47A1] transition-colors"
-            >
-              Reception Management
-            </button>
-            <ChevronRight size={12} />
-            <span className="font-semibold text-[#0D47A1]">
-              Queue Management
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+            style={{ fontFamily: RB }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
           <h1
             className="text-2xl font-bold text-[#111827]"
             style={{ fontFamily: PP }}
@@ -354,91 +419,7 @@ export function QueueManagementScreen({
           </button>
         </div>
       </div>
-
-      {/* ── GLOBAL SEARCH & FILTER BAR ── */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-sm space-y-3">
-        <div className="relative w-full">
-          <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-          />
-          <input
-            aria-label="Input field"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search queue by Patient Name, MRN, Token Number or Appointment ID..."
-            className="w-full pl-11 pr-4 py-3 rounded-xl bg-slate-50 border border-[#E5E7EB] text-xs text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white transition-colors shadow-inner"
-          />
-        </div>
-
-        <div className="flex items-center justify-between gap-3 flex-wrap pt-1 border-t border-slate-100">
-          <div className="flex items-center gap-2 flex-wrap">
-            <select
-              aria-label="Select option"
-              value={selectedDoctor}
-              onChange={(e) => setSelectedDoctor(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 border border-[#E5E7EB] text-xs text-[#64748B] font-medium focus:outline-none"
-            >
-              <option>All Doctors</option>
-              {Array.from(
-                new Set(queueItems.map((i) => i.doctorName).filter(Boolean)),
-              ).map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-
-            <select
-              aria-label="Select option"
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 border border-[#E5E7EB] text-xs text-[#64748B] font-medium focus:outline-none"
-            >
-              <option value="All Departments">All Departments</option>
-              {apiDepts.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              aria-label="Select option"
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 border border-[#E5E7EB] text-xs text-[#64748B] font-medium focus:outline-none"
-            >
-              <option>All Statuses</option>
-              <option>Scheduled</option>
-              <option>Checked-In</option>
-              <option>Waiting</option>
-              <option>In Consultation</option>
-              <option>Completed</option>
-              <option>No Show</option>
-              <option>Cancelled</option>
-            </select>
-
-            <button
-              onClick={resetFilters}
-              className="px-3 py-2 rounded-xl text-xs text-[#EF4444] font-semibold hover:bg-red-50 transition-colors"
-            >
-              Reset Filters
-            </button>
-          </div>
-
-          <div className="text-xs text-[#64748B] font-medium">
-            Showing{" "}
-            <span className="font-bold text-[#0D47A1]">
-              {filteredQueue.length}
-            </span>{" "}
-            queue entries
-          </div>
-        </div>
-      </div>
-
-      {/* ── 6 SUMMARY KPI CARDS ── */}
+      {/* ── SUMMARY KPI CARDS ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Card 01: Waiting Patients */}
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm space-y-1">
@@ -546,6 +527,7 @@ export function QueueManagementScreen({
           </span>
         </div>
       </div>
+
 
       {/* ── ENTERPRISE LAYOUT GRID ── */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
@@ -729,8 +711,20 @@ export function QueueManagementScreen({
             }
             title="Today's Queue Table"
             subtitle="Real-time patient flow and arrival management"
+            headerBadge={
+              <span className="text-xs text-[#64748B]">
+                Showing{" "}
+                <strong className="text-[#111827]">
+                  {filteredQueue.length}
+                </strong>{" "}
+                queue entries
+              </span>
+            }
             searchable={true}
-            searchPlaceholder=" Search queue by patient name, MRN, token, doctor..."
+            searchPlaceholder="Search queue by Patient Name, MRN, Token Number or Appointment ID..."
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+            toolbar={queueFilterToolbar}
             emptyTitle="No patients are currently in today's queue."
             emptySubtitle="Try adjusting search or select another doctor or department filter."
             emptyAction={

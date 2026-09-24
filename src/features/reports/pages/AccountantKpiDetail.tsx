@@ -324,30 +324,7 @@ export function AccountantDashboardKpiDetailScreen({
           </div>
         </div>
 
-        {/* Global Search Bar */}
-        <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm mb-4">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-            <input
-              aria-label="Input field"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Invoice ID, Patient Name, MRN, Payment Reference..."
-              className="w-full pl-10 pr-4 py-2.5 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] hover:text-[#111827]"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Accountant Filter Bar */}
+        {/* Search & Filter Bar */}
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm mb-6">
           <div className="flex items-center justify-between mb-3">
             <div
@@ -450,19 +427,40 @@ export function AccountantDashboardKpiDetailScreen({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
-            <button
-              onClick={handleResetFilters}
-              className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
-            >
-              Reset Filters
-            </button>
-            <button
-              onClick={handleRefresh}
-              className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-            >
-              Apply Filters
-            </button>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-3 border-t border-[#E5E7EB]">
+            <div className="relative w-full sm:w-72 md:w-80">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+              <input
+                aria-label="Input field"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Invoice ID, Patient Name, MRN, Payment Reference..."
+                className="w-full pl-10 pr-16 py-2 bg-[#F1F5F9] border border-[#E5E7EB] rounded-xl text-xs text-[#111827] placeholder-[#64748B] focus:outline-none focus:ring-2 focus:ring-[#0D47A1]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#64748B] hover:text-[#111827]"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <button
+                onClick={handleResetFilters}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#64748B] hover:text-[#111827] hover:bg-slate-100 transition"
+              >
+                Reset Filters
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="px-4 py-1.5 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+              >
+                Apply Filters
+              </button>
+            </div>
           </div>
         </div>
 

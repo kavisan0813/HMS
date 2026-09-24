@@ -159,8 +159,7 @@ export type DoctorKpiKey =
   | "my-patients"
   | "returning-patients"
   | "followup-patients"
-  | "avg-consult-time"
-  | "patient-satisfaction";
+  | "avg-consult-time";
 
 // ─── Backend API Response Types ──────────────────────────────────────────────
 

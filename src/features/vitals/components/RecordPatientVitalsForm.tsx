@@ -206,11 +206,11 @@ export function RecordPatientVitalsForm({
       )}
 
       {/* HEADER BAR WITH BACK BUTTON */}
-      <div className="bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}
-            className="p-2.5 rounded-xl border border-[#E5E7EB] bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
+            className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white text-slate-700 transition-colors flex items-center justify-center cursor-pointer shadow-2xs"
             title="Go Back"
           >
             <ArrowLeft size={18} />
@@ -230,12 +230,14 @@ export function RecordPatientVitalsForm({
           </div>
         </div>
         <button
-          onClick={onBack}
-          className="px-4 py-2 rounded-xl border border-[#E5E7EB] bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
-          style={{ fontFamily: PP }}
-        >
-          <ArrowLeft size={14} /> Back
-        </button>
+            onClick={handleSaveVitals}
+            disabled={!can("VITALS_CREATE")}
+            className="px-6 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            style={{ fontFamily: PP }}
+          >
+            <Check size={14} />{" "}
+            {isEditMode ? "Update / Amend Vitals" : "Save Vitals"}
+          </button>
       </div>
 
       {/* STICKY PATIENT SUMMARY STRIP */}
@@ -534,27 +536,6 @@ export function RecordPatientVitalsForm({
               </span>
             </div>
           </div>
-        </div>
-
-        {/* STICKY FOOTER ACTION BAR */}
-        <div className="bg-white p-4 rounded-2xl border border-[#E5E7EB] shadow-md flex items-center justify-between gap-3 sticky bottom-4 z-40">
-          <button
-            onClick={onBack}
-            className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] text-xs font-bold text-[#64748B] hover:bg-slate-100 transition-colors flex items-center gap-1.5 cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <ArrowLeft size={14} /> Back to Queue
-          </button>
-
-          <button
-            onClick={handleSaveVitals}
-            disabled={!can("VITALS_CREATE")}
-            className="px-6 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-bold hover:bg-[#0c3d8a] transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <Check size={14} />{" "}
-            {isEditMode ? "Update / Amend Vitals" : "Save Vitals"}
-          </button>
         </div>
       </div>
 

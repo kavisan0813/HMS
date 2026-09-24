@@ -1,6 +1,6 @@
 import { getToken, setToken, removeToken } from "./cookie-token-storage";
 
-export const API_BASE_URL = "http:///10.180.175.223:8888";
+export const API_BASE_URL = "";
 // (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
 // "";
 
@@ -129,7 +129,18 @@ async function customFetch<T = unknown>(
 
       isRefreshing = true;
       try {
-        const refreshToken = getToken("refreshToken");
+        let refreshToken = getToken("refreshToken");
+        if (!refreshToken && typeof localStorage !== "undefined") {
+          try {
+            const rawStorage = localStorage.getItem("hms-auth-storage:v1");
+            if (rawStorage) {
+              const parsed = JSON.parse(rawStorage);
+              refreshToken = parsed?.tokens?.refreshToken || null;
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
 
         if (!refreshToken) {
           throw new ApiError(

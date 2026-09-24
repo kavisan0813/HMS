@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
   ChevronLeft,
-  ChevronRight,
   Search,
   CheckCircle2,
   AlertCircle,
@@ -667,25 +666,6 @@ export function BookAppointmentScreen({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
         <div>
           <div className="flex items-center gap-2 text-xs text-[#64748B] mb-1">
-            <button
-              type="button"
-              onClick={onBack ? onBack : () => navigate(-1)}
-              className="p-1 -ml-1 text-slate-400 hover:text-[#0D47A1] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-              title="Go Back"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              onClick={onBack ? onBack : () => navigate(-1)}
-              className="hover:text-[#0D47A1] transition-colors cursor-pointer"
-            >
-              {role === "patient" ? "Patient Portal" : "Patient Management"}
-            </button>
-            <ChevronRight size={12} />
-            <span className="font-semibold text-[#0D47A1]">
-              Book Appointment
-            </span>
           </div>
           <div className="flex items-center gap-2">
             <button

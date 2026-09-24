@@ -675,9 +675,13 @@ export function CommonProfilePage() {
   const displayPhoto =
     form.photoUrl || form.photo || profile.photoUrl || profile.photo;
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div
-      className="flex-1 p-6 space-y-6 max-w-6xl mx-auto w-full"
+      className="flex-1 p-6 space-y-6 w-full"
       style={{ fontFamily: RB }}
     >
       {/* Toast Banner */}
@@ -700,21 +704,21 @@ export function CommonProfilePage() {
 
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#0D47A1] via-[#1565C0] to-[#1E88E5] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+        <button
+              type="button"
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+              style={{ fontFamily: RB }}
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
         <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-          <User size={240} />
+          <User size={200} />
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-2">
-            {!isSelfProfile && (
-              <button
-                onClick={() => navigate(-1)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-white mr-2 cursor-pointer"
-                title="Go Back"
-              >
-                <ArrowLeft size={18} />
-              </button>
-            )}
             <div>
               <h1
                 className="text-xl sm:text-2xl font-bold tracking-tight"
