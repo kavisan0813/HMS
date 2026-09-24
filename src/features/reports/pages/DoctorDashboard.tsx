@@ -52,6 +52,7 @@ import type {
 const PP = "Poppins, system-ui, sans-serif";
 const RB = "Roboto, system-ui, sans-serif";
 
+
 export interface DoctorConsultationRecord {
   id: string;
   patientName: string;
@@ -1377,6 +1378,7 @@ export function DoctorReportsDashboardScreen({
   const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
   const setTrendDays = (val: "7" | "30" | "90") => dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
+  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending,] = useTransition();
   const isLoading = isPending || showLoadingDemo;
