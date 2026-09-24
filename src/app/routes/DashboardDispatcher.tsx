@@ -1,12 +1,48 @@
+import { lazy } from "react";
 import { useAuthStore } from "../../features/auth/store/auth.store";
-import { SuperAdminDashboard } from "../../features/dashboard/pages/SuperAdminDashboard";
-import { HospitalAdminDashboard } from "../../features/dashboard/pages/HospitalAdminDashboard";
-import { DoctorDashboard } from "../../features/dashboard/pages/DoctorDashboard";
-import { NurseDashboard } from "../../features/dashboard/pages/NurseDashboard";
-import { ReceptionDashboard } from "../../features/dashboard/pages/ReceptionDashboard";
-import { AccountantDashboard } from "../../features/dashboard/pages/AccountantDashboard";
-import { PatientDashboard } from "../../features/dashboard/pages/PatientDashboard";
 import { usePatientPortal } from "../../features/patients/context/usePatientPortal";
+
+const SuperAdminDashboard = lazy(() =>
+  import("../../features/dashboard/pages/SuperAdminDashboard").then((m) => ({
+    default: m.SuperAdminDashboard,
+  })),
+);
+
+const HospitalAdminDashboard = lazy(() =>
+  import("../../features/dashboard/pages/HospitalAdminDashboard").then((m) => ({
+    default: m.HospitalAdminDashboard,
+  })),
+);
+
+const DoctorDashboard = lazy(() =>
+  import("../../features/dashboard/pages/DoctorDashboard").then((m) => ({
+    default: m.DoctorDashboard,
+  })),
+);
+
+const NurseDashboard = lazy(() =>
+  import("../../features/dashboard/pages/NurseDashboard").then((m) => ({
+    default: m.NurseDashboard,
+  })),
+);
+
+const ReceptionDashboard = lazy(() =>
+  import("../../features/dashboard/pages/ReceptionDashboard").then((m) => ({
+    default: m.ReceptionDashboard,
+  })),
+);
+
+const AccountantDashboard = lazy(() =>
+  import("../../features/dashboard/pages/AccountantDashboard").then((m) => ({
+    default: m.AccountantDashboard,
+  })),
+);
+
+const PatientDashboard = lazy(() =>
+  import("../../features/dashboard/pages/PatientDashboard").then((m) => ({
+    default: m.PatientDashboard,
+  })),
+);
 
 export function DashboardDispatcher() {
   const user = useAuthStore((s) => s.user);

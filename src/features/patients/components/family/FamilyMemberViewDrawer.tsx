@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  X,
-  Edit3,
-  UserX,
-  Clock,
-  CheckCircle2,
-} from "lucide-react";
+import { X, Edit3, UserX, Clock, CheckCircle2 } from "lucide-react";
 import type { FamilyMember } from "../../types/family.types";
 
 const PP = "'Poppins', system-ui, sans-serif";
@@ -27,7 +21,8 @@ function calculateAge(dob?: string, ageVal?: number): number {
       computedAge--;
     }
     return Math.max(0, computedAge);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return 0;
   }
 }
@@ -55,7 +50,9 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
   const info = modalData.basicInfo || {};
   const fullName = String(info.fullName || member.patientName || "Patient");
   const mrn = member.mrn;
-  const relationship = String(info.relationship || member.relationship || "Family Member");
+  const relationship = String(
+    info.relationship || member.relationship || "Family Member",
+  );
   const dob = String(info.dateOfBirth || member.dateOfBirth || "");
   const computedAge = member.age > 0 ? member.age : calculateAge(dob);
   const gender = String(info.gender || member.gender || "Other");
@@ -76,7 +73,9 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
 
   const address =
     typeof info.address === "object" && info.address
-      ? Object.values(info.address as Record<string, unknown>).filter(Boolean).join(", ")
+      ? Object.values(info.address as Record<string, unknown>)
+          .filter(Boolean)
+          .join(", ")
       : String(info.address || "");
 
   const emergency =
@@ -88,7 +87,6 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200">
       <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col border-l border-slate-200">
-          
           {/* ── DRAWER HEADER ── */}
           <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3.5 min-w-0">
@@ -102,12 +100,17 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
                 >
                   {fullName}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5" style={{ fontFamily: RB }}>
+                <div
+                  className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5"
+                  style={{ fontFamily: RB }}
+                >
                   <span className="font-mono bg-blue-50 text-[#0D47A1] px-2 py-0.5 rounded-md font-semibold text-[11px]">
                     {mrn}
                   </span>
                   <span>·</span>
-                  <span className="font-medium text-[#0D47A1]">{relationship}</span>
+                  <span className="font-medium text-[#0D47A1]">
+                    {relationship}
+                  </span>
                 </div>
               </div>
             </div>
@@ -125,7 +128,10 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
           <div className="flex-1 overflow-y-auto p-5 space-y-5">
             {/* Header Action Bar */}
             <div className="flex items-center justify-between bg-blue-50/60 border border-blue-100 p-3 rounded-xl">
-              <div className="flex items-center gap-2 text-xs text-[#0D47A1] font-semibold" style={{ fontFamily: PP }}>
+              <div
+                className="flex items-center gap-2 text-xs text-[#0D47A1] font-semibold"
+                style={{ fontFamily: PP }}
+              >
                 <CheckCircle2 size={15} />
                 <span>Patient Profile Details</span>
               </div>
@@ -148,14 +154,21 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
               >
                 Demographic Information
               </h4>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs" style={{ fontFamily: RB }}>
+              <div
+                className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs"
+                style={{ fontFamily: RB }}
+              >
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B]">Full Name:</span>
-                  <span className="font-semibold text-[#111827]">{fullName}</span>
+                  <span className="font-semibold text-[#111827]">
+                    {fullName}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B]">MRN:</span>
-                  <span className="font-mono font-semibold text-[#111827]">{mrn}</span>
+                  <span className="font-mono font-semibold text-[#111827]">
+                    {mrn}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B]">Relationship:</span>
@@ -184,13 +197,17 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
                 {maritalStatus && (
                   <div className="flex justify-between items-center">
                     <span className="text-[#64748B]">Marital Status:</span>
-                    <span className="font-semibold text-[#111827]">{maritalStatus}</span>
+                    <span className="font-semibold text-[#111827]">
+                      {maritalStatus}
+                    </span>
                   </div>
                 )}
                 {nationalId && (
                   <div className="flex justify-between items-center">
                     <span className="text-[#64748B]">National ID:</span>
-                    <span className="font-mono font-semibold text-[#111827]">{nationalId}</span>
+                    <span className="font-mono font-semibold text-[#111827]">
+                      {nationalId}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-1 border-t border-slate-200">
@@ -204,7 +221,9 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
                           : "bg-slate-100 text-[#64748B]"
                     }`}
                   >
-                    {member.verificationStatus === "Pending" && <Clock size={10} />}
+                    {member.verificationStatus === "Pending" && (
+                      <Clock size={10} />
+                    )}
                     {member.verificationStatus}
                   </span>
                 </div>
@@ -219,21 +238,30 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
               >
                 Contact & Location
               </h4>
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs" style={{ fontFamily: RB }}>
+              <div
+                className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs"
+                style={{ fontFamily: RB }}
+              >
                 <div className="flex justify-between items-center">
                   <span className="text-[#64748B]">Phone Number:</span>
-                  <span className="font-mono font-semibold text-[#111827]">{phone || "N/A"}</span>
+                  <span className="font-mono font-semibold text-[#111827]">
+                    {phone || "N/A"}
+                  </span>
                 </div>
                 {email && (
                   <div className="flex justify-between items-center">
                     <span className="text-[#64748B]">Email Address:</span>
-                    <span className="font-semibold text-[#111827] truncate max-w-[200px]">{email}</span>
+                    <span className="font-semibold text-[#111827] truncate max-w-50">
+                      {email}
+                    </span>
                   </div>
                 )}
                 {address && (
                   <div className="flex justify-between items-start">
                     <span className="text-[#64748B] shrink-0">Address:</span>
-                    <span className="font-semibold text-[#111827] text-right ml-4">{address}</span>
+                    <span className="font-semibold text-[#111827] text-right ml-4">
+                      {address}
+                    </span>
                   </div>
                 )}
                 {emergency && (
@@ -244,7 +272,8 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
                     <div className="flex justify-between">
                       <span className="text-[#64748B]">Name:</span>
                       <span className="font-semibold text-[#111827]">
-                        {String(emergency.name || "N/A")} ({String(emergency.relationship || "Contact")})
+                        {String(emergency.name || "N/A")} (
+                        {String(emergency.relationship || "Contact")})
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -259,7 +288,11 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
             </div>
 
             {/* Section: Clinical & Registration */}
-            {(patientCategory || registrationType || knownAllergies || chronicDiseases || specialNotes) && (
+            {(patientCategory ||
+              registrationType ||
+              knownAllergies ||
+              chronicDiseases ||
+              specialNotes) && (
               <div>
                 <h4
                   className="text-xs font-bold text-[#64748B] uppercase tracking-wider mb-2.5"
@@ -267,34 +300,47 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
                 >
                   Medical & Category Info
                 </h4>
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs" style={{ fontFamily: RB }}>
+                <div
+                  className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2.5 text-xs"
+                  style={{ fontFamily: RB }}
+                >
                   {patientCategory && (
                     <div className="flex justify-between items-center">
                       <span className="text-[#64748B]">Patient Category:</span>
-                      <span className="font-semibold text-[#0D47A1]">{patientCategory}</span>
+                      <span className="font-semibold text-[#0D47A1]">
+                        {patientCategory}
+                      </span>
                     </div>
                   )}
                   {registrationType && (
                     <div className="flex justify-between items-center">
                       <span className="text-[#64748B]">Registration Type:</span>
-                      <span className="font-semibold text-[#111827]">{registrationType}</span>
+                      <span className="font-semibold text-[#111827]">
+                        {registrationType}
+                      </span>
                     </div>
                   )}
                   {knownAllergies && (
                     <div className="flex justify-between items-center">
                       <span className="text-[#64748B]">Known Allergies:</span>
-                      <span className="font-semibold text-amber-700">{knownAllergies}</span>
+                      <span className="font-semibold text-amber-700">
+                        {knownAllergies}
+                      </span>
                     </div>
                   )}
                   {chronicDiseases && (
                     <div className="flex justify-between items-center">
                       <span className="text-[#64748B]">Chronic Diseases:</span>
-                      <span className="font-semibold text-red-700">{chronicDiseases}</span>
+                      <span className="font-semibold text-red-700">
+                        {chronicDiseases}
+                      </span>
                     </div>
                   )}
                   {specialNotes && (
                     <div className="pt-1 border-t border-slate-200">
-                      <span className="text-[#64748B] block mb-1">Special Notes:</span>
+                      <span className="text-[#64748B] block mb-1">
+                        Special Notes:
+                      </span>
                       <p className="text-[#111827] bg-white p-2.5 rounded-lg border border-slate-200 text-xs">
                         {specialNotes}
                       </p>
@@ -338,7 +384,6 @@ export const FamilyMemberViewDrawer: React.FC<FamilyMemberViewDrawerProps> = ({
               </button>
             )}
           </div>
-
         </div>
       </div>
     </div>

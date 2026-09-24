@@ -68,7 +68,8 @@ export const receptionService = {
         if (idx >= 0) {
           queueNumber = idx + 1;
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // queue position is optional
       }
 

@@ -168,7 +168,12 @@ function Av({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 const NURSE_CHIP_MAP: Record<ChipVariant, string> = {
   success: "bg-green-50 text-[#66BB6A]",
   warning: "bg-amber-50 text-[#F59E0B]",
@@ -340,7 +345,7 @@ export function NurseDashboard() {
           q.hasVitals === true ||
           q.vitalsStatus === "COMPLETED" ||
           q.vitalsStatus === "Vitals Recorded" ||
-          q.vitalsId != null
+          q.vitalsId != null,
         );
         return !isDone;
       }).length;
@@ -672,8 +677,8 @@ export function NurseDashboard() {
             className="mt-2 text-[11px] text-center font-medium text-[#0D47A1]"
             style={{ fontFamily: PP }}
           >
-            Total Patients in Queue: {prepStatus?.totalPatients ?? queueItems.length} (Active
-            OPD)
+            Total Patients in Queue:{" "}
+            {prepStatus?.totalPatients ?? queueItems.length} (Active OPD)
           </div>
         </div>
       </div>
@@ -731,25 +736,55 @@ export function NurseDashboard() {
               {queueItems.length > 0 ? (
                 queueItems.map((q: Record<string, unknown>, idx: number) => {
                   const token = String(q.token || q.tokenNo || `#${idx + 1}`);
-                  const patientObj = q.patient as { name?: string; fullName?: string } | undefined;
-                  const doctorObj = q.doctor as { name?: string; fullName?: string } | undefined;
-                  const pName = typeof q.patientName === "string" ? q.patientName : String(patientObj?.name || patientObj?.fullName || "—");
-                  const dName = typeof q.doctorName === "string" ? q.doctorName : String(doctorObj?.name || doctorObj?.fullName || "—");
-                  const dept = typeof q.departmentName === "string" ? q.departmentName : typeof q.department === "string" ? q.department : String(q.doctorDepartment || "—");
-                  const time = String(q.appointmentTime || q.timeSlot || q.startTime || q.time || "—");
+                  const patientObj = q.patient as
+                    | { name?: string; fullName?: string }
+                    | undefined;
+                  const doctorObj = q.doctor as
+                    | { name?: string; fullName?: string }
+                    | undefined;
+                  const pName =
+                    typeof q.patientName === "string"
+                      ? q.patientName
+                      : String(patientObj?.name || patientObj?.fullName || "—");
+                  const dName =
+                    typeof q.doctorName === "string"
+                      ? q.doctorName
+                      : String(doctorObj?.name || doctorObj?.fullName || "—");
+                  const dept =
+                    typeof q.departmentName === "string"
+                      ? q.departmentName
+                      : typeof q.department === "string"
+                        ? q.department
+                        : String(q.doctorDepartment || "—");
+                  const time = String(
+                    q.appointmentTime ||
+                      q.timeSlot ||
+                      q.startTime ||
+                      q.time ||
+                      "—",
+                  );
                   const vitalsDone = Boolean(
                     q.vitalsRecorded === true ||
                     q.hasVitals === true ||
                     q.vitalsStatus === "COMPLETED" ||
                     q.vitalsStatus === "Vitals Recorded" ||
-                    q.vitalsId != null
+                    q.vitalsId != null,
                   );
-                  const queueStatus = String(q.queueStatus || q.status || (vitalsDone ? "Vitals Recorded" : "Waiting for Vitals"));
+                  const queueStatus = String(
+                    q.queueStatus ||
+                      q.status ||
+                      (vitalsDone ? "Vitals Recorded" : "Waiting for Vitals"),
+                  );
                   const priority = String(q.priority || "NORMAL");
 
                   return (
                     <tr
-                      key={String(q.appointmentId || q.id || q.token || `${pName}-${dName}-${time}`)}
+                      key={String(
+                        q.appointmentId ||
+                          q.id ||
+                          q.token ||
+                          `${pName}-${dName}-${time}`,
+                      )}
                       className="hover:bg-slate-50 transition-colors"
                     >
                       <td className="px-5 py-3 font-mono text-xs font-bold text-[#0D47A1]">
@@ -791,9 +826,12 @@ export function NurseDashboard() {
                         <Chip
                           label={queueStatus}
                           variant={
-                            queueStatus === "COMPLETED" || queueStatus === "Vitals Recorded" || queueStatus === "Ready for Consultation"
+                            queueStatus === "COMPLETED" ||
+                            queueStatus === "Vitals Recorded" ||
+                            queueStatus === "Ready for Consultation"
                               ? "success"
-                              : queueStatus === "IN_CONSULTATION" || queueStatus === "RECORDING_IN_PROGRESS"
+                              : queueStatus === "IN_CONSULTATION" ||
+                                  queueStatus === "RECORDING_IN_PROGRESS"
                                 ? "teal"
                                 : "warning"
                           }

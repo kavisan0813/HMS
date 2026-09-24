@@ -112,9 +112,7 @@ export const receptionDashboardApi = {
           "--",
         queuePosition: (item.queuePosition as number) || idx + 1,
         status:
-          (item.queueStatus as string) ||
-          (item.status as string) ||
-          "WAITING",
+          (item.queueStatus as string) || (item.status as string) || "WAITING",
       };
     });
   },

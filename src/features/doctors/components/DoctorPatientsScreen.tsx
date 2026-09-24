@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, User, ChevronRight, RefreshCw, Phone, ArrowLeft } from "lucide-react";
+import {
+  Search,
+  User,
+  ChevronRight,
+  RefreshCw,
+  Phone,
+  ArrowLeft,
+} from "lucide-react";
 import { useAuthStore } from "../../auth/store/auth.store";
 import { patientsApi } from "../../patients/api/patient.api";
 import { mapApiPatientToPatientRecord } from "../../patients/api/mapApiPatientToPatientRecord";
@@ -77,7 +84,8 @@ export function DoctorPatientsScreen() {
     try {
       const result = await patientsApi.getDoctorPatients(id);
       setPatients(processDoctorPatients(result));
-    } catch {
+    } catch (err) {
+      console.log(err);
       setError("Failed to load patients. Please try again.");
       setPatients([]);
     } finally {
@@ -116,7 +124,8 @@ export function DoctorPatientsScreen() {
       setIsLoading(true);
       const response = await patientsApi.getPatientByMrn(patientRow.mrn);
       setSelectedPatient(mapApiPatientToPatientRecord(response));
-    } catch {
+    } catch (err) {
+      console.log(err);
       setSelectedPatient({
         id: patientRow.id,
         mrn: patientRow.mrn,
@@ -140,9 +149,11 @@ export function DoctorPatientsScreen() {
 
   if (selectedPatient) {
     const currentIndex = filteredPatients.findIndex(
-      (p) => p.mrn === selectedPatient.mrn || p.id === String(selectedPatient.id),
+      (p) =>
+        p.mrn === selectedPatient.mrn || p.id === String(selectedPatient.id),
     );
-    const hasNext = currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
+    const hasNext =
+      currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
     const hasPrev = currentIndex > 0;
 
     const handleSelectRow = (patientRow: PatientRow) => {
@@ -174,10 +185,14 @@ export function DoctorPatientsScreen() {
         currentRole="DOCTOR"
         onBack={() => setSelectedPatient(null)}
         onNextPatient={
-          hasNext ? () => handleSelectRow(filteredPatients[currentIndex + 1]) : undefined
+          hasNext
+            ? () => handleSelectRow(filteredPatients[currentIndex + 1])
+            : undefined
         }
         onPrevPatient={
-          hasPrev ? () => handleSelectRow(filteredPatients[currentIndex - 1]) : undefined
+          hasPrev
+            ? () => handleSelectRow(filteredPatients[currentIndex - 1])
+            : undefined
         }
       />
     );
@@ -200,7 +215,10 @@ export function DoctorPatientsScreen() {
           >
             My Patients
           </h1>
-          <p className="text-sm text-[#64748B] mt-0.5" style={{ fontFamily: RB }}>
+          <p
+            className="text-sm text-[#64748B] mt-0.5"
+            style={{ fontFamily: RB }}
+          >
             View and manage patients under your care.
           </p>
         </div>

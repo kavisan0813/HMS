@@ -175,12 +175,12 @@ export const appointmentsApi = {
     } catch (error: unknown) {
       if (numericStr && numericStr !== rawStr) {
         try {
-          const fallbackRes = await apiClient.get<ApiResponse<AppointmentRecord>>(
-            `/api/v1/appointments/${numericStr}`,
-          );
+          const fallbackRes = await apiClient.get<
+            ApiResponse<AppointmentRecord>
+          >(`/api/v1/appointments/${numericStr}`);
           return fallbackRes.data;
-        } catch {
-          // Ignore fallback error
+        } catch (err) {
+          console.log(err);
         }
       }
       return handleApiError(error);
@@ -213,7 +213,7 @@ export const appointmentsApi = {
         payload,
       );
       return response.data;
-    } catch (error: unknown) {
+    } catch (error) {
       try {
         // 2. PATCH /api/v1/appointments/{appointmentId}/reschedule
         const response = await apiClient.patch<ApiResponse<AppointmentRecord>>(
@@ -221,14 +221,16 @@ export const appointmentsApi = {
           payload,
         );
         return response.data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           // 3. PATCH /api/v1/reception/appointments/{appointmentId}/reschedule
           const response = await apiClient.patch<
             ApiResponse<AppointmentRecord>
           >(`/api/v1/reception/appointments/${numericId}/reschedule`, payload);
           return response.data;
-        } catch {
+        } catch (err) {
+          console.log(err);
           return handleApiError(error);
         }
       }
@@ -262,15 +264,16 @@ export const appointmentsApi = {
           { status: "CANCELLED", reason: data.reason },
         );
         return response.data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (numericId !== appointmentId) {
           try {
             const response = await apiClient.patch<
               ApiResponse<AppointmentRecord>
             >(`/api/v1/appointments/${appointmentId}/cancel`, data);
             return response.data;
-          } catch {
-            // Handled below
+          } catch (err) {
+            console.log(err);
           }
         }
         return handleApiError(error);
@@ -310,8 +313,8 @@ export const appointmentsApi = {
             `/api/v1/doctors/${doctorId}/appointments${queryString ? `?${queryString}` : ""}`,
           );
           return response.data;
-        } catch {
-          // Handled silently
+        } catch (err) {
+          console.log(err);
         }
       }
       return handleApiError(error);
@@ -346,7 +349,8 @@ export const appointmentsApi = {
           ApiResponse<QueueActionResponse>
         >(`/api/v1/queue/${appointmentId}/start-consultation`);
         return response.data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         return handleApiError(error);
       }
     }
@@ -360,13 +364,15 @@ export const appointmentsApi = {
         `/api/v1/queue/${appointmentId}/complete-consultation`,
       );
       return response.data;
-    } catch {
+    } catch (err) {
+      console.log(err);
       try {
         const response = await apiClient.patch<
           ApiResponse<QueueActionResponse>
         >(`/api/v1/doctor/appointments/${appointmentId}/complete`);
         return response.data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           const response = await apiClient.patch<
             ApiResponse<QueueActionResponse>
@@ -375,7 +381,8 @@ export const appointmentsApi = {
             reason: "Consultation completed",
           });
           return response.data;
-        } catch {
+        } catch (err) {
+          console.log(err);
           const response = await apiClient.patch<
             ApiResponse<QueueActionResponse>
           >(`/api/v1/appointments/${appointmentId}/complete`);
@@ -504,8 +511,8 @@ export const appointmentsApi = {
             ApiResponse<AppointmentRecord>
           >(`/api/v1/appointments/${appointmentId}/status`, { status, reason });
           return response.data;
-        } catch {
-          // Handled below
+        } catch (err) {
+          console.log(err);
         }
       }
       return handleApiError(error);
@@ -549,8 +556,8 @@ export const appointmentsApi = {
         response = await apiClient.get<ApiResponse<DoctorSummary[]>>(
           `${baseUrl}${sep}status=ACTIVE`,
         );
-      } catch {
-        // Fall back to the unfiltered endpoint (frontend filters anyway)
+      } catch (err) {
+        console.log(err);
         response = await apiClient.get<ApiResponse<DoctorSummary[]>>(baseUrl);
       }
       return response.data;
@@ -604,8 +611,8 @@ export const appointmentsApi = {
             ApiResponse<QueueActionResponse>
           >(`/api/v1/queue/${appointmentId}/call`);
           return response.data;
-        } catch {
-          // Handled below
+        } catch (err) {
+          console.log(err);
         }
       }
       return handleApiError(error);

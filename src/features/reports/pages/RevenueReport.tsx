@@ -301,7 +301,11 @@ const renderStatusChip = (status?: string) => {
   );
 };
 
-function computeDateRangeObject(range: string, customFrom: string, customTo: string) {
+function computeDateRangeObject(
+  range: string,
+  customFrom: string,
+  customTo: string,
+) {
   const todayStr = new Date().toISOString().slice(0, 10);
   if (range === "Today") return { fromDate: todayStr, toDate: todayStr };
   if (range === "7 Days") {
@@ -642,7 +646,8 @@ export function DailyRevenueReportScreen({
     }
 
     const invoicesCount = filteredData.length;
-    const totalRev = sumBilled || collectionRateData?.totalBilledAmount || 2173826168;
+    const totalRev =
+      sumBilled || collectionRateData?.totalBilledAmount || 2173826168;
     const collectedRev =
       sumPaid || collectionRateData?.totalCollectedAmount || 2173826168;
     const outstanding =
@@ -1222,7 +1227,11 @@ export function DailyRevenueReportScreen({
                       type: "SET_FILTER",
                       payload: { key: "dateRange", value: btn.value },
                     });
-                    const r = computeDateRangeObject(btn.value, fromDate, toDate);
+                    const r = computeDateRangeObject(
+                      btn.value,
+                      fromDate,
+                      toDate,
+                    );
                     setFromDate(r.fromDate);
                     setToDate(r.toDate);
                   }}

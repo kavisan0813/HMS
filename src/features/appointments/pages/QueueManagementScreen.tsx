@@ -18,7 +18,10 @@ import {
   AlertCircle,
   ArrowLeft,
 } from "lucide-react";
-import { getTodayDateString, normalizeDateString } from "../../../lib/time-utils";
+import {
+  getTodayDateString,
+  normalizeDateString,
+} from "../../../lib/time-utils";
 
 const fetchQueue = async () => {
   return appointmentService.getActiveAppointments();
@@ -253,7 +256,14 @@ export function QueueManagementScreen({
       waitTimes.length > 0
         ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length)
         : null;
-    return { waiting, checkedIn, inConsultation, completed, noShows, avgWaitTime };
+    return {
+      waiting,
+      checkedIn,
+      inConsultation,
+      completed,
+      noShows,
+      avgWaitTime,
+    };
   }, [queueItems]);
 
   const resetFilters = () => {

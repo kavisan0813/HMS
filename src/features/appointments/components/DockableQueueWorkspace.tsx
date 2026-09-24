@@ -451,7 +451,6 @@ const WorkspaceCurrentPatient = ({
   </div>
 );
 
-
 const WorkspaceQueueTable = ({
   filteredQueue,
   paginatedQueue,

@@ -80,9 +80,9 @@ const reportKeys = {
     [...reportKeys.all, "invoice-summary", f] as const,
   operationalTrend: (f?: ReportFilters) =>
     [...reportKeys.all, "operational-trend", f] as const,
-   patientRegistrationSummary: (f?: ReportFilters) =>
+  patientRegistrationSummary: (f?: ReportFilters) =>
     [...reportKeys.all, "patient-registration-summary", f] as const,
-   revenueVsCollection: (f?: ReportFilters) =>
+  revenueVsCollection: (f?: ReportFilters) =>
     [...reportKeys.all, "revenue-vs-collection", f] as const,
   dailyRevenue: (f?: ReportFilters) =>
     [...reportKeys.all, "daily-revenue", f] as const,
@@ -639,7 +639,10 @@ export function useCollectionRateStatusShare() {
   });
 }
 
-export function useDoctorPerformanceById(doctorId: string | number, filters?: ReportFilters) {
+export function useDoctorPerformanceById(
+  doctorId: string | number,
+  filters?: ReportFilters,
+) {
   const f = getDefaultFilters(filters);
   return useQuery({
     queryKey: reportKeys.doctorPerformanceById(doctorId, f),
@@ -649,7 +652,10 @@ export function useDoctorPerformanceById(doctorId: string | number, filters?: Re
   });
 }
 
-export function useDoctorActivities(doctorId: string | number, filters?: ReportFilters) {
+export function useDoctorActivities(
+  doctorId: string | number,
+  filters?: ReportFilters,
+) {
   const f = getDefaultFilters(filters);
   return useQuery({
     queryKey: reportKeys.doctorActivities(doctorId, f),

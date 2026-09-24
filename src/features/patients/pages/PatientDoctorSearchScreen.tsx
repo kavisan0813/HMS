@@ -39,7 +39,8 @@ export function PatientDoctorSearchScreen() {
       try {
         const res = await doctorsApi.getAll({ activeOnly: true });
         setDoctors(res.items || []);
-      } catch {
+      } catch (err) {
+        console.log(err);
         setDoctors([]);
       } finally {
         setIsLoading(false);

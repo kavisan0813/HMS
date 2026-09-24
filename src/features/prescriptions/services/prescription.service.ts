@@ -89,7 +89,10 @@ export const prescriptionService = {
           : m.dose || m.dosage || m.strength;
 
       const freqVal =
-        m.frequencyDisplay || m.frequencyCode || m.frequencyLabel || m.frequency;
+        m.frequencyDisplay ||
+        m.frequencyCode ||
+        m.frequencyLabel ||
+        m.frequency;
 
       const durVal =
         m.durationValue != null
@@ -125,7 +128,9 @@ export const prescriptionService = {
         frequency: formatComplex(freqVal),
         duration: formatComplex(durVal),
         quantity: formatComplex(qtyVal),
-        instructions: String(m.instructions || m.specialInstructions || m.notes || ""),
+        instructions: String(
+          m.instructions || m.specialInstructions || m.notes || "",
+        ),
       };
     });
 
@@ -309,7 +314,8 @@ export const prescriptionService = {
 
       prescriptionStoreActions.setPrescriptions(mapped);
       return mapped;
-    } catch {
+    } catch (err) {
+      console.log(err);
       try {
         const records = await prescriptionApi.getPrescriptions(mrn);
         const mapped = records.map((rx) =>
@@ -320,7 +326,8 @@ export const prescriptionService = {
         );
         prescriptionStoreActions.setPrescriptions(mapped);
         return mapped;
-      } catch {
+      } catch (err) {
+        console.log(err);
         prescriptionStoreActions.setPrescriptions([]);
         return [];
       }
@@ -345,7 +352,8 @@ export const prescriptionService = {
         return unified;
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     } finally {
       prescriptionStoreActions.setLoading(false);
@@ -363,7 +371,8 @@ export const prescriptionService = {
         return unified;
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },

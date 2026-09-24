@@ -7,7 +7,10 @@ import { QUEUE_QUERY_KEY } from "../../opd/hooks/useQueue";
 import { RecordPatientVitalsForm } from "../../vitals/components/RecordPatientVitalsForm";
 import { VitalsDetailsScreen } from "../../vitals/components/VitalsDetailsScreen";
 import type { AppointmentRecord } from "../../appointments/types/appointment.types";
-import type { NurseWaitingPatient, RecordedVitalsData } from "../../vitals/types/vitals.types";
+import type {
+  NurseWaitingPatient,
+  RecordedVitalsData,
+} from "../../vitals/types/vitals.types";
 
 type VitalsWaitingItem = NurseWaitingPatient;
 
@@ -43,7 +46,10 @@ const toAppointmentRecord = (item: VitalsWaitingItem): AppointmentRecord => ({
     id: item.patientId || item.mrn,
     mrn: item.mrn,
     name: getPatientName(item),
-    age: typeof item.age === "number" ? item.age : Number.parseInt(item.age, 10) || 0,
+    age:
+      typeof item.age === "number"
+        ? item.age
+        : Number.parseInt(item.age, 10) || 0,
     gender: item.gender,
     phone: item.phone || item.contact || "—",
   },
@@ -58,8 +64,12 @@ export function NurseVitalsWorklistPage() {
   const [selectedPatient, setSelectedPatient] =
     useState<VitalsWaitingItem | null>(null);
   const [activeApt, setActiveApt] = useState<AppointmentRecord | null>(null);
-  const [detailsVitals, setDetailsVitals] = useState<RecordedVitalsData | null>(null);
-  const [viewMode, setViewMode] = useState<"worklist" | "record" | "details">("worklist");
+  const [detailsVitals, setDetailsVitals] = useState<RecordedVitalsData | null>(
+    null,
+  );
+  const [viewMode, setViewMode] = useState<"worklist" | "record" | "details">(
+    "worklist",
+  );
   const [isEditMode, setIsEditMode] = useState(false);
 
   const fetchWorklist = () => {
@@ -106,7 +116,8 @@ export function NurseVitalsWorklistPage() {
         if (freshVitals) {
           setDetailsVitals(freshVitals);
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to submittedData or default
       }
     }

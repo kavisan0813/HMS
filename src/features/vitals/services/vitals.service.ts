@@ -31,7 +31,8 @@ export const vitalsService = {
             month: "short",
             year: "numeric",
           });
-        } catch {
+        } catch (err) {
+          console.log(err);
           return dateStr;
         }
       };
@@ -450,4 +451,3 @@ export const vitalsService = {
     return res?.success !== false;
   },
 };
-

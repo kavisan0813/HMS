@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useLocation } from "react-router";
 import { ROUTES } from "../../../app/routes/routes";
 import { ChevronRight, RefreshCw, UserPlus, Calendar } from "lucide-react";
@@ -11,14 +11,23 @@ import type { Role } from "../utils/patientPermissions";
 import { PatientTable } from "../components/PatientTable";
 import type { PatientFilterValues } from "../components/PatientFilters";
 import { PatientProfilePage } from "./PatientProfilePage";
-import { RegisterPatientScreen } from "./RegisterPatientScreen";
+const RegisterPatientScreen = lazy(() =>
+  import("./RegisterPatientScreen").then((m) => ({
+    default: m.RegisterPatientScreen,
+  })),
+);
 import { EditPatientScreen } from "./EditPatientScreen";
 import {
   DeactivatePatientDialog,
   ActivatePatientDialog,
 } from "../components/PatientStatusDialogs";
 import { BookAppointmentDrawer } from "../../appointments/components/BookAppointmentDrawer";
-import { BookAppointmentScreen } from "../../appointments/pages/BookAppointmentScreen";
+
+const BookAppointmentScreen = lazy(() =>
+  import("../../appointments/pages/BookAppointmentScreen").then((m) => ({
+    default: m.BookAppointmentScreen,
+  })),
+);
 
 const DEFAULT_FILTERS: PatientFilterValues = {
   searchQuery: "",
@@ -180,7 +189,8 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
     setIsUpdatingStatus(true);
     try {
       const targetId = (activatePatient.mrn || activatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "ACTIVE" });
       setActivatePatient(null);
       fetchPatients();
@@ -196,7 +206,8 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
     setIsUpdatingStatus(true);
     try {
       const targetId = (deactivatePatient.mrn || deactivatePatient.id) as
-        string | number;
+        | string
+        | number;
       await patientsApi.update(targetId, { status: "INACTIVE" });
       setDeactivatePatient(null);
       fetchPatients();
@@ -209,9 +220,12 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
 
   if (viewingPatient) {
     const currentIndex = filteredPatients.findIndex(
-      (p) => (p.mrn || String(p.id)) === (viewingPatient.mrn || String(viewingPatient.id)),
+      (p) =>
+        (p.mrn || String(p.id)) ===
+        (viewingPatient.mrn || String(viewingPatient.id)),
     );
-    const hasNext = currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
+    const hasNext =
+      currentIndex >= 0 && currentIndex < filteredPatients.length - 1;
     const hasPrev = currentIndex > 0;
 
     return (
@@ -235,32 +249,57 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
 
   if (registering) {
     return (
-      <RegisterPatientScreen
-        onBack={() => setRegistering(false)}
-        onViewProfile={(mrn) => {
-          setRegistering(false);
-          fetchPatients();
-          patientsApi
-            .getPatientByMrn(mrn)
-            .then((data) =>
-              setViewingPatient(mapApiPatientToPatientRecord(data)),
-            )
-            .catch(() => {});
-        }}
-      />
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading patient registration...
+          </div>
+        }
+      >
+        <RegisterPatientScreen
+          onBack={() => setRegistering(false)}
+          onViewProfile={(mrn) => {
+            setRegistering(false);
+            fetchPatients();
+            patientsApi
+              .getPatientByMrn(mrn)
+              .then((data) =>
+                setViewingPatient(mapApiPatientToPatientRecord(data)),
+              )
+              .catch(() => {});
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (bookingAppt) {
     return (
-      <BookAppointmentScreen
-        role={currentRole.toLowerCase() as "super-admin" | "admin" | "doctor" | "nurse" | "receptionist" | "accountant" | "patient"}
-        onBack={() => setBookingAppt(false)}
-        onBookSuccess={() => {
-          setBookingAppt(false);
-          fetchPatients();
-        }}
-      />
+      <Suspense
+        fallback={
+          <div className="flex min-h-100 items-center justify-center text-sm text-slate-500">
+            Loading booking workspace...
+          </div>
+        }
+      >
+        <BookAppointmentScreen
+          role={
+            currentRole.toLowerCase() as
+              | "super-admin"
+              | "admin"
+              | "doctor"
+              | "nurse"
+              | "receptionist"
+              | "accountant"
+              | "patient"
+          }
+          onBack={() => setBookingAppt(false)}
+          onBookSuccess={() => {
+            setBookingAppt(false);
+            fetchPatients();
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -343,13 +382,17 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-          <div className="text-xs text-[#64748B] font-medium">Active Patients</div>
+          <div className="text-xs text-[#64748B] font-medium">
+            Active Patients
+          </div>
           <div className="text-2xl font-bold text-[#009688] mt-0.5">
             {activePatients}
           </div>
         </div>
         <div className="bg-white rounded-2xl border border-[#E5E7EB] p-4 shadow-sm">
-          <div className="text-xs text-[#64748B] font-medium">Inactive Patients</div>
+          <div className="text-xs text-[#64748B] font-medium">
+            Inactive Patients
+          </div>
           <div className="text-2xl font-bold text-[#F59E0B] mt-0.5">
             {Math.max(0, totalPatients - activePatients)}
           </div>
@@ -361,7 +404,9 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
         totalCount={patients.length}
         isLoading={loading}
         filterValues={filters}
-        onFilterChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        onFilterChange={(patch) =>
+          setFilters((prev) => ({ ...prev, ...patch }))
+        }
         onResetFilters={() => setFilters(DEFAULT_FILTERS)}
         hasActiveFilters={hasActiveFilters}
         selectedPatientId={selectedPatientId}
@@ -372,7 +417,9 @@ export function PatientListPage({ currentRole }: { currentRole: Role }) {
         onEditPatient={
           canEdit
             ? (p) =>
-                navigate(ROUTES.PATIENT_PROFILE.replace(":mrn", p.mrn || String(p.id)))
+                navigate(
+                  ROUTES.PATIENT_PROFILE.replace(":mrn", p.mrn || String(p.id)),
+                )
             : undefined
         }
         onBookAppointment={

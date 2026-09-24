@@ -211,7 +211,9 @@ export const billingService = {
     const targetId = await resolveBillId(billId);
 
     const normalizedPayments = (payload.payments || []).map((p) => {
-      const rawMethod = String(p.method || "CASH").trim().toUpperCase();
+      const rawMethod = String(p.method || "CASH")
+        .trim()
+        .toUpperCase();
       let method = rawMethod;
       if (
         rawMethod === "CASH" ||
@@ -314,7 +316,8 @@ export const billingService = {
       try {
         const response = await billingApi.getPatientBilling(mrn);
         responseData = response.data as unknown as Record<string, unknown>;
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           const res = await apiClient.get<Record<string, unknown>>(
             `/api/v1/patients/${encodeURIComponent(mrn)}/billing`,
@@ -323,7 +326,8 @@ export const billingService = {
             string,
             unknown
           >;
-        } catch {
+        } catch (err) {
+          console.log(err);
           try {
             const res = await apiClient.get<Record<string, unknown>>(
               `/api/v1/billing?mrn=${encodeURIComponent(mrn)}`,
@@ -332,7 +336,8 @@ export const billingService = {
               string,
               unknown
             >;
-          } catch {
+          } catch (err) {
+            console.log(err);
             return [];
           }
         }
@@ -425,7 +430,8 @@ export const billingService = {
           },
         } as unknown as BillListItem);
       });
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },

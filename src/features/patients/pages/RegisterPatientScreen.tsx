@@ -38,14 +38,70 @@ const labelBase = "block text-xs font-semibold text-slate-600 mb-1.5";
 function normalizeBloodGroup(bg?: unknown): string {
   if (!bg) return "";
   const s = String(bg).trim().toUpperCase();
-  if (s === "A+" || s === "A_POSITIVE" || s === "A POSITIVE" || s === "A POS" || s === "A-POSITIVE") return "A_POSITIVE";
-  if (s === "A-" || s === "A_NEGATIVE" || s === "A NEGATIVE" || s === "A NEG" || s === "A-NEGATIVE") return "A_NEGATIVE";
-  if (s === "B+" || s === "B_POSITIVE" || s === "B POSITIVE" || s === "B POS" || s === "B-POSITIVE") return "B_POSITIVE";
-  if (s === "B-" || s === "B_NEGATIVE" || s === "B NEGATIVE" || s === "B NEG" || s === "B-NEGATIVE") return "B_NEGATIVE";
-  if (s === "AB+" || s === "AB_POSITIVE" || s === "AB POSITIVE" || s === "AB POS" || s === "AB-POSITIVE") return "AB_POSITIVE";
-  if (s === "AB-" || s === "AB_NEGATIVE" || s === "AB NEGATIVE" || s === "AB NEG" || s === "AB-NEGATIVE") return "AB_NEGATIVE";
-  if (s === "O+" || s === "O_POSITIVE" || s === "O POSITIVE" || s === "O POS" || s === "O-POSITIVE") return "O_POSITIVE";
-  if (s === "O-" || s === "O_NEGATIVE" || s === "O NEGATIVE" || s === "O NEG" || s === "O-NEGATIVE") return "O_NEGATIVE";
+  if (
+    s === "A+" ||
+    s === "A_POSITIVE" ||
+    s === "A POSITIVE" ||
+    s === "A POS" ||
+    s === "A-POSITIVE"
+  )
+    return "A_POSITIVE";
+  if (
+    s === "A-" ||
+    s === "A_NEGATIVE" ||
+    s === "A NEGATIVE" ||
+    s === "A NEG" ||
+    s === "A-NEGATIVE"
+  )
+    return "A_NEGATIVE";
+  if (
+    s === "B+" ||
+    s === "B_POSITIVE" ||
+    s === "B POSITIVE" ||
+    s === "B POS" ||
+    s === "B-POSITIVE"
+  )
+    return "B_POSITIVE";
+  if (
+    s === "B-" ||
+    s === "B_NEGATIVE" ||
+    s === "B NEGATIVE" ||
+    s === "B NEG" ||
+    s === "B-NEGATIVE"
+  )
+    return "B_NEGATIVE";
+  if (
+    s === "AB+" ||
+    s === "AB_POSITIVE" ||
+    s === "AB POSITIVE" ||
+    s === "AB POS" ||
+    s === "AB-POSITIVE"
+  )
+    return "AB_POSITIVE";
+  if (
+    s === "AB-" ||
+    s === "AB_NEGATIVE" ||
+    s === "AB NEGATIVE" ||
+    s === "AB NEG" ||
+    s === "AB-NEGATIVE"
+  )
+    return "AB_NEGATIVE";
+  if (
+    s === "O+" ||
+    s === "O_POSITIVE" ||
+    s === "O POSITIVE" ||
+    s === "O POS" ||
+    s === "O-POSITIVE"
+  )
+    return "O_POSITIVE";
+  if (
+    s === "O-" ||
+    s === "O_NEGATIVE" ||
+    s === "O NEGATIVE" ||
+    s === "O NEG" ||
+    s === "O-NEGATIVE"
+  )
+    return "O_NEGATIVE";
   if (s === "UNKNOWN") return "UNKNOWN";
   return s;
 }
@@ -114,13 +170,17 @@ function extractAddressFields(src: unknown): {
       addrObj = raw.address as Record<string, unknown>;
     } else if (typeof raw.address === "string" && raw.address.trim()) {
       const str = raw.address.trim();
-      const parts = str.split(",").map((p) => p.trim()).filter(Boolean);
+      const parts = str
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean);
       return {
         addressLine1: parts[0] || str,
         addressLine2: parts[1] || "",
         city: parts[2] || (raw.city as string) || "",
         state: parts[3] || (raw.state as string) || "",
-        pincode: parts[4] || (raw.pincode as string) || (raw.zipCode as string) || "",
+        pincode:
+          parts[4] || (raw.pincode as string) || (raw.zipCode as string) || "",
         country: parts[5] || (raw.country as string) || "India",
       };
     } else {
@@ -128,7 +188,10 @@ function extractAddressFields(src: unknown): {
     }
   } else if (typeof src === "string" && src.trim()) {
     const str = src.trim();
-    const parts = str.split(",").map((p) => p.trim()).filter(Boolean);
+    const parts = str
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
     return {
       addressLine1: parts[0] || str,
       addressLine2: parts[1] || "",
@@ -154,16 +217,10 @@ function extractAddressFields(src: unknown): {
       "",
   );
   const city = String(
-    addrObj.city ||
-      addrObj.cityName ||
-      addrObj.district ||
-      "",
+    addrObj.city || addrObj.cityName || addrObj.district || "",
   );
   const state = String(
-    addrObj.state ||
-      addrObj.stateName ||
-      addrObj.province ||
-      "",
+    addrObj.state || addrObj.stateName || addrObj.province || "",
   );
   const pincode = String(
     addrObj.pincode ||
@@ -174,11 +231,7 @@ function extractAddressFields(src: unknown): {
       addrObj.pin ||
       "",
   );
-  const country = String(
-    addrObj.country ||
-      addrObj.countryName ||
-      "India",
-  );
+  const country = String(addrObj.country || addrObj.countryName || "India");
 
   return {
     addressLine1: line1,
@@ -519,7 +572,10 @@ function RegistrationSuccessDialog({
 }
 
 export type RegistrationMode =
-  "ADMIN" | "RECEPTIONIST" | "PATIENT_SELF" | "PATIENT_FAMILY";
+  | "ADMIN"
+  | "RECEPTIONIST"
+  | "PATIENT_SELF"
+  | "PATIENT_FAMILY";
 
 /* ═══════════════════════════════════════════════════════
    MAIN COMPONENT
@@ -607,15 +663,22 @@ export function RegisterPatientScreen({
   const isAddingFamilyMember = effectiveMode === "PATIENT_FAMILY";
   const isPatientUser = String(user?.role || "").toUpperCase() === "PATIENT";
   const isSelfRegistration =
-    effectiveMode === "PATIENT_SELF" || (isPatientUser && !isAddingFamilyMember);
+    effectiveMode === "PATIENT_SELF" ||
+    (isPatientUser && !isAddingFamilyMember);
 
   const [form, setForm] = useState<RegistrationFormState>(() => {
     let pendingDob = "";
     let pendingGender = "";
     try {
-      const userEmail = String(user?.email || "").trim().toLowerCase();
-      const raw1 = userEmail ? localStorage.getItem(`hms-pending-patient:${userEmail}`) : null;
-      const raw2 = localStorage.getItem("hms-pending-patient-last:v1") || localStorage.getItem("hms-pending-patient-last");
+      const userEmail = String(user?.email || "")
+        .trim()
+        .toLowerCase();
+      const raw1 = userEmail
+        ? localStorage.getItem(`hms-pending-patient:${userEmail}`)
+        : null;
+      const raw2 =
+        localStorage.getItem("hms-pending-patient-last:v1") ||
+        localStorage.getItem("hms-pending-patient-last");
       const raw3 = localStorage.getItem("hms-pending-patient-profile:v1");
       const storedPending = raw1 || raw2 || raw3;
       if (storedPending) {
@@ -623,7 +686,8 @@ export function RegisterPatientScreen({
         pendingDob = parsed?.dateOfBirth || parsed?.dob || "";
         pendingGender = parsed?.gender || "";
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       /* ignore */
     }
 
@@ -637,7 +701,8 @@ export function RegisterPatientScreen({
         ? {
             fullName: user?.fullName || user?.name || "",
             email: user?.email || "",
-            mobileNumber: user?.mobile || user?.phone || user?.mobileNumber || "",
+            mobileNumber:
+              user?.mobile || user?.phone || user?.mobileNumber || "",
             dateOfBirth: rawDob ? String(rawDob).split("T")[0] : "",
             gender: rawGender ? String(rawGender).toUpperCase() : "",
           }
@@ -669,9 +734,15 @@ export function RegisterPatientScreen({
         let pendingDob = "";
         let pendingGender = "";
         try {
-          const userEmail = String(user?.email || "").trim().toLowerCase();
-          const raw1 = userEmail ? localStorage.getItem(`hms-pending-patient:${userEmail}`) : null;
-          const raw2 = localStorage.getItem("hms-pending-patient-last:v1") || localStorage.getItem("hms-pending-patient-last");
+          const userEmail = String(user?.email || "")
+            .trim()
+            .toLowerCase();
+          const raw1 = userEmail
+            ? localStorage.getItem(`hms-pending-patient:${userEmail}`)
+            : null;
+          const raw2 =
+            localStorage.getItem("hms-pending-patient-last:v1") ||
+            localStorage.getItem("hms-pending-patient-last");
           const raw3 = localStorage.getItem("hms-pending-patient-profile:v1");
           const storedPending = raw1 || raw2 || raw3;
           if (storedPending) {
@@ -679,7 +750,8 @@ export function RegisterPatientScreen({
             pendingDob = parsed?.dateOfBirth || parsed?.dob || "";
             pendingGender = parsed?.gender || "";
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           /* ignore */
         }
 
@@ -758,15 +830,41 @@ export function RegisterPatientScreen({
     let cancelled = false;
 
     const emObj = editMember as Record<string, unknown>;
-    const emName = editMember.patientName || (editMember.fullName as string) || (editMember.name as string) || "";
-    const emGender = editMember.gender ? String(editMember.gender).toUpperCase() : "";
-    const emDob = editMember.dateOfBirth ? String(editMember.dateOfBirth).split("T")[0] : "";
-    const emMobile = editMember.registeredMobile || (editMember.mobileNumber as string) || (editMember.phone as string) || "";
-    const emEmail = String(editMember.email || emObj.emailAddress || emObj.contactEmail || emObj.patientEmail || "");
-    const emBlood = normalizeBloodGroup(editMember.bloodGroup || emObj.blood_group || emObj.bloodGroupEnum);
-    const emMarital = normalizeMaritalStatus(emObj.maritalStatus || emObj.marital_status || emObj.maritalStatusEnum);
-    const emAllergies = parseListField(editMember.knownAllergies || emObj.allergies || emObj.known_allergies);
-    const emRel = editMember.relationship ? String(editMember.relationship).toUpperCase() : "";
+    const emName =
+      editMember.patientName ||
+      (editMember.fullName as string) ||
+      (editMember.name as string) ||
+      "";
+    const emGender = editMember.gender
+      ? String(editMember.gender).toUpperCase()
+      : "";
+    const emDob = editMember.dateOfBirth
+      ? String(editMember.dateOfBirth).split("T")[0]
+      : "";
+    const emMobile =
+      editMember.registeredMobile ||
+      (editMember.mobileNumber as string) ||
+      (editMember.phone as string) ||
+      "";
+    const emEmail = String(
+      editMember.email ||
+        emObj.emailAddress ||
+        emObj.contactEmail ||
+        emObj.patientEmail ||
+        "",
+    );
+    const emBlood = normalizeBloodGroup(
+      editMember.bloodGroup || emObj.blood_group || emObj.bloodGroupEnum,
+    );
+    const emMarital = normalizeMaritalStatus(
+      emObj.maritalStatus || emObj.marital_status || emObj.maritalStatusEnum,
+    );
+    const emAllergies = parseListField(
+      editMember.knownAllergies || emObj.allergies || emObj.known_allergies,
+    );
+    const emRel = editMember.relationship
+      ? String(editMember.relationship).toUpperCase()
+      : "";
     const emAddr = extractAddressFields(emObj.address || emObj);
 
     // Immediate initial population from editMember prop
@@ -798,45 +896,110 @@ export function RegisterPatientScreen({
 
     async function loadPatientDetails() {
       try {
-        const res = await apiClient.get(`/api/v1/patients/${encodeURIComponent(mrn!)}`);
+        const res = await apiClient.get(
+          `/api/v1/patients/${encodeURIComponent(mrn!)}`,
+        );
         if (cancelled) return;
-        const rawData = ((res.data as { data?: Record<string, unknown> })?.data || res.data) as Record<string, unknown>;
+        const rawData = ((res.data as { data?: Record<string, unknown> })
+          ?.data || res.data) as Record<string, unknown>;
         if (rawData) {
-          const em = (rawData.emergencyContact as Record<string, unknown>) || {};
+          const em =
+            (rawData.emergencyContact as Record<string, unknown>) || {};
           const apiAddr = extractAddressFields(rawData.address || rawData);
 
-          const apiEmail = String(rawData.email || rawData.emailAddress || rawData.contactEmail || rawData.patientEmail || emEmail || "");
-          const apiBloodGroup = normalizeBloodGroup(rawData.bloodGroup || rawData.blood_group || rawData.bloodGroupEnum || editMember?.bloodGroup || emObj.blood_group);
-          const apiMaritalStatus = normalizeMaritalStatus(rawData.maritalStatus || rawData.marital_status || rawData.maritalStatusEnum || emObj.maritalStatus || emObj.marital_status);
-          const apiAllergies = parseListField(rawData.knownAllergies || rawData.allergies || rawData.known_allergies || rawData.allergyDetails || editMember?.knownAllergies || emObj.allergies);
-          const apiDiseases = parseListField(rawData.chronicDiseases || rawData.chronicConditions || rawData.diseases || rawData.chronic_diseases || emObj.chronicDiseases);
+          const apiEmail = String(
+            rawData.email ||
+              rawData.emailAddress ||
+              rawData.contactEmail ||
+              rawData.patientEmail ||
+              emEmail ||
+              "",
+          );
+          const apiBloodGroup = normalizeBloodGroup(
+            rawData.bloodGroup ||
+              rawData.blood_group ||
+              rawData.bloodGroupEnum ||
+              editMember?.bloodGroup ||
+              emObj.blood_group,
+          );
+          const apiMaritalStatus = normalizeMaritalStatus(
+            rawData.maritalStatus ||
+              rawData.marital_status ||
+              rawData.maritalStatusEnum ||
+              emObj.maritalStatus ||
+              emObj.marital_status,
+          );
+          const apiAllergies = parseListField(
+            rawData.knownAllergies ||
+              rawData.allergies ||
+              rawData.known_allergies ||
+              rawData.allergyDetails ||
+              editMember?.knownAllergies ||
+              emObj.allergies,
+          );
+          const apiDiseases = parseListField(
+            rawData.chronicDiseases ||
+              rawData.chronicConditions ||
+              rawData.diseases ||
+              rawData.chronic_diseases ||
+              emObj.chronicDiseases,
+          );
 
           setForm((prev) => ({
             ...prev,
-            fullName: String(rawData.fullName || rawData.patientName || rawData.name || prev.fullName),
+            fullName: String(
+              rawData.fullName ||
+                rawData.patientName ||
+                rawData.name ||
+                prev.fullName,
+            ),
             gender: String(rawData.gender || prev.gender).toUpperCase(),
-            dateOfBirth: rawData.dateOfBirth ? String(rawData.dateOfBirth).split("T")[0] : (rawData.dob ? String(rawData.dob).split("T")[0] : prev.dateOfBirth),
-            mobileNumber: String(rawData.phone || rawData.mobileNumber || rawData.registeredMobile || prev.mobileNumber),
+            dateOfBirth: rawData.dateOfBirth
+              ? String(rawData.dateOfBirth).split("T")[0]
+              : rawData.dob
+                ? String(rawData.dob).split("T")[0]
+                : prev.dateOfBirth,
+            mobileNumber: String(
+              rawData.phone ||
+                rawData.mobileNumber ||
+                rawData.registeredMobile ||
+                prev.mobileNumber,
+            ),
             email: apiEmail || prev.email,
             bloodGroup: apiBloodGroup || prev.bloodGroup,
             maritalStatus: apiMaritalStatus || prev.maritalStatus,
-            nationalId: String(rawData.nationalId || rawData.aadharNumber || rawData.aadhar || prev.nationalId || ""),
+            nationalId: String(
+              rawData.nationalId ||
+                rawData.aadharNumber ||
+                rawData.aadhar ||
+                prev.nationalId ||
+                "",
+            ),
             photoUrl: String(rawData.photoUrl || prev.photoUrl || ""),
-            addressLine1: apiAddr.addressLine1 || emAddr.addressLine1 || prev.addressLine1,
-            addressLine2: apiAddr.addressLine2 || emAddr.addressLine2 || prev.addressLine2,
+            addressLine1:
+              apiAddr.addressLine1 || emAddr.addressLine1 || prev.addressLine1,
+            addressLine2:
+              apiAddr.addressLine2 || emAddr.addressLine2 || prev.addressLine2,
             city: apiAddr.city || emAddr.city || prev.city,
             state: apiAddr.state || emAddr.state || prev.state,
             pincode: apiAddr.pincode || emAddr.pincode || prev.pincode,
-            country: apiAddr.country || emAddr.country || prev.country || "India",
+            country:
+              apiAddr.country || emAddr.country || prev.country || "India",
             ecName: String(em.name || ""),
             ecRelationship: String(em.relationship || ""),
             ecMobile: String(em.mobileNumber || em.phone || ""),
             ecAltMobile: String(em.alternativeMobileNumber || ""),
-            patientCategory: String(rawData.patientCategory || "GENERAL").toUpperCase(),
+            patientCategory: String(
+              rawData.patientCategory || "GENERAL",
+            ).toUpperCase(),
             knownAllergies: apiAllergies || prev.knownAllergies,
             chronicDiseases: apiDiseases || prev.chronicDiseases,
             specialNotes: String(rawData.specialNotes || rawData.notes || ""),
-            relationship: String(rawData.relationship || editMember?.relationship || prev.relationship).toUpperCase(),
+            relationship: String(
+              rawData.relationship ||
+                editMember?.relationship ||
+                prev.relationship,
+            ).toUpperCase(),
           }));
         }
       } catch (err) {
@@ -1114,7 +1277,8 @@ export function RegisterPatientScreen({
             ...payload,
           });
           mrn = updated.mrn || primaryMrn;
-        } catch {
+        } catch (err) {
+          console.log(err);
           const created = (await createPatient.mutateAsync(payload)) as {
             mrn?: string;
             MRNId?: string;

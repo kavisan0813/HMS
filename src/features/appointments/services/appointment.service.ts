@@ -88,7 +88,8 @@ const normalizeAppointmentRecord = (
 
   return {
     id: (item?.id ?? item?.appointmentId ?? item?.appointmentNumber ?? "") as
-      string | number,
+      | string
+      | number,
     appointmentNumber: (item?.appointmentNumber ||
       item?.queueToken ||
       String(item?.id ?? "")) as string,
@@ -99,9 +100,11 @@ const normalizeAppointmentRecord = (
       patient?.name ||
       "") as string,
     patientMrn: (item?.patientMrn || patient?.mrn || item?.mrn) as
-      string | undefined,
+      | string
+      | undefined,
     doctorId: (item?.doctorId ?? doctor?.doctorId ?? doctor?.id ?? "") as
-      string | number,
+      | string
+      | number,
     doctorName: (item?.doctorName ||
       doctor?.name ||
       doctor?.fullName ||
@@ -111,7 +114,8 @@ const normalizeAppointmentRecord = (
     endTime: item?.endTime as string | undefined,
     status: displayStatus,
     queueStatus: (item?.queueStatus || item?.arrivalStatus) as
-      string | undefined,
+      | string
+      | undefined,
     appointmentType: item?.appointmentType as string | undefined,
     reason: (item?.reason || item?.chiefComplaint) as string | undefined,
     symptoms: item?.symptoms as string | undefined,
@@ -135,7 +139,11 @@ const normalizeAppointmentRecord = (
     rescheduleReason: item?.rescheduleReason as string | undefined,
     vitalsRecorded: item?.vitalsRecorded as boolean | undefined,
     paymentStatus: item?.paymentStatus as
-      "PAID" | "UNPAID" | "PARTIAL" | "PENDING" | undefined,
+      | "PAID"
+      | "UNPAID"
+      | "PARTIAL"
+      | "PENDING"
+      | undefined,
     priority: item?.priority as string | undefined,
     arrivalStatus: item?.arrivalStatus as string | undefined,
     opdRoom: (item?.opdRoom || doctor?.opdRoom) as string | undefined,
@@ -157,12 +165,14 @@ const normalizeAppointmentRecord = (
       patient?.phone ||
       patient?.mobile) as string | undefined,
     doctorSpecialty: (item?.doctorSpecialty || doctor?.specialty) as
-      string | undefined,
+      | string
+      | undefined,
     tokenNo: (item?.tokenNo || item?.queueToken) as string | undefined,
     timeSlot: (item?.timeSlot || startTime) as string | undefined,
     visitType: (item?.visitType || item?.appointmentType) as string | undefined,
     chiefComplaint: (item?.chiefComplaint || item?.reason) as
-      string | undefined,
+      | string
+      | undefined,
     notes: item?.notes as string | undefined,
     arrivalTime: "",
     time: startTime,
@@ -286,7 +296,8 @@ export const appointmentService = {
         status,
       );
       rawItems = unwrapAppointmentCollection(res);
-    } catch {
+    } catch (err) {
+      console.log(err);
       rawItems = [];
     }
 
@@ -673,64 +684,69 @@ export const appointmentService = {
         return true;
       });
 
-      return activeDoctors.map((d: DoctorInputShape): DoctorSummary => ({
-        id: String(
-          d.doctorId ?? d.doctorProfile?.doctorId ?? d.userId ?? d.id ?? "",
-        ),
-        doctorId: d.doctorId ?? d.doctorProfile?.doctorId ?? d.id ?? "",
-        name: String(d.doctorName ?? d.fullName ?? d.name ?? ""),
-        fullName: String(d.doctorName ?? d.fullName ?? d.name ?? ""),
-        departmentName:
-          d.departmentName ??
-          d.department ??
-          d.primaryDepartment?.departmentName ??
-          "",
-        department:
-          d.departmentName ??
-          d.department ??
-          d.primaryDepartment?.departmentName ??
-          "",
-        departmentId: (d.departmentId ??
-          d.primaryDepartment?.departmentId ??
-          departmentId ??
-          "") as string | number,
-        specialty:
-          d.specialty ??
-          d.primarySpecialty?.specialtyName ??
-          d.doctorProfile?.primarySpecialty?.specialtyName ??
-          "",
-        qualification: d.qualification ?? d.doctorProfile?.qualification ?? "",
-        consultationFee:
-          Number(
-            (d as Record<string, unknown>).consultFee ??
-              d.consultationFee ??
-              (d as Record<string, unknown>).consultFeeInr ??
-              (d as Record<string, unknown>).fee ??
-              d.fees?.standardConsultationFee ??
-              d.doctorProfile?.consultationFee ??
-              d.doctorProfile?.consultFee ??
-              0,
-          ) || 0,
-        opdRoom: d.opdRoom ?? "",
-        status:
-          d.status ??
-          d.doctorProfile?.status ??
-          d.doctor?.status ??
-          d.user?.status ??
-          "ACTIVE",
-        active:
-          d.active ??
-          d.isActive ??
-          d.enabled ??
-          d.doctorProfile?.active ??
-          d.doctorProfile?.isActive ??
-          d.doctor?.active ??
-          d.doctor?.isActive ??
-          d.user?.active ??
-          d.user?.isActive ??
-          d.user?.enabled ??
-          (d.status ? String(d.status).toUpperCase() === "ACTIVE" : undefined),
-      }));
+      return activeDoctors.map(
+        (d: DoctorInputShape): DoctorSummary => ({
+          id: String(
+            d.doctorId ?? d.doctorProfile?.doctorId ?? d.userId ?? d.id ?? "",
+          ),
+          doctorId: d.doctorId ?? d.doctorProfile?.doctorId ?? d.id ?? "",
+          name: String(d.doctorName ?? d.fullName ?? d.name ?? ""),
+          fullName: String(d.doctorName ?? d.fullName ?? d.name ?? ""),
+          departmentName:
+            d.departmentName ??
+            d.department ??
+            d.primaryDepartment?.departmentName ??
+            "",
+          department:
+            d.departmentName ??
+            d.department ??
+            d.primaryDepartment?.departmentName ??
+            "",
+          departmentId: (d.departmentId ??
+            d.primaryDepartment?.departmentId ??
+            departmentId ??
+            "") as string | number,
+          specialty:
+            d.specialty ??
+            d.primarySpecialty?.specialtyName ??
+            d.doctorProfile?.primarySpecialty?.specialtyName ??
+            "",
+          qualification:
+            d.qualification ?? d.doctorProfile?.qualification ?? "",
+          consultationFee:
+            Number(
+              (d as Record<string, unknown>).consultFee ??
+                d.consultationFee ??
+                (d as Record<string, unknown>).consultFeeInr ??
+                (d as Record<string, unknown>).fee ??
+                d.fees?.standardConsultationFee ??
+                d.doctorProfile?.consultationFee ??
+                d.doctorProfile?.consultFee ??
+                0,
+            ) || 0,
+          opdRoom: d.opdRoom ?? "",
+          status:
+            d.status ??
+            d.doctorProfile?.status ??
+            d.doctor?.status ??
+            d.user?.status ??
+            "ACTIVE",
+          active:
+            d.active ??
+            d.isActive ??
+            d.enabled ??
+            d.doctorProfile?.active ??
+            d.doctorProfile?.isActive ??
+            d.doctor?.active ??
+            d.doctor?.isActive ??
+            d.user?.active ??
+            d.user?.isActive ??
+            d.user?.enabled ??
+            (d.status
+              ? String(d.status).toUpperCase() === "ACTIVE"
+              : undefined),
+        }),
+      );
     } catch (error) {
       console.warn("[appointmentService] listDoctors failed:", error);
       return [];

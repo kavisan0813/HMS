@@ -1220,10 +1220,7 @@ const DoctorConsultationsTable = ({
             </tr>
           ) : (
             filteredConsultations.map((item) => (
-              <tr
-                key={item.id}
-                className="hover:bg-slate-50 transition-colors"
-              >
+              <tr key={item.id} className="hover:bg-slate-50 transition-colors">
                 <td className="py-3.5 px-4 font-bold text-[#111827]">
                   {item.patientName}
                 </td>
@@ -1371,14 +1368,17 @@ export function DoctorReportsDashboardScreen({
   } = state;
 
   const setSearchQuery = (val: string) => dispatch({ searchQuery: val });
-  const setDateRangeFilter = (val: string) => dispatch({ dateRangeFilter: val });
+  const setDateRangeFilter = (val: string) =>
+    dispatch({ dateRangeFilter: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
   const setStatusFilter = (val: string) => dispatch({ statusFilter: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
   const setTrendDays = (val: "7" | "30" | "90") => dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
+  const setShowLoadingDemo = (val: boolean) =>
+    dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending,] = useTransition();
   const isLoading = isPending || showLoadingDemo;
@@ -1412,13 +1412,12 @@ export function DoctorReportsDashboardScreen({
       toDate: endDate,
       period: `${trendDays}days`,
     });
-  const { refetch: refetchPatReg } =
-    useDoctorPatientRegister({
-      fromDate: startDate,
-      toDate: endDate,
-      search: searchQuery || undefined,
-      size: 50,
-    });
+  const { refetch: refetchPatReg } = useDoctorPatientRegister({
+    fromDate: startDate,
+    toDate: endDate,
+    search: searchQuery || undefined,
+    size: 50,
+  });
 
   const handlePresetDateChange = (preset: string) => {
     setDateRangeFilter(preset);

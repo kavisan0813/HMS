@@ -15,7 +15,7 @@ import { PP, RB } from "../../../doctors/constants/doctors.constants";
 import { patientsApi } from "../../api/patient.api";
 import { InvoiceDetailsDrawer } from "../../../billing/components/InvoiceDetailsDrawer";
 import { mapApiInvoiceToInvoiceRecord } from "../../../billing/utils/billing.utils";
-import { DataTable} from "../../../../common/components/DataTable";
+import { DataTable } from "../../../../common/components/DataTable";
 
 export interface BillingTabProps {
   patient: Patient;
@@ -55,9 +55,7 @@ function renderBillingStatusBadge(status?: string) {
   );
 }
 
-export function PatientBillingTab({
-  patient,
-}: BillingTabProps) {
+export function PatientBillingTab({ patient }: BillingTabProps) {
   const [invoices, setInvoices] = useState<ApiPatientInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [prevMrn, setPrevMrn] = useState<string | null>(null);

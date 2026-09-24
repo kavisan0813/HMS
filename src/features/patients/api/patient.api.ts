@@ -51,12 +51,14 @@ export const patientsApi = {
       try {
         res = await apiClient.get<unknown>(url);
       } catch (err) {
+        console.log(err);
         const fallbackUrl = params?.query
           ? `/api/v1/patients/search?query=${encodeURIComponent(params.query)}`
           : "/api/v1/admin/users?role=PATIENT";
         try {
           res = await apiClient.get<unknown>(fallbackUrl);
-        } catch {
+        } catch (err) {
+          console.log(err);
           throw err;
         }
       }
@@ -412,7 +414,8 @@ export const patientsApi = {
       const searchParams = new URLSearchParams();
       const queryVal =
         ((params as Record<string, unknown> | undefined)?.query as
-          string | undefined) || params?.search;
+          | string
+          | undefined) || params?.search;
       if (queryVal) searchParams.append("query", queryVal);
       if (params?.page) searchParams.append("page", String(params.page));
       if (params?.limit) searchParams.append("limit", String(params.limit));
@@ -426,7 +429,8 @@ export const patientsApi = {
         response = await apiClient.get<
           PatientApiResponse<Patient[]> | Patient[]
         >(url);
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback endpoint if primary /api/v1/patients returns 500
         const fallbackUrl = queryVal
           ? `/api/v1/patients/search?query=${encodeURIComponent(queryVal)}`
@@ -558,7 +562,8 @@ export const patientsApi = {
         response.data?.data ||
         (Array.isArray(response.data) ? response.data : [])
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -576,7 +581,8 @@ export const patientsApi = {
         (response.data as unknown as ApiPatientFamilyMember) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -599,7 +605,8 @@ export const patientsApi = {
         (response.data as unknown as ApiPatientFamilyMember) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -639,7 +646,8 @@ export const patientsApi = {
         (response.data as unknown as ApiPatientFamilyMember) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Attempt 2: POST /api/v1/patients/link (Standard backend relationship link/update API)
       try {
         const linkPayload = {
@@ -656,7 +664,8 @@ export const patientsApi = {
           (response.data as unknown as ApiPatientFamilyMember) ||
           null
         );
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Attempt 3: PUT /api/v1/patients/{targetMrn}
         try {
           const fallbackTarget = memberId || mrn;
@@ -668,7 +677,8 @@ export const patientsApi = {
             (response.data as unknown as ApiPatientFamilyMember) ||
             null
           );
-        } catch {
+        } catch (err) {
+          console.log(err);
           return null;
         }
       }
@@ -685,13 +695,15 @@ export const patientsApi = {
         `/api/v1/patients/${encodeURIComponent(target)}/link`,
       );
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       try {
         await apiClient.delete(
           `/api/v1/patients/${encodeURIComponent(mrn)}/link`,
         );
         return true;
-      } catch {
+      } catch (err) {
+        console.log(err);
         return false;
       }
     }
@@ -728,7 +740,8 @@ export const patientsApi = {
           `/api/v1/appointments?mrn=${encodeURIComponent(mrn)}`,
         );
         rawList = extractList(res.data);
-      } catch {
+      } catch (err) {
+        console.log(err);
         // continue
       }
 
@@ -739,7 +752,8 @@ export const patientsApi = {
             `/api/v1/patients/${encodeURIComponent(mrn)}/appointments`,
           );
           rawList = extractList(res.data);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // continue
         }
       }
@@ -764,7 +778,8 @@ export const patientsApi = {
               (aMrn && aMrn === normalized) || (aPid && aPid === normalized)
             );
           });
-        } catch {
+        } catch (err) {
+          console.log(err);
           // continue
         }
       }
@@ -808,7 +823,8 @@ export const patientsApi = {
           notes: (a.notes || a.clinicalNotes) as string | undefined,
         };
       });
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -886,7 +902,8 @@ export const patientsApi = {
         }>
       >(`/api/v1/reception/queue`);
       return response.data?.data?.queue || [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -942,7 +959,8 @@ export const patientsApi = {
       });
 
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return false;
     }
   },
@@ -984,7 +1002,8 @@ export const patientsApi = {
         }
       }
       return resData || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -1008,7 +1027,8 @@ export const patientsApi = {
         response.data?.data ||
         (Array.isArray(response.data) ? response.data : [])
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -1063,7 +1083,8 @@ export const patientsApi = {
       });
 
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return false;
     }
   },
@@ -1101,7 +1122,10 @@ export const patientsApi = {
             `/api/v1/patient/prescriptions?mrn=${encodeURIComponent(mrn)}`,
             `/api/v1/patients/me/prescriptions`,
           ]
-        : ["/api/v1/patients/me/prescriptions", "/api/v1/patient/prescriptions"];
+        : [
+            "/api/v1/patients/me/prescriptions",
+            "/api/v1/patient/prescriptions",
+          ];
 
       for (const url of endpoints) {
         try {
@@ -1111,18 +1135,15 @@ export const patientsApi = {
             rawList = list;
             break;
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // try next endpoint
         }
       }
 
       return rawList.map((r) => {
         const rawMeds =
-          r.medicines ||
-          r.medications ||
-          r.items ||
-          r.sampleMedicines ||
-          [];
+          r.medicines || r.medications || r.items || r.sampleMedicines || [];
         const meds = Array.isArray(rawMeds) ? rawMeds : [];
         const docObj = (
           r.doctor && typeof r.doctor === "object" ? r.doctor : {}
@@ -1137,17 +1158,20 @@ export const patientsApi = {
             ? r.totalMedicines
             : meds.length || Number(r.medicineCount) || 0;
 
-        const encId = r.encounterId || r.encounterNumber || r.encounter_id || "";
+        const encId =
+          r.encounterId || r.encounterNumber || r.encounter_id || "";
 
         return {
           id: String(r.id || r.prescriptionId || ""),
-          prescriptionId: String(r.prescriptionId || r.prescriptionNumber || r.id || ""),
-          encounterId: encId ? String(encId) : undefined,
-          date: String(r.issueDate || r.date || r.createdAt || r.finalizedAt || ""),
-          doctorName: String(docName),
-          department: String(
-            r.department || r.departmentName || "General OPD",
+          prescriptionId: String(
+            r.prescriptionId || r.prescriptionNumber || r.id || "",
           ),
+          encounterId: encId ? String(encId) : undefined,
+          date: String(
+            r.issueDate || r.date || r.createdAt || r.finalizedAt || "",
+          ),
+          doctorName: String(docName),
+          department: String(r.department || r.departmentName || "General OPD"),
           medicineCount: count,
           status: String(r.status || "FINALIZED"),
           medicines: meds.map((m: unknown, idx: number) => {
@@ -1161,19 +1185,34 @@ export const patientsApi = {
                 instructions: "After food",
               };
             }
-            const item = (m && typeof m === "object" ? m : {}) as Record<string, unknown>;
+            const item = (m && typeof m === "object" ? m : {}) as Record<
+              string,
+              unknown
+            >;
             return {
               id: String(item.id || item.medicationId || idx + 1),
-              name: String(item.medicineName || item.name || item.title || "Medication"),
-              dosage: String(item.strength || item.dosage || item.dose || "1 tab"),
-              frequency: String(item.frequency || item.frequencyCode || item.frequencyDisplay || "1-0-1"),
+              name: String(
+                item.medicineName || item.name || item.title || "Medication",
+              ),
+              dosage: String(
+                item.strength || item.dosage || item.dose || "1 tab",
+              ),
+              frequency: String(
+                item.frequency ||
+                  item.frequencyCode ||
+                  item.frequencyDisplay ||
+                  "1-0-1",
+              ),
               duration: String(item.duration || item.durationValue || "5 days"),
-              instructions: String(item.instructions || item.notes || "After food"),
+              instructions: String(
+                item.instructions || item.notes || "After food",
+              ),
             };
           }) as ApiPatientPrescription["medicines"],
         };
       });
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -1191,14 +1230,20 @@ export const patientsApi = {
         (response.data as unknown as ApiPatientPrescription) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
 
   getPrescriptionSummary: async (
     mrn: string,
-  ): Promise<{ active: number; completed: number; expired: number; total: number } | null> => {
+  ): Promise<{
+    active: number;
+    completed: number;
+    expired: number;
+    total: number;
+  } | null> => {
     try {
       const endpoints = mrn
         ? [
@@ -1213,7 +1258,10 @@ export const patientsApi = {
         try {
           const res = await apiClient.get<Record<string, unknown>>(url);
           const data = (res.data?.data || res.data) as Record<string, unknown>;
-          if (data && (typeof data.active === "number" || typeof data.total === "number")) {
+          if (
+            data &&
+            (typeof data.active === "number" || typeof data.total === "number")
+          ) {
             return {
               active: Number(data.active || 0),
               completed: Number(data.completed || 0),
@@ -1221,12 +1269,14 @@ export const patientsApi = {
               total: Number(data.total || 0),
             };
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // try next
         }
       }
       return null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -1240,12 +1290,20 @@ export const patientsApi = {
         date: r.invoiceDate,
         amount: r.invoiceAmount,
         paidAmount: r.paidAmount ?? 0,
-        balance: r.balance != null ? r.balance : Math.max(0, r.invoiceAmount - (r.paidAmount || 0)),
+        balance:
+          r.balance != null
+            ? r.balance
+            : Math.max(0, r.invoiceAmount - (r.paidAmount || 0)),
         doctorName: r.doctorName || "Doctor",
-        departmentName: r.department || (r as unknown as Record<string, unknown>).departmentName as string || "General OPD",
+        departmentName:
+          r.department ||
+          ((r as unknown as Record<string, unknown>)
+            .departmentName as string) ||
+          "General OPD",
         status: r.paymentStatus || "Pending",
       }));
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -1266,7 +1324,8 @@ export const patientsApi = {
         response.data?.data ||
         (Array.isArray(response.data) ? response.data : [])
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -1337,7 +1396,8 @@ export const patientsApi = {
         }>(
           `/api/v1/doctors/${encodeURIComponent(targetDoctorId)}/patients${qs}`,
         );
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to /api/v1/doctor/patients
         response = await apiClient.get<unknown>(`/api/v1/doctor/patients${qs}`);
       }
@@ -1418,14 +1478,21 @@ export const patientsApi = {
       const data = unwrapData<ApiPatientDocument[]>(res);
       if (Array.isArray(data)) return data;
       return [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
 
   uploadDocument: async (
     mrn: string,
-    payload: { title: string; category: string; fileType?: string; fileSize?: string; url?: string },
+    payload: {
+      title: string;
+      category: string;
+      fileType?: string;
+      fileSize?: string;
+      url?: string;
+    },
   ): Promise<ApiPatientDocument> => {
     try {
       const res = await apiClient.post<unknown>(
@@ -1454,7 +1521,8 @@ export const patientsApi = {
         `/api/v1/patients/${encodeURIComponent(mrn)}/documents/${encodeURIComponent(docId)}`,
       );
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return true;
     }
   },

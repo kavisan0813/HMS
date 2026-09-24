@@ -152,7 +152,8 @@ export function DoctorManagementPage() {
       const updated = await fetchDoctors();
       setDoctors(updated);
       showToast("Doctor information updated successfully.");
-    } catch {
+    } catch (err) {
+      console.log(err);
       console.error("Failed to refresh doctors after edit");
     }
   };
@@ -372,7 +373,8 @@ export function DoctorManagementPage() {
                 const updated = await fetchDoctors();
                 setDoctors(updated);
                 showToast("Refreshing doctor records from backend...");
-              } catch {
+              } catch (err) {
+                console.log(err);
                 console.error("Failed to refresh doctors");
               }
             }}

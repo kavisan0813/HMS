@@ -94,11 +94,13 @@ export const queueApi = {
 
       try {
         response = await apiClient.get<Record<string, unknown>>(primaryUrl);
-      } catch {
+      } catch (err) {
+        console.log(err);
         try {
           const fallbackUrl = `/api/v1/queue${qs ? `?${qs}` : ""}`;
           response = await apiClient.get<Record<string, unknown>>(fallbackUrl);
-        } catch {
+        } catch (err) {
+          console.log(err);
           const fallbackUrl2 = `/api/v1/doctors/me/consultation-queue${qs ? `?${qs}` : ""}`;
           response = await apiClient.get<Record<string, unknown>>(fallbackUrl2);
         }
@@ -291,7 +293,8 @@ export const queueApi = {
             | { success: boolean; status: string }
           >(`/api/v1/queue/${appointmentId}/call`);
           return unwrap(response.data);
-        } catch {
+        } catch (err) {
+          console.log(err);
           // Handled below
         }
       }

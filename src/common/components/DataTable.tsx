@@ -84,7 +84,8 @@ export function DataTable<T>({
 
   // Internal Search State
   const [internalSearchQuery, setInternalSearchQuery] = useState("");
-  const searchQuery = searchValue !== undefined ? searchValue : internalSearchQuery;
+  const searchQuery =
+    searchValue !== undefined ? searchValue : internalSearchQuery;
 
   const handleQueryChange = (val: string) => {
     if (onSearchChange) {
@@ -170,7 +171,8 @@ export function DataTable<T>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
-  const totalElements = totalCount !== undefined ? totalCount : sortedData.length;
+  const totalElements =
+    totalCount !== undefined ? totalCount : sortedData.length;
   const totalPages = Math.ceil(sortedData.length / pageSize) || 1;
   const safeCurrentPage = currentPage > totalPages ? 1 : currentPage;
 
@@ -359,7 +361,9 @@ export function DataTable<T>({
                   (item as Record<string, unknown>)?.uuid ??
                   (item as Record<string, unknown>)?.code ??
                   (item as Record<string, unknown>)?.name;
-                const rowId = getRowId ? getRowId(item, idx) : (itemKey as string | number);
+                const rowId = getRowId
+                  ? getRowId(item, idx)
+                  : (itemKey as string | number);
                 const isSelected =
                   selectedRowId !== undefined && selectedRowId !== null
                     ? String(selectedRowId) === String(rowId)
@@ -385,7 +389,7 @@ export function DataTable<T>({
                         >
                           {col.render
                             ? col.render(item, idx)
-                            : (value as React.ReactNode) ?? "-"}
+                            : ((value as React.ReactNode) ?? "-")}
                         </td>
                       );
                     })}

@@ -13,7 +13,7 @@ export function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unable to load audit data.";
 }
 
-export function localDate(date: Date): string {
+function localDate(date: Date): string {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
   return local.toISOString().slice(0, 10);
 }
@@ -56,7 +56,10 @@ export function normalizeCode(value: string | undefined): string {
   return (value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 }
 
-export function matchesCode(value: string | undefined, selected: string): boolean {
+export function matchesCode(
+  value: string | undefined,
+  selected: string,
+): boolean {
   if (selected === "All") return true;
   const actual = normalizeCode(value);
   const expected = normalizeCode(selected);
@@ -69,7 +72,10 @@ export function matchesCode(value: string | undefined, selected: string): boolea
   );
 }
 
-export function isInDateRange(timestamp: string | undefined, range: string): boolean {
+export function isInDateRange(
+  timestamp: string | undefined,
+  range: string,
+): boolean {
   if (range === "All Time" || !timestamp) return true;
   const value = new Date(timestamp).getTime();
   if (Number.isNaN(value)) return true;

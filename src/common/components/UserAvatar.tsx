@@ -73,5 +73,3 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     </div>
   );
 };
-
-export default UserAvatar;

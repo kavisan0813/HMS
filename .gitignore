@@ -35,3 +35,4 @@ build-output2.txt
 build-output.txt
 backend-paths.json
 backend-spec.json
+.eslintcache

@@ -183,7 +183,12 @@ function Av({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 const DOCTOR_CHIP_MAP: Record<ChipVariant, string> = {
   success: "bg-green-50 text-[#66BB6A]",
   warning: "bg-amber-50 text-[#F59E0B]",
@@ -315,8 +320,7 @@ const getTimelinePatientName = (item: unknown) => {
   const obj = item as TimelineItemLike;
   if (typeof obj.patientName === "string" && obj.patientName.trim())
     return obj.patientName;
-  if (typeof obj.patient === "string" && obj.patient.trim())
-    return obj.patient;
+  if (typeof obj.patient === "string" && obj.patient.trim()) return obj.patient;
   if (
     obj.patient &&
     typeof obj.patient === "object" &&
@@ -468,7 +472,8 @@ export function DoctorDashboard() {
         patientName: getTimelinePatientName(nextPatient),
         appointmentTime:
           nextPatient.appointmentTime ||
-          ((nextPatient as unknown as Record<string, unknown>).waitingTime as string) ||
+          ((nextPatient as unknown as Record<string, unknown>)
+            .waitingTime as string) ||
           "Waiting",
       };
     }
@@ -1197,7 +1202,8 @@ export function DoctorDashboard() {
                   <span className="text-xs text-[#64748B]">
                     {getTimelinePatientName(qItem)} ·{" "}
                     {qItem.departmentName ||
-                      (qItem as unknown as { doctor?: { department?: string } }).doctor?.department ||
+                      (qItem as unknown as { doctor?: { department?: string } })
+                        .doctor?.department ||
                       "OPD"}
                   </span>
                 </div>

@@ -73,7 +73,8 @@ const formatLastLogin = (lastLogin: string | null): string => {
       month: "short",
       year: "numeric",
     });
-  } catch {
+  } catch (err) {
+    console.log(err);
     return "—";
   }
 };

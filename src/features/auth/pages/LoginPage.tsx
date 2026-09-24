@@ -51,13 +51,19 @@ export const LoginPage: React.FC = () => {
       const docId =
         rawUser.doctorId ??
         (rawUser.doctorProfile as { doctorId?: number })?.doctorId;
-      
+
       let pendingDob = "";
       let pendingGender = "";
       try {
-        const userEmail = String(rawUser.email || "").trim().toLowerCase();
-        const raw1 = userEmail ? localStorage.getItem(`hms-pending-patient:${userEmail}`) : null;
-        const raw2 = localStorage.getItem("hms-pending-patient-last:v1") || localStorage.getItem("hms-pending-patient-last");
+        const userEmail = String(rawUser.email || "")
+          .trim()
+          .toLowerCase();
+        const raw1 = userEmail
+          ? localStorage.getItem(`hms-pending-patient:${userEmail}`)
+          : null;
+        const raw2 =
+          localStorage.getItem("hms-pending-patient-last:v1") ||
+          localStorage.getItem("hms-pending-patient-last");
         const raw3 = localStorage.getItem("hms-pending-patient-profile:v1");
         const stored = raw1 || raw2 || raw3;
         if (stored) {

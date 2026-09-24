@@ -86,7 +86,8 @@ export const PrescriptionTable: React.FC<PrescriptionTableProps> = ({
         month: "short",
         year: "numeric",
       });
-    } catch {
+    } catch (err) {
+      console.log(err);
       return rawStr;
     }
   };

@@ -180,7 +180,12 @@ function Av({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 const RECEPTION_CHIP_MAP: Record<ChipVariant, string> = {
   success: "bg-green-50 text-[#66BB6A]",
   warning: "bg-amber-50 text-[#F59E0B]",
@@ -476,9 +481,7 @@ export function ReceptionDashboard({
             {label}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-2">
-
-        </div>
+        <div className="ml-auto flex items-center gap-2"></div>
       </div>
 
       {/* ── KPI Row — 5 Reception KPI Cards ── */}
@@ -832,8 +835,7 @@ export function ReceptionDashboard({
                             : q.status === "Checked In" ||
                                 q.status === "CHECKED_IN"
                               ? "info"
-                              : q.status === "Waiting" ||
-                                  q.status === "WAITING"
+                              : q.status === "Waiting" || q.status === "WAITING"
                                 ? "warning"
                                 : q.status === "Completed"
                                   ? "success"
@@ -868,10 +870,7 @@ export function ReceptionDashboard({
                             if (onPatientSelect) onPatientSelect(q.mrn);
                             else
                               navigate(
-                                ROUTES.PATIENT_PROFILE.replace(
-                                  ":mrn",
-                                  q.mrn,
-                                ),
+                                ROUTES.PATIENT_PROFILE.replace(":mrn", q.mrn),
                               );
                           }}
                           className="px-2 py-1 rounded-lg bg-slate-100 text-[#0D47A1] text-[11px] font-semibold hover:bg-blue-50 transition-colors"

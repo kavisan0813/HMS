@@ -131,7 +131,8 @@ export function useInvoice(billId?: number | string) {
     queryFn: () => billingService.getBill(billId!),
     enabled: !!billId,
     retry: (failureCount, error: { status?: number }) => {
-      if (error?.status && error.status >= 400 && error.status < 500) return false;
+      if (error?.status && error.status >= 400 && error.status < 500)
+        return false;
       return failureCount < 2;
     },
   });
@@ -141,7 +142,8 @@ export function useInvoice(billId?: number | string) {
     queryFn: () => billingService.getBillSummary(billId!),
     enabled: !!billId,
     retry: (failureCount, error: { status?: number }) => {
-      if (error?.status && error.status >= 400 && error.status < 500) return false;
+      if (error?.status && error.status >= 400 && error.status < 500)
+        return false;
       return failureCount < 2;
     },
   });
@@ -380,7 +382,8 @@ export function usePayment(billId?: number | string) {
     queryFn: () => billingService.getPaymentHistory(billId!),
     enabled: !!billId,
     retry: (failureCount, error: { status?: number }) => {
-      if (error?.status && error.status >= 400 && error.status < 500) return false;
+      if (error?.status && error.status >= 400 && error.status < 500)
+        return false;
       return failureCount < 2;
     },
   });
@@ -474,8 +477,8 @@ function loadBillingConfig(): BillingConfiguration | null {
   try {
     const raw = localStorage.getItem(BILLING_CONFIG_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {
-    // ignore
+  } catch (err) {
+    console.log(err);
   }
   return null;
 }

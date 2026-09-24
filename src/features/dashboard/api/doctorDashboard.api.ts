@@ -47,11 +47,11 @@ export const doctorDashboardApi = {
       const url = doctorId
         ? `/api/v1/doctor/${doctorId}/dashboard/today-appointments${date ? `?date=${date}` : ""}`
         : `/api/v1/doctor/dashboard/today-appointments${date ? `?date=${date}` : ""}`;
-      const res = await apiClient.get<
-        DashboardApiResponse<DoctorTodayAppointments>
-      >(url);
+      const res =
+        await apiClient.get<DashboardApiResponse<DoctorTodayAppointments>>(url);
       return unwrap(res);
-    } catch {
+    } catch (err) {
+      console.log(err);
       const res = await apiClient.get<
         DashboardApiResponse<DoctorTodayAppointments>
       >("/api/v1/doctor/dashboard/today-appointments");

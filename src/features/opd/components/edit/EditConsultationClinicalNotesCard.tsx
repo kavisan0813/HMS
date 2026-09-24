@@ -4,22 +4,29 @@ import { ChevronDown } from "lucide-react";
 const PP = "'Poppins', system-ui, sans-serif";
 const RB = "'Roboto', system-ui, sans-serif";
 
-interface EditConsultationClinicalNotesCardProps {
+export interface ClinicalNotesData {
+  symptoms: string;
+  assessment: string;
+  advice: string;
+}
+
+interface EditConsultationClinicalNotesCardProps<
+  T extends ClinicalNotesData = ClinicalNotesData,
+> {
   collapsed: boolean;
   onToggle: () => void;
   isEditing: boolean;
-  formData: {
-    symptoms: string;
-    assessment: string;
-    advice: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFormData: (action: any) => void;
+  formData: T;
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
 }
 
-export const EditConsultationClinicalNotesCard: React.FC<
-  EditConsultationClinicalNotesCardProps
-> = ({ collapsed, onToggle, isEditing, formData, setFormData }) => {
+export const EditConsultationClinicalNotesCard = <T extends ClinicalNotesData>({
+  collapsed,
+  onToggle,
+  isEditing,
+  formData,
+  setFormData,
+}: EditConsultationClinicalNotesCardProps<T>) => {
   return (
     <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
       <button
@@ -60,8 +67,7 @@ export const EditConsultationClinicalNotesCard: React.FC<
               rows={2}
               value={formData.symptoms}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   symptoms: e.target.value,
                 }))
@@ -81,8 +87,7 @@ export const EditConsultationClinicalNotesCard: React.FC<
               rows={2}
               value={formData.assessment}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   assessment: e.target.value,
                 }))
@@ -102,8 +107,7 @@ export const EditConsultationClinicalNotesCard: React.FC<
               rows={2}
               value={formData.advice}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   advice: e.target.value,
                 }))

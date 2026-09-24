@@ -99,7 +99,8 @@ function formatDateTime(dateVal?: unknown): string {
     hours = hours ? hours : 12;
     const formattedHours = String(hours).padStart(2, "0");
     return `${day} ${month} ${year}, ${formattedHours}:${minutes} ${ampm}`;
-  } catch {
+  } catch (err) {
+    console.log(err);
     return String(dateVal);
   }
 }
@@ -145,7 +146,9 @@ export function EditConsultationScreen({
 
   // Pre-fill initial form state from initialRecord if passed from Consultation Details screen
   const buildInitialFormData = (rec?: Record<string, unknown> | null) => {
-    const rawMeds = (rec?.medicines || rec?.medications || []) as Array<Record<string, unknown>>;
+    const rawMeds = (rec?.medicines || rec?.medications || []) as Array<
+      Record<string, unknown>
+    >;
     const medicines: MedicineItem[] = Array.isArray(rawMeds)
       ? rawMeds.map((med: Record<string, unknown>, idx: number) => ({
           id: String(med.id ?? med.medicationId ?? idx + 1),
@@ -174,12 +177,18 @@ export function EditConsultationScreen({
         .trim();
     };
 
-    const rawInvs = (rec?.investigations || []) as Array<Record<string, unknown> | string>;
+    const rawInvs = (rec?.investigations || []) as Array<
+      Record<string, unknown> | string
+    >;
     const invNames = Array.isArray(rawInvs)
       ? rawInvs.map((i) =>
           typeof i === "string"
             ? i.toUpperCase()
-            : String((i as Record<string, unknown>)?.name || (i as Record<string, unknown>)?.testName || "").toUpperCase(),
+            : String(
+                (i as Record<string, unknown>)?.name ||
+                  (i as Record<string, unknown>)?.testName ||
+                  "",
+              ).toUpperCase(),
         )
       : [];
 
@@ -228,7 +237,9 @@ export function EditConsultationScreen({
       doctorName: toStringValue(rec?.doctorName ?? "—"),
       department: toStringValue(rec?.department ?? "—"),
       visitType: (rec?.visitType ?? "First Visit") as
-        "New Consultation" | "Follow-up" | "First Visit",
+        | "New Consultation"
+        | "Follow-up"
+        | "First Visit",
       chiefComplaint: toStringValue(rec?.chiefComplaint ?? ""),
       durationOfSymptoms: toStringValue(rec?.durationOfSymptoms ?? ""),
 
@@ -390,9 +401,15 @@ export function EditConsultationScreen({
 
         if (!mounted) return;
 
-        const encounter = (workspace?.encounter ?? {}) as Record<string, unknown>;
+        const encounter = (workspace?.encounter ?? {}) as Record<
+          string,
+          unknown
+        >;
         let patient = (workspace?.patient ?? {}) as Record<string, unknown>;
-        const appointment = (workspace?.appointment ?? {}) as Record<string, unknown>;
+        const appointment = (workspace?.appointment ?? {}) as Record<
+          string,
+          unknown
+        >;
         let doctor = (workspace?.doctor ?? {}) as Record<string, unknown>;
         let vitals = (workspace?.vitals ?? {}) as Record<string, unknown>;
 
@@ -466,7 +483,8 @@ export function EditConsultationScreen({
         }
 
         // 2. Fetch Consultation
-        let consultation: Record<string, unknown> | null = (workspace?.consultation ?? null) as Record<string, unknown> | null;
+        let consultation: Record<string, unknown> | null =
+          (workspace?.consultation ?? null) as Record<string, unknown> | null;
         if (!consultation?.id && realEncounterId) {
           try {
             consultation = unwrapApiData(
@@ -478,7 +496,9 @@ export function EditConsultationScreen({
         }
 
         // 3. Fetch Diagnoses
-        let diagnoses: Array<Record<string, unknown>> = Array.isArray(workspace?.diagnoses)
+        let diagnoses: Array<Record<string, unknown>> = Array.isArray(
+          workspace?.diagnoses,
+        )
           ? (workspace?.diagnoses as Array<Record<string, unknown>>)
           : [];
         if (diagnoses.length === 0 && realEncounterId) {
@@ -539,7 +559,9 @@ export function EditConsultationScreen({
           : [];
         const medicines: MedicineItem[] = rawMeds.map(
           (med: Record<string, unknown>, idx: number) => {
-            const freqObj = med.frequency as Record<string, unknown> | undefined;
+            const freqObj = med.frequency as
+              | Record<string, unknown>
+              | undefined;
             const durObj = med.duration as Record<string, unknown> | undefined;
             const qtyObj = med.quantity as Record<string, unknown> | undefined;
             const doseObj = med.dose as Record<string, unknown> | undefined;
@@ -569,7 +591,8 @@ export function EditConsultationScreen({
               id: String(med.medicationId ?? med.id ?? idx + 1),
               medicationId: Number(med.medicationId ?? med.id ?? 0),
               name: toStringValue(med.medicineName ?? med.name),
-              dosage: doseVal || toStringValue(med.strength ?? med.dosage ?? "1 tab"),
+              dosage:
+                doseVal || toStringValue(med.strength ?? med.dosage ?? "1 tab"),
               frequency: toStringValue(
                 freqObj?.display ??
                   med.frequencyDisplay ??
@@ -582,24 +605,14 @@ export function EditConsultationScreen({
               duration: durObj
                 ? `${toStringValue(durObj.value)} ${toStringValue(durObj.unit)}`.trim()
                 : toStringValue(med.duration),
-              durationValue: Number(
-                durObj?.value ?? med.durationValue ?? 0,
-              ),
+              durationValue: Number(durObj?.value ?? med.durationValue ?? 0),
               durationUnit: toStringValue(
                 durObj?.unit ?? med.durationUnit ?? "DAYS",
               ),
-              quantityValue: Number(
-                qtyObj?.value ?? med.quantityValue ?? 0,
-              ),
-              quantityUnit: toStringValue(
-                qtyObj?.unit ?? med.quantityUnit,
-              ),
-              doseValue: Number(
-                doseObj?.value ?? med.doseValue ?? 0,
-              ),
-              doseUnit: toStringValue(
-                doseObj?.unit ?? med.doseUnit,
-              ),
+              quantityValue: Number(qtyObj?.value ?? med.quantityValue ?? 0),
+              quantityUnit: toStringValue(qtyObj?.unit ?? med.quantityUnit),
+              doseValue: Number(doseObj?.value ?? med.doseValue ?? 0),
+              doseUnit: toStringValue(doseObj?.unit ?? med.doseUnit),
               form: toStringValue(med.form),
               route: toStringValue(med.route),
               instructions: toStringValue(med.instructions),
@@ -771,17 +784,19 @@ export function EditConsultationScreen({
               consultation?.investigations ||
               [];
             const invNames = Array.isArray(rawInv)
-              ? (rawInv as Array<Record<string, unknown> | string>).map((item) => {
-                  if (typeof item === "string") return item.toUpperCase();
-                  return String(
-                    (item as Record<string, unknown>)?.testName ||
-                      (item as Record<string, unknown>)?.investigationName ||
-                      (item as Record<string, unknown>)?.name ||
-                      (item as Record<string, unknown>)?.displayName ||
-                      (item as Record<string, unknown>)?.testCode ||
-                      "",
-                  ).toUpperCase();
-                })
+              ? (rawInv as Array<Record<string, unknown> | string>).map(
+                  (item) => {
+                    if (typeof item === "string") return item.toUpperCase();
+                    return String(
+                      (item as Record<string, unknown>)?.testName ||
+                        (item as Record<string, unknown>)?.investigationName ||
+                        (item as Record<string, unknown>)?.name ||
+                        (item as Record<string, unknown>)?.displayName ||
+                        (item as Record<string, unknown>)?.testCode ||
+                        "",
+                    ).toUpperCase();
+                  },
+                )
               : [];
             return {
               cbc: invNames.some(
@@ -848,9 +863,7 @@ export function EditConsultationScreen({
               consultation?.generalAdvice ??
               "",
           ),
-          lifestyleRecommendations: toStringValue(
-            adviceObj?.diet ?? "",
-          ),
+          lifestyleRecommendations: toStringValue(adviceObj?.diet ?? ""),
 
           generalAdvice: toStringValue(adviceObj?.general ?? ""),
           dietAdvice: toStringValue(adviceObj?.diet ?? ""),
@@ -861,13 +874,11 @@ export function EditConsultationScreen({
 
           followupRequired: Boolean(
             followUpObj?.followUpDate ??
-              consultation?.followUpDate ??
-              consultation?.followUpInstructions,
+            consultation?.followUpDate ??
+            consultation?.followUpInstructions,
           ),
           nextVisitDate: toStringValue(
-            followUpObj?.followUpDate ??
-              consultation?.followUpDate ??
-              "",
+            followUpObj?.followUpDate ?? consultation?.followUpDate ?? "",
           ),
           followupNotes: toStringValue(
             followUpObj?.instructions ??
@@ -875,9 +886,7 @@ export function EditConsultationScreen({
               "",
           ),
           followUpType: toStringValue(
-            consultation?.followUpType ??
-              followUpObj?.type ??
-              "ROUTINE",
+            consultation?.followUpType ?? followUpObj?.type ?? "ROUTINE",
           ),
           followUpIntervalValue: Number(
             consultation?.followUpIntervalValue ??
@@ -1219,7 +1228,7 @@ export function EditConsultationScreen({
 
   if (loading) {
     return (
-      <div className="flex-1 bg-[#F1F5F9] flex items-center justify-center p-12 min-h-[400px]">
+      <div className="flex-1 bg-[#F1F5F9] flex items-center justify-center p-12 min-h-100">
         <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm text-center max-w-sm w-full space-y-3">
           <Loader2 size={32} className="text-[#0D47A1] animate-spin mx-auto" />
           <p
@@ -1297,7 +1306,11 @@ export function EditConsultationScreen({
         age={formData.age}
         gender={formData.gender}
         bloodGroup={formData.bloodGroup}
-        tokenNo={formData.consultationNumericId ? String(formData.consultationNumericId) : ""}
+        tokenNo={
+          formData.consultationNumericId
+            ? String(formData.consultationNumericId)
+            : ""
+        }
         doctorName={formData.doctorName}
         department={formData.department}
         visitDate={formData.visitDate}
@@ -1636,7 +1649,14 @@ export function EditConsultationScreen({
                           <input
                             disabled={!isEditing}
                             type="checkbox"
-                            checked={Boolean((formData.investigations as Record<string, boolean>)[item.key])}
+                            checked={Boolean(
+                              (
+                                formData.investigations as Record<
+                                  string,
+                                  boolean
+                                >
+                              )[item.key],
+                            )}
                             onChange={(e) =>
                               setFormData((prev) => ({
                                 ...prev,
@@ -1945,8 +1965,12 @@ export function EditConsultationScreen({
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm p-4 md:p-8 flex items-center justify-center no-print">
           <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl relative flex flex-col">
             <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-800" style={{ fontFamily: PP }}>
-                Patient Consultation History — {formData.patientName} ({formData.mrn})
+              <h2
+                className="text-base font-bold text-slate-800"
+                style={{ fontFamily: PP }}
+              >
+                Patient Consultation History — {formData.patientName} (
+                {formData.mrn})
               </h2>
               <button
                 onClick={() => setShowHistoryModal(false)}
@@ -1969,5 +1993,3 @@ export function EditConsultationScreen({
     </div>
   );
 }
-
-export default EditConsultationScreen;

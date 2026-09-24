@@ -180,7 +180,12 @@ function Av({
 }
 
 type ChipVariant =
-  "success" | "warning" | "error" | "info" | "teal" | "default";
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "teal"
+  | "default";
 const ACCOUNTANT_CHIP_MAP: Record<ChipVariant, string> = {
   success: "bg-green-50 text-[#66BB6A]",
   warning: "bg-amber-50 text-[#F59E0B]",

@@ -1,8 +1,7 @@
 import { Users, Clock, CheckSquare, Stethoscope } from "lucide-react";
 
 const PP = "Poppins, sans-serif";
-
-export interface VitalsKpiStats {
+interface VitalsKpiStats {
   total: number;
   pending: number;
   recorded: number;
@@ -13,7 +12,9 @@ export interface VitalsKpiSummaryCardsProps {
   kpiStats: VitalsKpiStats;
 }
 
-export function VitalsKpiSummaryCards({ kpiStats }: VitalsKpiSummaryCardsProps) {
+export function VitalsKpiSummaryCards({
+  kpiStats,
+}: VitalsKpiSummaryCardsProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {/* Card 01: Today's Patients */}
@@ -35,9 +36,7 @@ export function VitalsKpiSummaryCards({ kpiStats }: VitalsKpiSummaryCardsProps) 
         >
           {kpiStats.total}
         </div>
-        <div className="text-[10px] text-slate-400">
-          Total OPD queue today
-        </div>
+        <div className="text-[10px] text-slate-400">Total OPD queue today</div>
       </div>
 
       {/* Card 02: Vitals Pending */}

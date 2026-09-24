@@ -273,7 +273,8 @@ export function EditStaffUserDrawer({
           scheduleExceptions: profile?.scheduleExceptions || [],
         }));
         return detail;
-      } catch {
+      } catch (err) {
+        console.log(err);
         return null;
       }
     };
@@ -308,7 +309,8 @@ export function EditStaffUserDrawer({
           if (matchedUser && matchedUser.id) {
             detail = await loadUserDetails(String(matchedUser.id));
           }
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore lookup failure
         }
       }

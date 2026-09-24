@@ -172,7 +172,8 @@ export const prescriptionApi = {
         ) {
           return (dataVal as { content: ApiPatientPrescription[] }).content;
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // try next endpoint
       }
     }
@@ -209,7 +210,8 @@ export const prescriptionApi = {
             | ApiPatientPrescription
             | PrescriptionDetailResponse;
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // try next fallback
       }
     }
@@ -242,7 +244,8 @@ export const prescriptionApi = {
         if (data && typeof data === "object") {
           return data as Record<string, unknown>;
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // try next fallback
       }
     }
@@ -265,7 +268,8 @@ export const prescriptionApi = {
         const data = (response.data?.data ||
           response.data) as PrescriptionSummaryResponse;
         if (data) return data;
-      } catch {
+      } catch (err) {
+        console.log(err);
         // try next
       }
     }
@@ -349,7 +353,8 @@ export const prescriptionApi = {
         `/api/v1/encounters/${encounterId}/prescription`,
       );
       return response.data || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -415,7 +420,8 @@ export const prescriptionApi = {
         `/api/v1/prescriptions/${prescriptionId}/print-output`,
       );
       return response.data || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -429,7 +435,8 @@ export const prescriptionApi = {
         "/api/v1/doctor/prescriptions/summary",
       );
       return response.data || null;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -451,7 +458,8 @@ export const prescriptionApi = {
         if (Array.isArray(inner)) return inner;
       }
       return [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -494,7 +502,8 @@ export const prescriptionApi = {
         first: true,
         last: true,
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return {
         content: [],
         page: 0,
@@ -524,7 +533,8 @@ export const prescriptionApi = {
         if (Array.isArray(inner)) return inner;
       }
       return [];
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },

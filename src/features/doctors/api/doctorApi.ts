@@ -42,7 +42,8 @@ export const doctorApi = {
         limit: params?.limit || 10,
         totalPages: Math.ceil(data.length / (params?.limit || 10)) || 1,
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       const response = await apiClient.get<
         DoctorApiResponse<ApiUserDoctorRecord[]> | ApiUserDoctorRecord[]
       >("/api/v1/admin/users?role=DOCTOR");
@@ -136,7 +137,8 @@ export const doctorApi = {
         };
       }
       return scheduleData;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -151,7 +153,8 @@ export const doctorApi = {
         payload,
       );
       return response.data?.success !== false;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return false;
     }
   },
@@ -165,7 +168,8 @@ export const doctorApi = {
         `/api/v1/doctors/${doctorId}/schedules/${scheduleId}`,
       );
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return false;
     }
   },
@@ -200,7 +204,8 @@ export const doctorApi = {
         action: item.action || "BLOCK_APPOINTMENTS",
         status: item.status || "ACTIVE",
       }));
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -218,7 +223,8 @@ export const doctorApi = {
         (response.data as unknown as ApiScheduleExceptionItem) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -240,7 +246,8 @@ export const doctorApi = {
         (response.data as unknown as ApiScheduleExceptionItem) ||
         null
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -254,7 +261,8 @@ export const doctorApi = {
         `/api/v1/doctors/${doctorId}/schedule-exceptions/${exceptionId}`,
       );
       return true;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return false;
     }
   },
@@ -287,8 +295,8 @@ export const doctorApi = {
           };
         }
       }
-    } catch {
-      // try fallback
+    } catch (err) {
+      console.log(err);
     }
 
     try {
@@ -309,8 +317,8 @@ export const doctorApi = {
           slots,
         };
       }
-    } catch {
-      // try next fallback
+    } catch (err) {
+      console.log(err);
     }
 
     try {
@@ -329,7 +337,8 @@ export const doctorApi = {
         scheduleStatus: "AVAILABLE",
         slots,
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -350,7 +359,8 @@ export const doctorApi = {
         month: monthlyData.month || month,
         days: Array.isArray(monthlyData.days) ? monthlyData.days : [],
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       return null;
     }
   },
@@ -383,7 +393,8 @@ export const doctorApi = {
         status: item.status || "BOOKED",
         complaint: item.complaint || "General Checkup",
       }));
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },
@@ -402,7 +413,8 @@ export const doctorApi = {
           a.status !== "Completed"
         );
       }).length;
-    } catch {
+    } catch (err) {
+      console.log(err);
       return 0;
     }
   },
@@ -432,7 +444,8 @@ export const doctorApi = {
         response.data?.data ||
         (Array.isArray(response.data) ? response.data : [])
       );
-    } catch {
+    } catch (err) {
+      console.log(err);
       return [];
     }
   },

@@ -1,6 +1,6 @@
 import { getToken, setToken, removeToken } from "./cookie-token-storage";
 
-export const API_BASE_URL = "";
+export const API_BASE_URL = "https://api.hms.viyaninfo.com";
 // (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
 // "";
 
@@ -61,7 +61,8 @@ async function customFetch<T = unknown>(
         const parsed = JSON.parse(rawStorage);
         token = parsed?.tokens?.accessToken || null;
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore parse errors
     }
   }
@@ -232,7 +233,8 @@ async function customFetch<T = unknown>(
         try {
           localStorage.removeItem("hms-auth-storage:v1");
           localStorage.removeItem("hms-user:v1");
-        } catch {
+        } catch (err) {
+          console.log(err);
           // ignore
         }
 

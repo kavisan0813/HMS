@@ -791,7 +791,8 @@ export function CreateInvoiceWorkspacePage() {
             const currentBill = await billingService.getBill(billId);
             const billObj = currentBill as unknown as Record<string, unknown>;
             const summaryObj = billObj?.summary as
-              Record<string, unknown> | undefined;
+              | Record<string, unknown>
+              | undefined;
             const rawBalance =
               summaryObj?.balanceAmount ??
               billObj?.balanceAmount ??
@@ -838,7 +839,8 @@ export function CreateInvoiceWorkspacePage() {
                   unknown
                 >;
                 const refreshedSummary = refreshedObj?.summary as
-                  Record<string, unknown> | undefined;
+                  | Record<string, unknown>
+                  | undefined;
                 const exactBalance =
                   refreshedSummary?.balanceAmount ??
                   refreshedObj?.balanceAmount ??

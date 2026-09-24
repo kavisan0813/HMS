@@ -4,22 +4,29 @@ import { ChevronDown } from "lucide-react";
 const PP = "'Poppins', system-ui, sans-serif";
 const RB = "'Roboto', system-ui, sans-serif";
 
-interface EditConsultationFollowupCardProps {
+export interface FollowupFormData {
+  followupRequired: boolean;
+  nextVisitDate: string;
+  followupNotes: string;
+}
+
+interface EditConsultationFollowupCardProps<
+  T extends FollowupFormData = FollowupFormData,
+> {
   collapsed: boolean;
   onToggle: () => void;
   isEditing: boolean;
-  formData: {
-    followupRequired: boolean;
-    nextVisitDate: string;
-    followupNotes: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFormData: (action: any) => void;
+  formData: T;
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
 }
 
-export const EditConsultationFollowupCard: React.FC<
-  EditConsultationFollowupCardProps
-> = ({ collapsed, onToggle, isEditing, formData, setFormData }) => {
+export const EditConsultationFollowupCard = <T extends FollowupFormData>({
+  collapsed,
+  onToggle,
+  isEditing,
+  formData,
+  setFormData,
+}: EditConsultationFollowupCardProps<T>) => {
   return (
     <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
       <button
@@ -51,8 +58,7 @@ export const EditConsultationFollowupCard: React.FC<
               type="checkbox"
               checked={formData.followupRequired}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   followupRequired: e.target.checked,
                 }))
@@ -76,8 +82,7 @@ export const EditConsultationFollowupCard: React.FC<
                   type="date"
                   value={formData.nextVisitDate}
                   onChange={(e) =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    setFormData((prev: any) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       nextVisitDate: e.target.value,
                     }))
@@ -97,8 +102,7 @@ export const EditConsultationFollowupCard: React.FC<
                   type="text"
                   value={formData.followupNotes}
                   onChange={(e) =>
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    setFormData((prev: any) => ({
+                    setFormData((prev) => ({
                       ...prev,
                       followupNotes: e.target.value,
                     }))

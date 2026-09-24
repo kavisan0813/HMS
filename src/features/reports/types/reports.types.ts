@@ -143,7 +143,8 @@ export interface KpiConsultationRecord {
   consultationTime: string;
   durationMinutes: number;
   status: "Completed" | "In-Progress" | "Cancelled";
-}export interface KpiPendingPaymentRecord {
+}
+export interface KpiPendingPaymentRecord {
   invoiceId: string;
   patientName: string;
   doctorName: string;
@@ -840,7 +841,7 @@ export interface DoctorSummaryMetrics {
   totalRevenue: number;
 }
 
-export interface DoctorPerformanceItemDto {
+interface DoctorPerformanceItemDto {
   doctorId: string;
   doctorName: string;
   department: string;
@@ -870,7 +871,7 @@ export interface DoctorPerformancePaginatedData {
   totalPages: number;
 }
 
-export interface DoctorInfo {
+interface DoctorInfo {
   doctorId: string;
   doctorName: string;
   department: string;
@@ -898,7 +899,7 @@ export interface DoctorActivityRecord {
   description: string;
 }
 
-export interface DoctorWorkloadRecord {
+interface DoctorWorkloadRecord {
   doctorId: string;
   doctorName: string;
   completedConsultations: number;
@@ -927,33 +928,6 @@ export interface ConsultationStatusRecord {
 }
 
 // ─── Hospital Invoices & Summaries ─────────────────────────────────────────
-
-export interface HospitalInvoiceRecord {
-  billId: number;
-  invoiceNumber: string;
-  patientName: string;
-  patientMrn: string;
-  amount: number;
-  status: string;
-  paymentStatus: string;
-  createdAt: string;
-}
-
-export interface HospitalInvoicesPageResponse {
-  content: HospitalInvoiceRecord[];
-  totalElements: number;
-  totalPages: number;
-  size: number;
-  number: number;
-}
-
-export interface HospitalInvoiceSummaryData {
-  totalInvoices: number;
-  paid: number;
-  pending: number;
-  voidInvoices: number;
-  collectionRate: number;
-}
 
 // ─── Hospital Appointments ─────────────────────────────────────────────────
 

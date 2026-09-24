@@ -21,10 +21,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
-import {
-  useDailyAppointments,
-  extractList,
-} from "../hooks/useReports";
+import { useDailyAppointments, extractList } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
 import type { DailyAppointmentDetail } from "../types/reports.types";
 
@@ -202,7 +199,9 @@ function ReceptionistAppointmentReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    const recordsToExport = (filteredAppointments.length > 0 ? filteredAppointments : apptSource).map((rec) => ({
+    const recordsToExport = (
+      filteredAppointments.length > 0 ? filteredAppointments : apptSource
+    ).map((rec) => ({
       Section: "RECEPTIONIST APPOINTMENT REPORT",
       "Appointment ID": rec.appointmentId || rec.tokenNumber || "N/A",
       "Patient Name": rec.patientName || "N/A",
@@ -217,7 +216,7 @@ function ReceptionistAppointmentReportScreen({
 
     exportDataToCsv(
       `Receptionist_Daily_Appointment_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport
+      recordsToExport,
     );
   };
 

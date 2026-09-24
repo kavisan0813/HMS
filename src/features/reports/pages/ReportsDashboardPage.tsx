@@ -1,33 +1,114 @@
-import React from "react";
+import React, { lazy } from "react";
 import { useReports } from "../hooks/useReports";
+import type { DoctorKpiKey } from "../types/reports.types";
 
 // Admin pages
-import { AdminReportsDashboardScreen } from "./ReportsOverview";
-import { DailyAppointmentReportScreen } from "./AppointmentReport";
-import { DailyRevenueReportScreen } from "./RevenueReport";
-import { PatientReportScreen } from "./PatientReport";
-import { DoctorReportScreen } from "./DoctorPerformanceReport";
-import { BillingReportScreen } from "./BillingReport";
-import { DashboardKpiDetailScreen } from "./KpiDetail";
+const AdminReportsDashboardScreen = lazy(() =>
+  import("./ReportsOverview").then((m) => ({
+    default: m.AdminReportsDashboardScreen,
+  })),
+);
+const DailyAppointmentReportScreen = lazy(() =>
+  import("./AppointmentReport").then((m) => ({
+    default: m.DailyAppointmentReportScreen,
+  })),
+);
+const DailyRevenueReportScreen = lazy(() =>
+  import("./RevenueReport").then((m) => ({
+    default: m.DailyRevenueReportScreen,
+  })),
+);
+const PatientReportScreen = lazy(() =>
+  import("./PatientReport").then((m) => ({
+    default: m.PatientReportScreen,
+  })),
+);
+const DoctorReportScreen = lazy(() =>
+  import("./DoctorPerformanceReport").then((m) => ({
+    default: m.DoctorReportScreen,
+  })),
+);
+const BillingReportScreen = lazy(() =>
+  import("./BillingReport").then((m) => ({
+    default: m.BillingReportScreen,
+  })),
+);
+const DashboardKpiDetailScreen = lazy(() =>
+  import("./KpiDetail").then((m) => ({
+    default: m.DashboardKpiDetailScreen,
+  })),
+);
 
 // Doctor pages
-import { DoctorReportsDashboardScreen } from "./DoctorDashboard";
-import { DoctorDailyAppointmentReportScreen } from "./DoctorAppointmentReport";
-import { DoctorPatientReportScreen } from "./DoctorPatientReport";
-import { DoctorDoctorReportScreen } from "./DoctorSelfReport";
+const DoctorReportsDashboardScreen = lazy(() =>
+  import("./DoctorDashboard").then((m) => ({
+    default: m.DoctorReportsDashboardScreen,
+  })),
+);
+const DoctorDailyAppointmentReportScreen = lazy(() =>
+  import("./DoctorAppointmentReport").then((m) => ({
+    default: m.DoctorDailyAppointmentReportScreen,
+  })),
+);
+const DoctorPatientReportScreen = lazy(() =>
+  import("./DoctorPatientReport").then((m) => ({
+    default: m.DoctorPatientReportScreen,
+  })),
+);
+const DoctorDoctorReportScreen = lazy(() =>
+  import("./DoctorSelfReport").then((m) => ({
+    default: m.DoctorDoctorReportScreen,
+  })),
+);
+const DoctorDashboardKpiDetailScreen = lazy(() =>
+  import("./DoctorKpiDetail").then((m) => ({
+    default: m.DoctorDashboardKpiDetailScreen,
+  })),
+);
 
 // Receptionist pages
-import { ReceptionistReportsDashboardScreen } from "./ReceptionistDashboard";
-import { ReceptionistDailyAppointmentReportScreen } from "./ReceptionistAppointmentReport";
-import { ReceptionistPatientReportScreen } from "./ReceptionistPatientReport";
-import { ReceptionistDashboardKpiDetailScreen } from "./ReceptionistKpiDetail";
+const ReceptionistReportsDashboardScreen = lazy(() =>
+  import("./ReceptionistDashboard").then((m) => ({
+    default: m.ReceptionistReportsDashboardScreen,
+  })),
+);
+const ReceptionistDailyAppointmentReportScreen = lazy(() =>
+  import("./ReceptionistAppointmentReport").then((m) => ({
+    default: m.ReceptionistDailyAppointmentReportScreen,
+  })),
+);
+const ReceptionistPatientReportScreen = lazy(() =>
+  import("./ReceptionistPatientReport").then((m) => ({
+    default: m.ReceptionistPatientReportScreen,
+  })),
+);
+const ReceptionistDashboardKpiDetailScreen = lazy(() =>
+  import("./ReceptionistKpiDetail").then((m) => ({
+    default: m.ReceptionistDashboardKpiDetailScreen,
+  })),
+);
 
 // Accountant pages
-import { AccountantReportsDashboardScreen } from "./AccountantDashboard";
-import { AccountantDailyRevenueReportScreen } from "./AccountantRevenueReport";
-import { AccountantBillingReportScreen } from "./AccountantBillingReport";
-import { AccountantDashboardKpiDetailScreen } from "./AccountantKpiDetail";
-
+const AccountantReportsDashboardScreen = lazy(() =>
+  import("./AccountantDashboard").then((m) => ({
+    default: m.AccountantReportsDashboardScreen,
+  })),
+);
+const AccountantDailyRevenueReportScreen = lazy(() =>
+  import("./AccountantRevenueReport").then((m) => ({
+    default: m.AccountantDailyRevenueReportScreen,
+  })),
+);
+const AccountantBillingReportScreen = lazy(() =>
+  import("./AccountantBillingReport").then((m) => ({
+    default: m.AccountantBillingReportScreen,
+  })),
+);
+const AccountantDashboardKpiDetailScreen = lazy(() =>
+  import("./AccountantKpiDetail").then((m) => ({
+    default: m.AccountantDashboardKpiDetailScreen,
+  })),
+);
 
 export function ReportsDashboardPage() {
   const {

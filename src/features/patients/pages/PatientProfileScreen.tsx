@@ -44,7 +44,8 @@ export function PatientProfileScreen({
             setError("Failed to load patient profile");
           }
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setError("Failed to load patient data");
       } finally {
         setLoading(false);

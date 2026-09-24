@@ -189,11 +189,16 @@ export function AccountantReportsDashboardScreen({
   const setDateRange = (val: string) => dispatch({ dateRange: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
-  const setPaymentStatusFilter = (val: string) => dispatch({ paymentStatusFilter: val });
-  const setPaymentMethodFilter = (val: string) => dispatch({ paymentMethodFilter: val });
-  const setInvoiceStatusFilter = (val: string) => dispatch({ invoiceStatusFilter: val });
-  const setCollectedByFilter = (val: string) => dispatch({ collectedByFilter: val });
-  const setTrendRange = (val: "Today" | "7 Days" | "30 Days" | "90 Days") => dispatch({ trendRange: val });
+  const setPaymentStatusFilter = (val: string) =>
+    dispatch({ paymentStatusFilter: val });
+  const setPaymentMethodFilter = (val: string) =>
+    dispatch({ paymentMethodFilter: val });
+  const setInvoiceStatusFilter = (val: string) =>
+    dispatch({ invoiceStatusFilter: val });
+  const setCollectedByFilter = (val: string) =>
+    dispatch({ collectedByFilter: val });
+  const setTrendRange = (val: "Today" | "7 Days" | "30 Days" | "90 Days") =>
+    dispatch({ trendRange: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
 
   const handlePresetDateChange = (preset: string) => {
@@ -263,7 +268,8 @@ export function AccountantReportsDashboardScreen({
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch {
+    } catch (err) {
+      console.log(err);
       alert("CSV Export initiated.");
     }
   };
@@ -501,11 +507,13 @@ export function AccountantReportsDashboardScreen({
       mainReportData?.revenueTrends &&
       mainReportData.revenueTrends.length > 0
     ) {
-      return mainReportData.revenueTrends.map((dp: { date: string; amount: number }) => ({
-        date: dp.date || "Date",
-        revenue: dp.amount || 0,
-        collections: Math.round((dp.amount || 0) * 0.9),
-      }));
+      return mainReportData.revenueTrends.map(
+        (dp: { date: string; amount: number }) => ({
+          date: dp.date || "Date",
+          revenue: dp.amount || 0,
+          collections: Math.round((dp.amount || 0) * 0.9),
+        }),
+      );
     }
 
     const daysCount =

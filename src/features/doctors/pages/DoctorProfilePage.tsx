@@ -192,7 +192,11 @@ export function DoctorProfilePage() {
               (response.data as DoctorApiResponse<ApiUserDoctorRecord>)?.data ||
               (response.data as ApiUserDoctorRecord);
 
-            if (!cancelled && data && (data.fullName || data.name || data.doctorProfile)) {
+            if (
+              !cancelled &&
+              data &&
+              (data.fullName || data.name || data.doctorProfile)
+            ) {
               const doctorRecord = mapApiUserToDoctorRecord(data);
               setDoctor(doctorRecord);
               setPersonalForm({
@@ -208,7 +212,8 @@ export function DoctorProfilePage() {
               });
               return;
             }
-          } catch {
+          } catch (err) {
+            console.log(err);
             // fallback below
           }
         }
@@ -225,7 +230,11 @@ export function DoctorProfilePage() {
               response.data?.data ||
               (response.data as unknown as ApiUserDoctorRecord);
 
-            if (!cancelled && data && (data.fullName || data.name || data.doctorProfile)) {
+            if (
+              !cancelled &&
+              data &&
+              (data.fullName || data.name || data.doctorProfile)
+            ) {
               const doctorRecord = mapApiUserToDoctorRecord(data);
               setDoctor(doctorRecord);
               setPersonalForm({
@@ -241,7 +250,8 @@ export function DoctorProfilePage() {
               });
               return;
             }
-          } catch {
+          } catch (err) {
+            console.log(err);
             // fallback below
           }
         }

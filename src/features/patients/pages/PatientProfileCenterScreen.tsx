@@ -103,7 +103,8 @@ export function PatientProfileCenterScreen({
           custom = { ...custom, ...JSON.parse(stored) };
         }
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore
     }
 
@@ -261,7 +262,8 @@ export function PatientProfileCenterScreen({
             );
           }
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Ignore
       }
 
@@ -295,7 +297,8 @@ export function PatientProfileCenterScreen({
           JSON.stringify(editForm),
         );
       }
-    } catch {
+    } catch (err) {
+      console.log(err);
       // Ignore
     }
 

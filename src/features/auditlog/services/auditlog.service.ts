@@ -120,7 +120,8 @@ function formatValue(value: unknown): string {
 
   try {
     return JSON.stringify(value);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return String(value);
   }
 }
@@ -527,7 +528,8 @@ export async function fetchLoginHistoryLogs(
         totalPages: loginRecords.length ? 1 : 0,
         numberOfElements: loginRecords.length,
       };
-    } catch {
+    } catch (err) {
+      console.log(err);
       throw error;
     }
   }

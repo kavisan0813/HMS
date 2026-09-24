@@ -14,12 +14,9 @@ interface RemoveMemberConfirmDialogProps {
   onError: (msg: string) => void;
 }
 
-export const RemoveMemberConfirmDialog: React.FC<RemoveMemberConfirmDialogProps> = ({
-  member,
-  onClose,
-  onConfirmSuccess,
-  onError,
-}) => {
+export const RemoveMemberConfirmDialog: React.FC<
+  RemoveMemberConfirmDialogProps
+> = ({ member, onClose, onConfirmSuccess, onError }) => {
   const [isUnlinking, setIsUnlinking] = useState<boolean>(false);
 
   if (!member) return null;
@@ -38,7 +35,9 @@ export const RemoveMemberConfirmDialog: React.FC<RemoveMemberConfirmDialogProps>
         } catch (err: unknown) {
           // If 404 RESOURCE_NOT_FOUND occurs (link does not exist or already removed), treat gracefully!
           if (axios.isAxiosError(err) && err.response?.status === 404) {
-            console.info(`Unlink endpoint returned 404 for ${mrn}, proceeding with removal.`);
+            console.info(
+              `Unlink endpoint returned 404 for ${mrn}, proceeding with removal.`,
+            );
           } else {
             throw err;
           }
@@ -71,10 +70,7 @@ export const RemoveMemberConfirmDialog: React.FC<RemoveMemberConfirmDialogProps>
             >
               Remove Family Member
             </h3>
-            <p
-              className="text-xs text-[#64748B]"
-              style={{ fontFamily: RB }}
-            >
+            <p className="text-xs text-[#64748B]" style={{ fontFamily: RB }}>
               Confirm removing linked family member
             </p>
           </div>
@@ -109,12 +105,13 @@ export const RemoveMemberConfirmDialog: React.FC<RemoveMemberConfirmDialogProps>
           style={{ fontFamily: RB }}
         >
           <p>
-            Are you sure you want to remove this linked family member from
-            your Patient Portal account?
+            Are you sure you want to remove this linked family member from your
+            Patient Portal account?
           </p>
           <p>
             This action only removes the relationship link from your account. It
-            will <strong>NOT</strong> delete the patient's hospital record or medical history.
+            will <strong>NOT</strong> delete the patient's hospital record or
+            medical history.
           </p>
         </div>
 

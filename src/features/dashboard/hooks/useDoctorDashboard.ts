@@ -35,7 +35,10 @@ export function useDoctorNextPatient() {
   });
 }
 
-export function useDoctorTodayAppointments(doctorId?: string | number, date?: string) {
+export function useDoctorTodayAppointments(
+  doctorId?: string | number,
+  date?: string,
+) {
   return useQuery({
     queryKey: [...doctorKeys.todayAppointments(), doctorId, date] as const,
     queryFn: () => doctorDashboardApi.getTodayAppointments(doctorId, date),
@@ -55,17 +58,6 @@ export function useDoctorCallToken() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (token: string) => doctorDashboardApi.callToken(token),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: doctorKeys.all });
-    },
-  });
-}
-
-export function useDoctorCompleteAppointment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (appointmentId: string) =>
-      doctorDashboardApi.completeAppointment(appointmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: doctorKeys.all });
     },

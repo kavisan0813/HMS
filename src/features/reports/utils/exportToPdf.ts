@@ -1,7 +1,6 @@
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+// Dynamic imports are used inside exportElementToPdf to keep heavy PDF generation libraries out of the initial bundle
 
-export interface ExportPdfOptions {
+interface ExportPdfOptions {
   /** The HTML element or element ID to export */
   elementOrId: string | HTMLElement;
   /** File name for the downloaded PDF (default: "report.pdf") */
@@ -29,7 +28,9 @@ export interface ExportPdfOptions {
  * Preserves content layout, text, tables, charts/images, and styling.
  * Automatically triggers browser download via Blob URL for maximum cross-browser compatibility.
  */
-export async function exportElementToPdf(options: ExportPdfOptions): Promise<boolean> {
+export async function exportElementToPdf(
+  options: ExportPdfOptions,
+): Promise<boolean> {
   const {
     elementOrId,
     fileName = "report.pdf",
@@ -53,9 +54,15 @@ export async function exportElementToPdf(options: ExportPdfOptions): Promise<boo
 
     if (!targetElement) {
       throw new Error(
-        `Target element '${typeof elementOrId === "string" ? elementOrId : "DOM Element"}' was not found.`
+        `Target element '${typeof elementOrId === "string" ? elementOrId : "DOM Element"}' was not found.`,
       );
     }
+
+    // Dynamically load html2canvas and jsPDF only when export is invoked
+    const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
+      import("jspdf"),
+      import("html2canvas"),
+    ]);
 
     // Capture target element via html2canvas
     const canvas = await html2canvas(targetElement, {
@@ -124,7 +131,7 @@ export async function exportElementToPdf(options: ExportPdfOptions): Promise<boo
       imgWidth,
       imgHeight,
       undefined,
-      "FAST"
+      "FAST",
     );
     heightLeft -= printableHeight;
 
@@ -140,12 +147,14 @@ export async function exportElementToPdf(options: ExportPdfOptions): Promise<boo
         imgWidth,
         imgHeight,
         undefined,
-        "FAST"
+        "FAST",
       );
       heightLeft -= printableHeight;
     }
 
-    const cleanFileName = fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`;
+    const cleanFileName = fileName.endsWith(".pdf")
+      ? fileName
+      : `${fileName}.pdf`;
 
     // Force automatic browser file download using Blob URL
     try {

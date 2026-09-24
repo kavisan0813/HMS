@@ -1,16 +1,17 @@
 import { Route } from "react-router";
 import { ROUTES } from "./routes";
 import { RouteGuard } from "../../permissions/guards";
-import { DoctorScheduleScreen } from "../../features/doctors/components/DoctorScheduleScreen";
-import { DoctorQueueScreen } from "../../features/doctors/components/DoctorQueueScreen";
-import { DoctorPatientsScreen } from "../../features/doctors/components/DoctorPatientsScreen";
-import { DoctorAppointmentsScreen } from "../../features/doctors/components/DoctorAppointmentsScreen";
-import { OpdConsultationCenterScreen } from "../../features/opd/pages/OPDConsultationPage";
-import { StartConsultationPage as StartOpdConsultationWorkspaceScreen } from "../../features/opd/pages/StartConsultationPage";
-import { PrescriptionManagementPage } from "../../features/prescriptions/pages/PrescriptionManagementPage";
-import { DoctorProfileRoute } from "../../features/doctors/pages/DoctorProfileRoute";
-// DoctorsRouteDispatcher is exported from routeConfig
-import { DoctorsRouteDispatcher } from "./routeConfig";
+import {
+  DoctorScheduleScreen,
+  DoctorQueueScreen,
+  DoctorPatientsScreen,
+  DoctorAppointmentsScreen,
+  DoctorProfileRoute,
+  OpdConsultationCenterScreen,
+  StartOpdConsultationWorkspaceScreen,
+  PrescriptionManagementPage,
+} from "./lazyPages";
+import { DoctorsRouteDispatcher } from "../../features/doctors/routes/DoctorsRouteDispatcher";
 
 export function DoctorRoutes() {
   return (

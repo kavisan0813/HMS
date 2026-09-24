@@ -836,8 +836,13 @@ export function DashboardKpiDetailScreen({
       },
     ];
 
-    type CsvExportRecord = Record<string, string | number | boolean | null | undefined>;
-    const recordRows = (currentDataset as unknown as Array<CsvExportRecord>).map((rec, idx) => ({
+    type CsvExportRecord = Record<
+      string,
+      string | number | boolean | null | undefined
+    >;
+    const recordRows = (
+      currentDataset as unknown as Array<CsvExportRecord>
+    ).map((rec, idx) => ({
       Section: "2. KPI DRILL-DOWN TABLE REGISTRY",
       Category_Item:
         rec.invoiceId ||

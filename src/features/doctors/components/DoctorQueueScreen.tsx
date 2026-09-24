@@ -131,7 +131,8 @@ export function DoctorQueueScreen() {
         summary: data.summary || {},
         content: Array.isArray(data.content) ? data.content : [],
       });
-    } catch {
+    } catch (err) {
+      console.log(err);
       setQueue({ summary: {}, content: [] });
     } finally {
       setIsLoading(false);
@@ -178,7 +179,8 @@ export function DoctorQueueScreen() {
         `Called patient ${res.tokenNumber || res.token || ""} successfully.`,
       );
       fetchQueue();
-    } catch {
+    } catch (err) {
+      console.log(err);
       showToast("Failed to call next patient.");
     } finally {
       setCallingNext(false);
@@ -192,7 +194,8 @@ export function DoctorQueueScreen() {
       await appointmentService.doctorStartConsultation(appointmentId);
       showToast("Consultation started. Encounter created.");
       fetchQueue();
-    } catch {
+    } catch (err) {
+      console.log(err);
       showToast("Failed to start consultation.");
     } finally {
       setActionId(null);
@@ -206,7 +209,8 @@ export function DoctorQueueScreen() {
       await appointmentService.doctorCompleteConsultation(appointmentId);
       showToast("Consultation completed successfully.");
       fetchQueue();
-    } catch {
+    } catch (err) {
+      console.log(err);
       showToast("Failed to complete consultation.");
     } finally {
       setActionId(null);

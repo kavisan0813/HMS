@@ -63,7 +63,8 @@ export function PatientQueueStatusScreen() {
     try {
       const result = await loadQueueData();
       setQueueStatus(result);
-    } catch {
+    } catch (err) {
+      console.log(err);
       setQueueStatus(null);
     } finally {
       setIsLoading(false);
@@ -77,7 +78,8 @@ export function PatientQueueStatusScreen() {
       try {
         const result = await loadQueueData();
         if (!cancelled) setQueueStatus(result);
-      } catch {
+      } catch (err) {
+        console.log(err);
         if (!cancelled) setQueueStatus(null);
       } finally {
         if (!cancelled) setIsLoading(false);

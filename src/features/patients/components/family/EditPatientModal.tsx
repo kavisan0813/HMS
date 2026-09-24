@@ -97,9 +97,8 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
           `/api/v1/patients/${encodeURIComponent(member!.mrn)}`,
         );
         if (cancelled) return;
-        const rawData =
-          ((res.data as { data?: Record<string, unknown> })?.data ||
-            res.data) as Record<string, unknown>;
+        const rawData = ((res.data as { data?: Record<string, unknown> })
+          ?.data || res.data) as Record<string, unknown>;
 
         if (rawData) {
           const em =
@@ -115,7 +114,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             gender: String(
               rawData.gender || member!.gender || "MALE",
             ).toUpperCase(),
-            dateOfBirth: String(rawData.dateOfBirth || member!.dateOfBirth || ""),
+            dateOfBirth: String(
+              rawData.dateOfBirth || member!.dateOfBirth || "",
+            ),
             bloodGroup: String(
               rawData.bloodGroup || member!.bloodGroup || "A_POSITIVE",
             ),
@@ -151,7 +152,8 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             specialNotes: String(rawData.specialNotes || ""),
           }));
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // Fallback to basic member details already set
       }
     }
@@ -247,7 +249,6 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl border border-slate-200 max-w-3xl w-full my-8 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        
         {/* Header */}
         <div className="p-5 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -261,9 +262,15 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
               >
                 Edit Patient Details
               </h3>
-              <div className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5" style={{ fontFamily: RB }}>
+              <div
+                className="flex items-center gap-2 text-xs text-[#64748B] mt-0.5"
+                style={{ fontFamily: RB }}
+              >
                 <span>
-                  MRN: <strong className="font-mono text-[#0D47A1]">{member.mrn}</strong>
+                  MRN:{" "}
+                  <strong className="font-mono text-[#0D47A1]">
+                    {member.mrn}
+                  </strong>
                 </span>
                 <span>·</span>
                 <span>{member.patientName}</span>
@@ -280,7 +287,10 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 overflow-y-auto p-6 space-y-6"
+        >
           {/* Section 1: Personal Details */}
           <div className="space-y-3">
             <h4
@@ -289,7 +299,10 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             >
               Personal Details
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs" style={{ fontFamily: RB }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs"
+              style={{ fontFamily: RB }}
+            >
               <div>
                 <label className="block text-[#64748B] font-medium mb-1">
                   Full Name *
@@ -298,7 +311,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                   type="text"
                   required
                   value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, fullName: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
               </div>
@@ -325,7 +340,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="date"
                   value={form.dateOfBirth}
-                  onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, dateOfBirth: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
               </div>
@@ -336,7 +353,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 </label>
                 <select
                   value={form.bloodGroup}
-                  onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, bloodGroup: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 >
                   <option value="A_POSITIVE">A+</option>
@@ -356,7 +375,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 </label>
                 <select
                   value={form.maritalStatus}
-                  onChange={(e) => setForm({ ...form, maritalStatus: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, maritalStatus: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 >
                   <option value="SINGLE">Single</option>
@@ -373,7 +394,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.nationalId}
-                  onChange={(e) => setForm({ ...form, nationalId: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, nationalId: e.target.value })
+                  }
                   placeholder="e.g. Aadhar / SSN"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white font-mono"
                 />
@@ -389,7 +412,10 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             >
               Contact & Address Details
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs" style={{ fontFamily: RB }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs"
+              style={{ fontFamily: RB }}
+            >
               <div>
                 <label className="block text-[#64748B] font-medium mb-1">
                   Phone Number *
@@ -423,7 +449,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.addressLine1}
-                  onChange={(e) => setForm({ ...form, addressLine1: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, addressLine1: e.target.value })
+                  }
                   placeholder="Street name, house/apt #"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
@@ -460,7 +488,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.pincode}
-                  onChange={(e) => setForm({ ...form, pincode: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, pincode: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white font-mono"
                 />
               </div>
@@ -475,7 +505,10 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             >
               Emergency Contact Details
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs" style={{ fontFamily: RB }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs"
+              style={{ fontFamily: RB }}
+            >
               <div>
                 <label className="block text-[#64748B] font-medium mb-1">
                   Contact Name
@@ -483,7 +516,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.emergencyName}
-                  onChange={(e) => setForm({ ...form, emergencyName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyName: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
               </div>
@@ -495,7 +530,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.emergencyRel}
-                  onChange={(e) => setForm({ ...form, emergencyRel: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyRel: e.target.value })
+                  }
                   placeholder="e.g. Spouse / Parent"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
@@ -508,7 +545,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="tel"
                   value={form.emergencyMobile}
-                  onChange={(e) => setForm({ ...form, emergencyMobile: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyMobile: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white font-mono"
                 />
               </div>
@@ -520,7 +559,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="tel"
                   value={form.emergencyAltMobile}
-                  onChange={(e) => setForm({ ...form, emergencyAltMobile: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, emergencyAltMobile: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white font-mono"
                 />
               </div>
@@ -535,14 +576,19 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
             >
               Medical & Registration Information
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs" style={{ fontFamily: RB }}>
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs"
+              style={{ fontFamily: RB }}
+            >
               <div>
                 <label className="block text-[#64748B] font-medium mb-1">
                   Patient Category
                 </label>
                 <select
                   value={form.patientCategory}
-                  onChange={(e) => setForm({ ...form, patientCategory: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, patientCategory: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 >
                   <option value="GENERAL">General</option>
@@ -559,7 +605,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 </label>
                 <select
                   value={form.registrationType}
-                  onChange={(e) => setForm({ ...form, registrationType: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, registrationType: e.target.value })
+                  }
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 >
                   <option value="WALK_IN">Walk-In</option>
@@ -576,7 +624,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.knownAllergies}
-                  onChange={(e) => setForm({ ...form, knownAllergies: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, knownAllergies: e.target.value })
+                  }
                   placeholder="e.g. Penicillin, Peanuts"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
@@ -589,7 +639,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.chronicDiseases}
-                  onChange={(e) => setForm({ ...form, chronicDiseases: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, chronicDiseases: e.target.value })
+                  }
                   placeholder="e.g. Diabetes, Hypertension"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />
@@ -602,7 +654,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <textarea
                   rows={2}
                   value={form.specialNotes}
-                  onChange={(e) => setForm({ ...form, specialNotes: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, specialNotes: e.target.value })
+                  }
                   placeholder="Any additional clinical or administrative notes"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white resize-none"
                 />
@@ -615,7 +669,9 @@ export const EditPatientModal: React.FC<EditPatientModalProps> = ({
                 <input
                   type="text"
                   value={form.changeReason}
-                  onChange={(e) => setForm({ ...form, changeReason: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, changeReason: e.target.value })
+                  }
                   placeholder="e.g. Family details updated via Patient Portal"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[#111827] focus:outline-none focus:border-[#0D47A1] focus:bg-white"
                 />

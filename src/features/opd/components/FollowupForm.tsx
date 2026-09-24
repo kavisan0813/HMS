@@ -38,13 +38,25 @@ export const FollowupForm: React.FC<FollowupFormProps> = ({
       try {
         const consData = await consultationApi.getConsultation(encId);
         if (consData && isMounted) {
-          const fuDate = String(consData.followUpDate || consData.nextVisitDate || "");
-          const fuInstructions = String(consData.followUpInstructions || consData.followupNotes || "");
+          const fuDate = String(
+            consData.followUpDate || consData.nextVisitDate || "",
+          );
+          const fuInstructions = String(
+            consData.followUpInstructions || consData.followupNotes || "",
+          );
           const fuType = String(consData.followUpType || "ROUTINE");
-          const fuVal = consData.followUpIntervalValue != null ? Number(consData.followUpIntervalValue) : undefined;
+          const fuVal =
+            consData.followUpIntervalValue != null
+              ? Number(consData.followUpIntervalValue)
+              : undefined;
           const fuUnit = String(consData.followUpIntervalUnit || "DAYS");
 
-          if (fuDate || fuInstructions || consData.followUpType || consData.followUpIntervalValue) {
+          if (
+            fuDate ||
+            fuInstructions ||
+            consData.followUpType ||
+            consData.followUpIntervalValue
+          ) {
             onChange("followupRequired", true);
             if (fuDate) onChange("nextVisitDate", fuDate);
             if (fuInstructions) onChange("followupNotes", fuInstructions);
@@ -107,7 +119,10 @@ export const FollowupForm: React.FC<FollowupFormProps> = ({
           {required && (
             <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5" style={{ fontFamily: PP }}>
+                <label
+                  className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5"
+                  style={{ fontFamily: PP }}
+                >
                   Follow-Up Date
                 </label>
                 <input
@@ -121,7 +136,10 @@ export const FollowupForm: React.FC<FollowupFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5" style={{ fontFamily: PP }}>
+                <label
+                  className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5"
+                  style={{ fontFamily: PP }}
+                >
                   Follow-Up Type
                 </label>
                 <select
@@ -139,7 +157,10 @@ export const FollowupForm: React.FC<FollowupFormProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5" style={{ fontFamily: PP }}>
+                <label
+                  className="block text-[10px] font-bold text-slate-400 uppercase mb-0.5"
+                  style={{ fontFamily: PP }}
+                >
                   Interval
                 </label>
                 <div className="flex items-center gap-1">
@@ -149,14 +170,21 @@ export const FollowupForm: React.FC<FollowupFormProps> = ({
                     min={1}
                     max={365}
                     value={followUpIntervalValue}
-                    onChange={(e) => onChange("followUpIntervalValue", Number(e.target.value) || 1)}
+                    onChange={(e) =>
+                      onChange(
+                        "followUpIntervalValue",
+                        Number(e.target.value) || 1,
+                      )
+                    }
                     className="w-16 px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-xl bg-slate-50 outline-none focus:border-[#0D47A1] focus:bg-white transition-colors"
                     style={{ fontFamily: RB }}
                   />
                   <select
                     aria-label="Interval Unit"
                     value={followUpIntervalUnit}
-                    onChange={(e) => onChange("followUpIntervalUnit", e.target.value)}
+                    onChange={(e) =>
+                      onChange("followUpIntervalUnit", e.target.value)
+                    }
                     className="px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-xl bg-slate-50 outline-none focus:border-[#0D47A1] focus:bg-white transition-colors"
                     style={{ fontFamily: RB }}
                   >

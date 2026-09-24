@@ -147,13 +147,17 @@ export function DoctorDashboardKpiDetailScreen({
   const setDateRange = (val: string) => dispatch({ dateRange: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
-  const setConsultStatusFilter = (val: string) => dispatch({ consultStatusFilter: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
+  const setConsultStatusFilter = (val: string) =>
+    dispatch({ consultStatusFilter: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
   const setShiftFilter = (val: string) => dispatch({ shiftFilter: val });
-  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days" | "1 Year") => dispatch({ trendDays: val });
+  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days" | "1 Year") =>
+    dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
-  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
+  const setShowLoadingDemo = (val: boolean) =>
+    dispatch({ showLoadingDemo: val });
   const [isPending, startTransition] = useTransition();
   const isLoading = isPending || showLoadingDemo;
 

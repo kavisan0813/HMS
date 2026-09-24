@@ -123,7 +123,8 @@ export function PrescriptionDetailsModal({
         const full =
           await prescriptionApi.getPrescriptionDetails(prescriptionId);
         if (full) return full;
-      } catch {
+      } catch (err) {
+        console.log(err);
         // continue
       }
       try {
@@ -143,7 +144,8 @@ export function PrescriptionDetailsModal({
               : undefined,
           } as PrescriptionDetailResponse;
         }
-      } catch {
+      } catch (err) {
+        console.log(err);
         // continue
       }
       return null;

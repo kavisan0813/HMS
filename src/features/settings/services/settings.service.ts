@@ -102,7 +102,8 @@ export function isUsableMediaUrl(value: string | undefined): value is string {
   try {
     const url = new URL(value, window.location.origin);
     return !["cdn.example.com", "hospital.com"].includes(url.hostname);
-  } catch {
+  } catch (err) {
+    console.log(err);
     return false;
   }
 }

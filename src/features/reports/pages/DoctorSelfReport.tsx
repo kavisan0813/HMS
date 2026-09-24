@@ -178,11 +178,7 @@ const SAMPLE_PERFORMANCE_RECORDS: DoctorConsultationPerformanceRecord[] = [
   },
 ];
 
-export function DoctorDoctorReportScreen({
-  onBack,
-}: {
-  onBack?: () => void;
-}) {
+export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
   const todayStr = getOffsetDateStr(0);
 
   const [state, dispatch] = useReducer(
@@ -246,11 +242,15 @@ export function DoctorDoctorReportScreen({
   const setDateRange = (val: string) => dispatch({ dateRange: val });
   const setStartDate = (val: string) => dispatch({ startDate: val });
   const setEndDate = (val: string) => dispatch({ endDate: val });
-  const setConsultStatusFilter = (val: string) => dispatch({ consultStatusFilter: val });
-  const setVisitTypeFilter = (val: string) => dispatch({ visitTypeFilter: val });
+  const setConsultStatusFilter = (val: string) =>
+    dispatch({ consultStatusFilter: val });
+  const setVisitTypeFilter = (val: string) =>
+    dispatch({ visitTypeFilter: val });
   const setShiftFilter = (val: string) => dispatch({ shiftFilter: val });
-  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") => dispatch({ trendDays: val });
+  const setTrendDays = (val: "7 Days" | "30 Days" | "90 Days") =>
+    dispatch({ trendDays: val });
   const setIsRefreshing = (val: boolean) => dispatch({ isRefreshing: val });
+  const setShowLoadingDemo = (val: boolean) => dispatch({ showLoadingDemo: val });
   const setHasError = (val: boolean) => dispatch({ hasError: val });
   const [isPending,] = useTransition();
   const isLoading = isPending || showLoadingDemo;
@@ -300,18 +300,34 @@ export function DoctorDoctorReportScreen({
       // 2. Consultation Status Filter
       const matchesStatus =
         consultStatusFilter === "All Statuses" ||
-        item.consultationStatus.toLowerCase() === consultStatusFilter.toLowerCase();
+        item.consultationStatus.toLowerCase() ===
+          consultStatusFilter.toLowerCase();
 
       // 3. Shift Slot Filter
       const timeStr = item.consultationTime || "";
       const matchesShift =
         shiftFilter === "All Shifts" ||
-        (shiftFilter.includes("Morning") && (timeStr.includes("08:") || timeStr.includes("09:") || timeStr.includes("10:") || timeStr.includes("11:"))) ||
-        (shiftFilter.includes("Afternoon") && (timeStr.includes("12:") || timeStr.includes("01:") || timeStr.includes("02:") || timeStr.includes("03:") || timeStr.includes("04:"))) ||
-        (shiftFilter.includes("Evening") && (timeStr.includes("05:") || timeStr.includes("06:") || timeStr.includes("07:") || timeStr.includes("08:")));
+        (shiftFilter.includes("Morning") &&
+          (timeStr.includes("08:") ||
+            timeStr.includes("09:") ||
+            timeStr.includes("10:") ||
+            timeStr.includes("11:"))) ||
+        (shiftFilter.includes("Afternoon") &&
+          (timeStr.includes("12:") ||
+            timeStr.includes("01:") ||
+            timeStr.includes("02:") ||
+            timeStr.includes("03:") ||
+            timeStr.includes("04:"))) ||
+        (shiftFilter.includes("Evening") &&
+          (timeStr.includes("05:") ||
+            timeStr.includes("06:") ||
+            timeStr.includes("07:") ||
+            timeStr.includes("08:")));
 
       // 4. Date Range Filter
-      const extractDateStr = (rec: DoctorConsultationPerformanceRecord): string | null => {
+      const extractDateStr = (
+        rec: DoctorConsultationPerformanceRecord,
+      ): string | null => {
         if (rec.appointmentDate && rec.appointmentDate.length >= 10) {
           const match = rec.appointmentDate.match(/\d{4}-\d{2}-\d{2}/);
           if (match) return match[0];
@@ -335,16 +351,16 @@ export function DoctorDoctorReportScreen({
   const kpi = useMemo(() => {
     const totalConsultations = filteredPerformance.length;
     const completedConsultations = filteredPerformance.filter(
-      (c) => c.consultationStatus === "Completed"
+      (c) => c.consultationStatus === "Completed",
     ).length;
     const pendingConsultations = filteredPerformance.filter(
-      (c) => c.consultationStatus === "In Progress"
+      (c) => c.consultationStatus === "In Progress",
     ).length;
     const cancelledConsultations = filteredPerformance.filter(
-      (c) => c.consultationStatus === "Cancelled"
+      (c) => c.consultationStatus === "Cancelled",
     ).length;
     const followUpCount = filteredPerformance.filter(
-      (c) => c.followUp && c.followUp !== "N/A"
+      (c) => c.followUp && c.followUp !== "N/A",
     ).length;
     const completionRate =
       totalConsultations > 0
@@ -360,7 +376,8 @@ export function DoctorDoctorReportScreen({
       completionRate,
       avgConsultationTime: "14.2 min",
       rating: "4.9 / 5.0",
-      avgDailyWorkload: totalConsultations > 0 ? (totalConsultations / 3).toFixed(1) : "0.0",
+      avgDailyWorkload:
+        totalConsultations > 0 ? (totalConsultations / 3).toFixed(1) : "0.0",
     };
   }, [filteredPerformance]);
 
@@ -386,13 +403,13 @@ export function DoctorDoctorReportScreen({
 
   const statusBreakdownData = useMemo(() => {
     const completed = filteredPerformance.filter(
-      (c) => c.consultationStatus === "Completed"
+      (c) => c.consultationStatus === "Completed",
     ).length;
     const inProgress = filteredPerformance.filter(
-      (c) => c.consultationStatus === "In Progress"
+      (c) => c.consultationStatus === "In Progress",
     ).length;
     const cancelled = filteredPerformance.filter(
-      (c) => c.consultationStatus === "Cancelled"
+      (c) => c.consultationStatus === "Cancelled",
     ).length;
 
     return [
@@ -451,7 +468,8 @@ export function DoctorDoctorReportScreen({
                 </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor your consultations, workload, patient care and clinical performance metrics.
+                Monitor your consultations, workload, patient care and clinical
+                performance metrics.
               </p>
             </div>
           </div>
@@ -530,11 +548,15 @@ export function DoctorDoctorReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#0D47A1] font-bold">{kpi.totalConsultations}</div>
+                  <div className="text-[#0D47A1] font-bold">
+                    {kpi.totalConsultations}
+                  </div>
                   <div className="text-[#64748B]">Today</div>
                 </div>
                 <div>
-                  <div className="text-[#009688] font-bold">{kpi.totalConsultations * 4}</div>
+                  <div className="text-[#009688] font-bold">
+                    {kpi.totalConsultations * 4}
+                  </div>
                   <div className="text-[#64748B]">Monthly</div>
                 </div>
               </div>
@@ -563,11 +585,15 @@ export function DoctorDoctorReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#66BB6A] font-bold">{kpi.completedConsultations}</div>
+                  <div className="text-[#66BB6A] font-bold">
+                    {kpi.completedConsultations}
+                  </div>
                   <div className="text-[#64748B]">Completed</div>
                 </div>
                 <div>
-                  <div className="text-[#0D47A1] font-bold">{kpi.completionRate}%</div>
+                  <div className="text-[#0D47A1] font-bold">
+                    {kpi.completionRate}%
+                  </div>
                   <div className="text-[#64748B]">Rate</div>
                 </div>
               </div>
@@ -629,11 +655,15 @@ export function DoctorDoctorReportScreen({
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
-                  <div className="text-[#F59E0B] font-bold">{kpi.followUpCount}</div>
+                  <div className="text-[#F59E0B] font-bold">
+                    {kpi.followUpCount}
+                  </div>
                   <div className="text-[#64748B]">Active</div>
                 </div>
                 <div>
-                  <div className="text-[#66BB6A] font-bold">{kpi.followUpCount + 12}</div>
+                  <div className="text-[#66BB6A] font-bold">
+                    {kpi.followUpCount + 12}
+                  </div>
                   <div className="text-[#64748B]">Done</div>
                 </div>
               </div>
@@ -1215,7 +1245,8 @@ export function DoctorDoctorReportScreen({
                           colSpan={10}
                           className="py-8 text-center text-[#64748B]"
                         >
-                          No consultation records match your search or filter criteria.
+                          No consultation records match your search or filter
+                          criteria.
                         </td>
                       </tr>
                     ) : (
@@ -1260,7 +1291,7 @@ export function DoctorDoctorReportScreen({
                               <button
                                 onClick={() =>
                                   alert(
-                                    `Viewing consultation ${item.consultationId}`
+                                    `Viewing consultation ${item.consultationId}`,
                                   )
                                 }
                                 className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
@@ -1280,7 +1311,7 @@ export function DoctorDoctorReportScreen({
                               <button
                                 onClick={() =>
                                   alert(
-                                    `Printing summary for ${item.consultationId}`
+                                    `Printing summary for ${item.consultationId}`,
                                   )
                                 }
                                 className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
@@ -1335,9 +1366,7 @@ export function DoctorDoctorReportScreen({
               {filteredPerformance.length} Performance Records
             </strong>
           </div>
-          <div>
-            Hospital Management System • Doctor Performance Report v1.0
-          </div>
+          <div>Hospital Management System • Doctor Performance Report v1.0</div>
           <div>
             Last Refreshed:{" "}
             <strong className="text-[#111827]">

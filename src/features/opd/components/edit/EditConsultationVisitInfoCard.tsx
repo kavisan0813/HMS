@@ -4,24 +4,31 @@ import { ChevronDown } from "lucide-react";
 const PP = "'Poppins', system-ui, sans-serif";
 const RB = "'Roboto', system-ui, sans-serif";
 
-interface EditConsultationVisitInfoCardProps {
+export interface VisitInfoFormData {
+  visitDate: string;
+  doctorName: string;
+  department: string;
+  visitType: string;
+  chiefComplaint: string;
+}
+
+interface EditConsultationVisitInfoCardProps<
+  T extends VisitInfoFormData = VisitInfoFormData,
+> {
   collapsed: boolean;
   onToggle: () => void;
   isEditing: boolean;
-  formData: {
-    visitDate: string;
-    doctorName: string;
-    department: string;
-    visitType: string;
-    chiefComplaint: string;
-  };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  setFormData: (action: any) => void;
+  formData: T;
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
 }
 
-export const EditConsultationVisitInfoCard: React.FC<
-  EditConsultationVisitInfoCardProps
-> = ({ collapsed, onToggle, isEditing, formData, setFormData }) => {
+export const EditConsultationVisitInfoCard = <T extends VisitInfoFormData>({
+  collapsed,
+  onToggle,
+  isEditing,
+  formData,
+  setFormData,
+}: EditConsultationVisitInfoCardProps<T>) => {
   return (
     <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
       <button
@@ -110,8 +117,7 @@ export const EditConsultationVisitInfoCard: React.FC<
                 disabled={!isEditing}
                 value={formData.visitType}
                 onChange={(e) =>
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                  setFormData((prev) => ({
                     ...prev,
                     visitType: e.target.value,
                   }))
@@ -138,8 +144,7 @@ export const EditConsultationVisitInfoCard: React.FC<
               rows={2}
               value={formData.chiefComplaint}
               onChange={(e) =>
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  setFormData((prev: any) => ({
+                setFormData((prev) => ({
                   ...prev,
                   chiefComplaint: e.target.value,
                 }))

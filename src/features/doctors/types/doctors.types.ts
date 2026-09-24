@@ -1,5 +1,9 @@
 export type DoctorAvailability =
-  "Available Today" | "On Duty" | "On Call" | "On Leave" | "Out of Office";
+  | "Available Today"
+  | "On Duty"
+  | "On Call"
+  | "On Leave"
+  | "Out of Office";
 
 export type DoctorStatus = "Active" | "Inactive" | "On Leave" | "Suspended";
 
@@ -121,12 +125,21 @@ export type DayOfWeek =
 export type BreakType = "LUNCH" | "TEA" | "MEETING" | "PERSONAL";
 
 export type ExceptionType =
-  "VACATION" | "TRAINING" | "CONFERENCE" | "EMERGENCY" | "SURGERY" | "OTHER";
+  | "VACATION"
+  | "TRAINING"
+  | "CONFERENCE"
+  | "EMERGENCY"
+  | "SURGERY"
+  | "OTHER";
 
 export type ExceptionAction = "BLOCK_APPOINTMENTS";
 
 type ExceptionStatus =
-  "ACTIVE" | "INACTIVE" | "CANCELLED" | "PENDING" | "COMPLETED";
+  | "ACTIVE"
+  | "INACTIVE"
+  | "CANCELLED"
+  | "PENDING"
+  | "COMPLETED";
 
 export interface ApiScheduleBreak {
   id?: number;
