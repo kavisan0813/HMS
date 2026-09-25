@@ -14,10 +14,8 @@ export function SettingsPageHeader({
   return (
     <div
       style={{
-        background: "#FFFFFF",
         borderBottom: "1px solid #E5E7EB",
         padding: "20px 24px",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
       }}
     >
       <div
@@ -39,13 +37,7 @@ export function SettingsPageHeader({
               marginBottom: "6px",
             }}
           >
-            <span>Hospital</span>
-            <span>&gt;</span>
-            <span>Settings</span>
-            <span>&gt;</span>
-            <span style={{ color: "#0D47A1", fontWeight: 600 }}>
-              General Settings
-            </span>
+           
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div

@@ -45,9 +45,9 @@ const STATUS_MAP: Record<string, { bg: string; text: string; dot: string }> = {
 
 export function BillingStatusBadge({ status }: { status: string }) {
   const style = STATUS_MAP[status] || {
-    bg: "bg-slate-100 border-slate-200",
-    text: "text-[#64748B]",
-    dot: "bg-[#64748B]",
+    bg: "bg-green-50 border-green-500",
+    text: "text-green-500",
+    dot: "bg-green-500",
   };
 
   return (

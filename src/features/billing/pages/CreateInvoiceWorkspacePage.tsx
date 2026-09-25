@@ -649,6 +649,17 @@ export function CreateInvoiceWorkspacePage() {
           setValidationError("Received amount cannot be negative.");
           return;
         }
+
+        // Reference number is required for every non-cash payment
+        if (
+          String(paymentMode).toUpperCase() !== "CASH" &&
+          !referenceNo.trim()
+        ) {
+          setValidationError(
+            `Reference number is required for ${paymentMode} payment.`,
+          );
+          return;
+        }
       }
 
       setValidationError(null);
@@ -817,10 +828,13 @@ export function CreateInvoiceWorkspacePage() {
                 {
                   method: paymentMode,
                   amount: payAmount,
-                  referenceNumber: referenceNo || undefined,
+                  referenceNumber:
+                    String(paymentMode).toUpperCase() === "CASH"
+                      ? undefined
+                      : referenceNo.trim(),
                 },
               ],
-              remarks: txnNotes || undefined,
+              remarks: txnNotes.trim() || undefined,
             });
           } catch (payErr) {
             const errObj = payErr as
@@ -854,10 +868,13 @@ export function CreateInvoiceWorkspacePage() {
                       {
                         method: paymentMode,
                         amount: exactBalance,
-                        referenceNumber: referenceNo || undefined,
+                        referenceNumber:
+                          String(paymentMode).toUpperCase() === "CASH"
+                            ? undefined
+                            : referenceNo.trim(),
                       },
                     ],
-                    remarks: txnNotes || undefined,
+                    remarks: txnNotes.trim() || undefined,
                   });
                 }
               } catch (retryErr) {
@@ -1816,16 +1833,20 @@ export function CreateInvoiceWorkspacePage() {
                   </p>
                 )}
               </div>
-              {paymentMode !== "Cash" && (
+              {String(paymentMode).toUpperCase() !== "CASH" && (
                 <div>
                   <span className="block text-slate-700 font-semibold mb-1">
-                    Txn / Reference Number
+                    Txn / Reference Number <span className="text-red-500">*</span>
                     <input
                       aria-label="Input field"
                       type="text"
                       value={referenceNo}
                       onChange={(e) => setReferenceNo(e.target.value)}
-                      placeholder="e.g. UPI/890123/OKAX"
+                      placeholder={
+                        String(paymentMode).toUpperCase() === "CASH"
+                          ? "Optional for cash"
+                          : `Enter ${paymentMode} reference number (e.g. UPI/890123/OKAX)`
+                      }
                       className="w-full px-3 py-2 rounded-xl border border-[#E5E7EB] bg-slate-50 focus:bg-white focus:border-[#0D47A1] focus:outline-none font-mono"
                     />
                   </span>

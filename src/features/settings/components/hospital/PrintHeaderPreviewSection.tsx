@@ -97,7 +97,7 @@ export function PrintHeaderPreviewSection({
                 fontSize: "20px",
               }}
             >
-              STJ
+              SHH
             </div>
             <div>
               <h4

@@ -14,6 +14,7 @@ const PP = "'Poppins', system-ui, sans-serif";
 
 export interface GeneralSettingsContentHandle {
   openResetModal: () => void;
+  saveGeneralSettings?: () => void;
 }
 
 interface GeneralSettingsContentProps {
@@ -23,7 +24,7 @@ interface GeneralSettingsContentProps {
 export const GeneralSettingsContent = forwardRef<
   GeneralSettingsContentHandle,
   GeneralSettingsContentProps
->(function GeneralSettingsContent({ onSave = () => {} }, ref) {
+>(function GeneralSettingsContent({ onSave = () => { } }, ref) {
   // Accordion State (single expanded accordion at a time)
   const [expandedAccordion, setExpandedAccordion] = useState<string | null>(
     "accordion-1",
@@ -57,6 +58,7 @@ export const GeneralSettingsContent = forwardRef<
 
   useImperativeHandle(ref, () => ({
     openResetModal: () => setShowResetWarning(true),
+    saveGeneralSettings: () => onSave?.("General settings saved successfully!"),
   }));
 
   return (
@@ -1075,245 +1077,7 @@ export const GeneralSettingsContent = forwardRef<
           )}
         </div>
 
-        {/* ACCORDION 03: Display Preferences */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: "16px",
-            border:
-              expandedAccordion === "accordion-3"
-                ? "2px solid #0D47A1"
-                : "1px solid #E5E7EB",
-            overflow: "hidden",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            transition: "background-color 0.2s ease, border-color 0.2s ease",
-          }}
-        >
-          <div
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                (e.currentTarget as HTMLElement).click();
-              }
-            }}
-            role="button"
-            onClick={() =>
-              setExpandedAccordion(
-                expandedAccordion === "accordion-3" ? null : "accordion-3",
-              )
-            }
-            style={{
-              padding: "18px 20px",
-              background:
-                expandedAccordion === "accordion-3" ? "#F0F7FF" : "#FFFFFF",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              cursor: "pointer",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <div
-                style={{
-                  width: "36px",
-                  height: "36px",
-                  borderRadius: "10px",
-                  background: "#FEF3C7",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Sliders size={18} style={{ color: "#B45309" }} />
-              </div>
-              <div>
-                <h3
-                  style={{
-                    fontFamily: PP,
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    color: "#111827",
-                    margin: 0,
-                  }}
-                >
-                  Display Preferences
-                </h3>
-                <p
-                  style={{
-                    fontSize: "12px",
-                    color: "#64748B",
-                    margin: "2px 0 0 0",
-                  }}
-                >
-                  Configure application appearance.
-                </p>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  padding: "3px 8px",
-                  borderRadius: "12px",
-                  background: "#E8F5E9",
-                  color: "#2E7D32",
-                }}
-              >
-                Configured
-              </span>
-              {expandedAccordion === "accordion-3" ? (
-                <ChevronDown size={18} style={{ color: "#0D47A1" }} />
-              ) : (
-                <ChevronRight size={18} style={{ color: "#94A3B8" }} />
-              )}
-            </div>
-          </div>
-
-          {expandedAccordion === "accordion-3" && (
-            <div
-              style={{
-                padding: "20px",
-                borderTop: "1px solid #E5E7EB",
-                display: "flex",
-                flexDirection: "column",
-                gap: "14px",
-              }}
-            >
-              <div style={{ maxWidth: "320px" }}>
-                <span
-                  style={{
-                    display: "block",
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "#374151",
-                    marginBottom: "6px",
-                  }}
-                >
-                  Default Theme
-                  <select
-                    aria-label="Select option"
-                    value={generalSettings.defaultTheme}
-                    onChange={(e) =>
-                      setGeneralSettings((prev) => ({
-                        ...prev,
-                        defaultTheme: e.target.value,
-                      }))
-                    }
-                    style={{
-                      width: "100%",
-                      padding: "9px 12px",
-                      borderRadius: "8px",
-                      border: "1px solid #D1D5DB",
-                      fontSize: "13px",
-                      background: "#FFFFFF",
-                    }}
-                  >
-                    <option value="Light">Light (Healthcare Standard)</option>
-                    <option value="Dark">Dark Mode</option>
-                    <option value="System">System Preference Match</option>
-                  </select>
-                </span>
-              </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: "12px",
-                }}
-              >
-                {[
-                  {
-                    title: "Compact Table View",
-                    sub: "Reduces padding for high density data rosters",
-                    key: "compactTableView",
-                  },
-                  {
-                    title: "Enable Animations",
-                    sub: "Smooth transitions and interactive micro-animations",
-                    key: "enableAnimations",
-                  },
-                  {
-                    title: "Show Breadcrumb Navigation",
-                    sub: "Displays top contextual trail on all module headers",
-                    key: "showBreadcrumbs",
-                  },
-                  {
-                    title: "Enable Tooltips",
-                    sub: "Shows informative hover tooltips across data tables",
-                    key: "enableTooltips",
-                  },
-                ].map((pref) => (
-                  <div
-                    key={pref.key}
-                    style={{
-                      background: "#F8FAFC",
-                      padding: "12px 14px",
-                      borderRadius: "10px",
-                      border: "1px solid #E2E8F0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 600,
-                          color: "#111827",
-                        }}
-                      >
-                        {pref.title}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#64748B" }}>
-                        {pref.sub}
-                      </div>
-                    </div>
-                    <input
-                      aria-label="Toggle option"
-                      type="checkbox"
-                      checked={Boolean(
-                        generalSettings[
-                          pref.key as keyof typeof generalSettings
-                        ],
-                      )}
-                      onChange={(e) =>
-                        setGeneralSettings((prev) => ({
-                          ...prev,
-                          [pref.key]: e.target.checked,
-                        }))
-                      }
-                      style={{
-                        accentColor: "#0D47A1",
-                        width: "18px",
-                        height: "18px",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ACCORDION 04: Operational Preferences */}
+        {/* ACCORDION 03: Operational Preferences */}
         <div
           style={{
             background: "#FFFFFF",

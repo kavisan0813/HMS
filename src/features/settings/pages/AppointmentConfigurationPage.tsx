@@ -8,7 +8,6 @@ import { QueueTokenSettings } from "../components/appointments/QueueTokenSetting
 import { HolidayCalendar } from "../components/appointments/HolidayCalendar";
 import { AppointmentStatusSettings } from "../components/appointments/AppointmentStatusSettings";
 import { AppointmentAnalyticsCharts } from "../components/appointments/AppointmentAnalyticsCharts";
-import { AppointmentWorkflowPreview } from "../components/appointments/AppointmentWorkflowPreview";
 import { AppointmentSaveToast } from "../components/appointments/AppointmentSaveToast";
 import { useOpdConfiguration } from "../hooks/useOpdConfiguration";
 
@@ -97,9 +96,6 @@ export function AppointmentConfigurationPage() {
 
         {/* SECTION 07: APPOINTMENT ANALYTICS CHARTS */}
         <AppointmentAnalyticsCharts />
-
-        {/* SECTION 08: CONFIGURATION PREVIEW DIAGRAM */}
-        <AppointmentWorkflowPreview />
       </div>
 
       {/* SAVE TOAST */}

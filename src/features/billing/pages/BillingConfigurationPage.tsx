@@ -14,8 +14,8 @@ export function BillingConfigurationPage({ onBack }: { onBack?: () => void }) {
   };
 
   return (
-    <div style={{ padding: "20px", background: "#F1F5F9", minHeight: "100vh" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+    <div style={{ width: "100%" }}>
+      {onBack && (
         <button
           type="button"
           onClick={handleBack}
@@ -25,11 +25,11 @@ export function BillingConfigurationPage({ onBack }: { onBack?: () => void }) {
           <ArrowLeft size={16} />
           Back
         </button>
-        <BillingConfigurationForm
-          initialConfig={configuration}
-          onSave={saveConfiguration}
-        />
-      </div>
+      )}
+      <BillingConfigurationForm
+        initialConfig={configuration}
+        onSave={saveConfiguration}
+      />
     </div>
   );
 }

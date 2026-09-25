@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   DollarSign,
   Printer,
@@ -79,7 +80,24 @@ export function BillingTable({
   onViewPaymentHistory,
   onPrintInvoice,
 }: BillingTableProps) {
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{
+    id: string;
+    top?: number;
+    bottom?: number;
+    right: number;
+    inv: InvoiceRecord;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!menuAnchor) return;
+    const handleClose = () => setMenuAnchor(null);
+    window.addEventListener("scroll", handleClose, true);
+    window.addEventListener("resize", handleClose);
+    return () => {
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("resize", handleClose);
+    };
+  }, [menuAnchor]);
 
   const columns: Column<InvoiceRecord>[] = useMemo(
     () => [
@@ -223,87 +241,43 @@ export function BillingTable({
               </button>
             )}
 
-            <div className="relative">
+            <div>
               <button
+                type="button"
                 aria-label="Action"
-                onClick={() =>
-                  setActiveMenuId(activeMenuId === inv.id ? null : inv.id)
-                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (menuAnchor?.id === inv.id) {
+                    setMenuAnchor(null);
+                  } else {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const showAbove = spaceBelow < 140 && rect.top > 140;
+                    setMenuAnchor({
+                      id: inv.id,
+                      top: showAbove ? undefined : rect.bottom + 4,
+                      bottom: showAbove
+                        ? window.innerHeight - rect.top + 4
+                        : undefined,
+                      right: window.innerWidth - rect.right,
+                      inv,
+                    });
+                  }
+                }}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <MoreVertical size={14} />
               </button>
-
-              {activeMenuId === inv.id && (
-                <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl border border-[#E5E7EB] shadow-lg py-1 z-20 text-left">
-                  <button
-                    onClick={() => {
-                      onViewPaymentHistory?.(inv);
-                      setActiveMenuId(null);
-                    }}
-                    className="w-full px-3 py-2 text-xs text-[#111827] hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
-                  >
-                    <History size={13} className="text-slate-400" />
-                    View Payment History
-                  </button>
-                  {!isAdminReadOnly &&
-                    inv.status?.toUpperCase() !== "READY_FOR_BILLING" &&
-                    inv.status?.toUpperCase() !== "PENDING_BILLING" &&
-                    inv.status?.toUpperCase() !== "PENDING" &&
-                    inv.balance > 0 &&
-                    inv.paymentStatus !== "Cancelled" && (
-                      <button
-                        onClick={() => {
-                          onCollectPaymentClick?.(inv);
-                          setActiveMenuId(null);
-                        }}
-                        className="w-full px-3 py-2 text-xs text-[#009688] hover:bg-teal-50 flex items-center gap-2 cursor-pointer font-medium"
-                      >
-                        <DollarSign size={13} className="text-[#009688]" />
-                        Collect Payment
-                      </button>
-                    )}
-                  <button
-                    onClick={() => {
-                      if (onPrintInvoice) onPrintInvoice(inv);
-                      else onViewInvoiceDetailsClick?.(inv);
-                      setActiveMenuId(null);
-                    }}
-                    className="w-full px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
-                  >
-                    <Printer size={13} className="text-slate-400" />
-                    Print Invoice
-                  </button>
-                  {!isAdminReadOnly &&
-                    inv.paymentStatus !== "Cancelled" &&
-                    inv.paymentStatus !== "Refunded" && (
-                      <button
-                        onClick={() => {
-                          if (onCancelInvoice) onCancelInvoice(inv.id);
-                          setActiveMenuId(null);
-                        }}
-                        className="w-full px-3 py-2 text-xs text-[#EF4444] hover:bg-red-50 flex items-center gap-2 cursor-pointer font-medium"
-                      >
-                        <Ban size={13} className="text-slate-400" />
-                        Cancel Invoice
-                      </button>
-                    )}
-                </div>
-              )}
             </div>
           </div>
         ),
       },
     ],
     [
-      activeMenuId,
+      menuAnchor,
       isAdminReadOnly,
       onGenerateInvoiceClick,
       onViewInvoiceDetailsClick,
-      onViewPaymentHistory,
-      onCollectPaymentClick,
-      onPrintInvoice,
-      onCancelInvoice,
     ],
   );
 
@@ -432,12 +406,89 @@ export function BillingTable({
 
   return (
     <>
-      {activeMenuId && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-10 bg-transparent"
-          onClick={() => setActiveMenuId(null)}
-        />
+      {menuAnchor && (
+        <>
+          <div
+            role="presentation"
+            className="fixed inset-0 z-40 bg-transparent"
+            onClick={() => setMenuAnchor(null)}
+          />
+          {createPortal(
+            <div
+              style={{
+                position: "fixed",
+                ...(menuAnchor.top !== undefined
+                  ? { top: `${menuAnchor.top}px` }
+                  : {}),
+                ...(menuAnchor.bottom !== undefined
+                  ? { bottom: `${menuAnchor.bottom}px` }
+                  : {}),
+                right: `${menuAnchor.right}px`,
+                zIndex: 9999,
+              }}
+              className="w-48 bg-white rounded-xl border border-[#E5E7EB] shadow-xl py-1 text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  onViewPaymentHistory?.(menuAnchor.inv);
+                  setMenuAnchor(null);
+                }}
+                className="w-full px-3 py-2 text-xs text-[#111827] hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+              >
+                <History size={13} className="text-slate-400" />
+                View Payment History
+              </button>
+              {!isAdminReadOnly &&
+                menuAnchor.inv.status?.toUpperCase() !== "READY_FOR_BILLING" &&
+                menuAnchor.inv.status?.toUpperCase() !== "PENDING_BILLING" &&
+                menuAnchor.inv.status?.toUpperCase() !== "PENDING" &&
+                menuAnchor.inv.balance > 0 &&
+                menuAnchor.inv.paymentStatus !== "Cancelled" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onCollectPaymentClick?.(menuAnchor.inv);
+                      setMenuAnchor(null);
+                    }}
+                    className="w-full px-3 py-2 text-xs text-[#009688] hover:bg-teal-50 flex items-center gap-2 cursor-pointer font-medium"
+                  >
+                    <DollarSign size={13} className="text-[#009688]" />
+                    Collect Payment
+                  </button>
+                )}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onPrintInvoice) onPrintInvoice(menuAnchor.inv);
+                  else onViewInvoiceDetailsClick?.(menuAnchor.inv);
+                  setMenuAnchor(null);
+                }}
+                className="w-full px-3 py-2 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+              >
+                <Printer size={13} className="text-slate-400" />
+                Print Invoice
+              </button>
+              {!isAdminReadOnly &&
+                menuAnchor.inv.paymentStatus !== "Cancelled" &&
+                menuAnchor.inv.paymentStatus !== "Refunded" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onCancelInvoice) onCancelInvoice(menuAnchor.inv.id);
+                      setMenuAnchor(null);
+                    }}
+                    className="w-full px-3 py-2 text-xs text-[#EF4444] hover:bg-red-50 flex items-center gap-2 cursor-pointer font-medium"
+                  >
+                    <Ban size={13} className="text-slate-400" />
+                    Cancel Invoice
+                  </button>
+                )}
+            </div>,
+            document.body,
+          )}
+        </>
       )}
       <DataTable<InvoiceRecord>
         data={invoices}

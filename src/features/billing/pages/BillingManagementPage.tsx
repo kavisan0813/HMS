@@ -125,6 +125,11 @@ export function BillingManagementPage({ onBack }: { onBack?: () => void }) {
   const { data: billsData, isLoading: listLoading } = useBillingList(
     isPatient ? undefined : queryParams,
   );
+  const { data: overallBillsData } = useBillingList(
+    isPatient
+      ? undefined
+      : { page: 0, size: 500, sortBy: "createdAt", direction: "desc" },
+  );
   const { data: dashboardData, isLoading: dashboardLoading } =
     useBillingDashboard();
 
@@ -137,11 +142,17 @@ export function BillingManagementPage({ onBack }: { onBack?: () => void }) {
     },
   });
 
-  // Map API bills to InvoiceRecord format
+  // Map API bills to InvoiceRecord format for current filtered view
   const allInvoices = useMemo(() => {
     if (!billsData?.bills) return [];
     return billsData.bills.map(mapBillToInvoice);
   }, [billsData]);
+
+  // Overall invoices for stable KPI stats across tab switching
+  const overallInvoices = useMemo(() => {
+    if (!overallBillsData?.bills) return allInvoices;
+    return overallBillsData.bills.map(mapBillToInvoice);
+  }, [overallBillsData, allInvoices]);
 
   const totalCount = billsData?.totalElements || 0;
 
@@ -239,7 +250,7 @@ export function BillingManagementPage({ onBack }: { onBack?: () => void }) {
 
       <BillingKPICards
         dashboardData={dashboardData}
-        invoices={allInvoices}
+        invoices={overallInvoices}
         isLoading={dashboardLoading}
       />
 

@@ -1,6 +1,6 @@
 import { useRef, useState, lazy, Suspense } from "react";
 import { HospitalInformationPage } from "./HospitalInformationPage";
-import { UserRolesPermissionsPage } from "./UserRolesPermissionsPage";
+// import { UserRolesPermissionsPage } from "./UserRolesPermissionsPage";
 import { AppointmentConfigurationPage } from "./AppointmentConfigurationPage";
 const BillingConfigurationPage = lazy(() =>
   import("../../billing/pages/BillingConfigurationPage").then((m) => ({
@@ -16,7 +16,6 @@ import {
   GeneralSettingsContent,
   type GeneralSettingsContentHandle,
 } from "../components/shell/GeneralSettingsContent";
-import { BottomActionBar } from "../components/shell/BottomActionBar";
 import {
   Building2,
   Calendar,
@@ -25,8 +24,7 @@ import {
   Lock,
   Database,
   Sliders,
-  ShieldCheck,
-  Stethoscope,
+  // ShieldCheck,
 } from "lucide-react";
 
 const RB = "'Roboto', system-ui, sans-serif";
@@ -50,20 +48,13 @@ const QUICK_CONFIG_CARDS = [
     icon: Building2,
     status: "Configured",
   },
-  {
+  /* {
     id: "user-roles",
     title: "User Roles & Permissions",
     description: "RBAC & access control",
     icon: ShieldCheck,
     status: "Active",
-  },
-  {
-    id: "opd-config",
-    title: "OPD & Clinical Configuration",
-    description: "Consultation & queue settings",
-    icon: Stethoscope,
-    status: "Active",
-  },
+  }, */
   {
     id: "appointment-settings",
     title: "Appointment & Scheduling",
@@ -73,14 +64,14 @@ const QUICK_CONFIG_CARDS = [
   },
   {
     id: "billing-config",
-    title: "Billing & Financial Settings",
+    title: "Billing & Financial",
     description: "Invoicing, taxes & payment rules",
     icon: CreditCard,
     status: "Configured",
   },
   {
     id: "notification-settings",
-    title: "Notifications & Messaging",
+    title: "Notifications",
     description: "Templates, SMS & Email alerts",
     icon: Bell,
     status: "Configured",
@@ -107,27 +98,27 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const generalSettingsRef = useRef<GeneralSettingsContentHandle>(null);
 
-  // Quick Configuration Toolbar items
   const handleSave = (message?: string) => {
     setSaveStatus(message ?? "Settings saved successfully!");
-    setTimeout(() => setSaveStatus(null), 3000);
+    setTimeout(() => {
+      setSaveStatus(null);
+    }, 3000);
   };
 
-  // Keep browser click events out of the human-readable status string.
-  const handleButtonSave = () => handleSave();
+  const handleButtonSave = () => {
+    handleSave();
+  };
 
   const handleCancel = () => {
     setActiveMenu("general");
     setSaveStatus(null);
   };
 
+  void handleCancel;
+
   const openResetModal = () => {
     generalSettingsRef.current?.openResetModal();
   };
-
-  const activeTitle =
-    QUICK_CONFIG_CARDS.find((q) => q.id === activeMenu)?.title ||
-    "Settings Workspace";
 
   return (
     <div
@@ -168,9 +159,9 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
             />
           ) : activeMenu === "hospital-info" ? (
             <HospitalInformationPage />
-          ) : activeMenu === "user-roles" ||
+          /* ) : activeMenu === "user-roles" ||
             activeMenu === "roles-permissions" ? (
-            <UserRolesPermissionsPage />
+            <UserRolesPermissionsPage /> */
           ) : activeMenu === "appointment-settings" ||
             activeMenu === "appointments" ? (
             <AppointmentConfigurationPage />
@@ -195,14 +186,11 @@ export function SettingsPage({ onNavigate }: SettingsPageProps) {
         </div>
       </div>
 
-      {/* ─── BOTTOM STICKY ACTION BAR ────────────────────────────────────── */}
-      <BottomActionBar
-        saveStatus={saveStatus}
-        activeTitle={activeTitle}
-        onCancel={handleCancel}
-        onSave={handleButtonSave}
-        onReset={openResetModal}
-      />
+      {saveStatus && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-semibold text-white shadow-lg animate-in fade-in slide-in-from-bottom-2">
+          {saveStatus}
+        </div>
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { LoginProtection } from "../components/security/LoginProtection";
 import { AccessRestrictions } from "../components/security/AccessRestrictions";
 import { SecurityEventsTable } from "../components/security/SecurityEventsTable";
 import { SecurityAnalyticsCharts } from "../components/security/SecurityAnalyticsCharts";
-import { SecurityWorkflowPreview } from "../components/security/SecurityWorkflowPreview";
+
 import { SecuritySaveToast } from "../components/security/SecuritySaveToast";
 
 export function SecuritySettingsPage() {
@@ -66,8 +66,7 @@ export function SecuritySettingsPage() {
         {/* SECTION 07: SECURITY ANALYTICS CHARTS */}
         <SecurityAnalyticsCharts />
 
-        {/* SECTION 08: CONFIGURATION WORKFLOW PREVIEW */}
-        <SecurityWorkflowPreview />
+
       </div>
 
       {/* SAVE TOAST */}

@@ -50,14 +50,10 @@ export async function saveHospitalConfiguration(
 }
 
 export async function uploadHospitalLogo(file: File): Promise<UploadResponse> {
-  return uploadFile(file);
-}
-
-async function uploadFile(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
   const res = await apiClient.post<ApiEnvelope<UploadResponse>>(
-    "/api/v1/upload",
+    "/api/v1/admin/hospital/configuration/logo",
     formData,
   );
   return unwrap<UploadResponse>(res);
@@ -66,7 +62,13 @@ async function uploadFile(file: File): Promise<UploadResponse> {
 export async function uploadHospitalHeaderBanner(
   file: File,
 ): Promise<UploadResponse> {
-  return uploadFile(file);
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiClient.post<ApiEnvelope<UploadResponse>>(
+    "/api/v1/admin/hospital/configuration/header-banner",
+    formData,
+  );
+  return unwrap<UploadResponse>(res);
 }
 
 export function getUploadedFileUrl(result: UploadResponse): string {
@@ -262,8 +264,6 @@ export function mapFormToConfiguration(
 
   return {
     branding: {
-      logoUrl: form.logoUrl || undefined,
-      headerBannerUrl: form.bannerUrl || undefined,
       legalName: form.hospitalName,
       shortName: form.hospitalShortName,
       tagline: form.hospitalTagline || undefined,

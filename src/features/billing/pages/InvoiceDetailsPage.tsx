@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   FileText,
-  ChevronRight,
   Printer,
   DollarSign,
   MoreVertical,
@@ -123,13 +122,13 @@ export function InvoiceDetailsPage() {
   );
   const doctorName = String(
     bRec?.doctorName ||
-      bRec?.doctor_name ||
-      docObj.fullName ||
-      docObj.name ||
-      docObj.doctorName ||
-      bRec?.attendingDoctorName ||
-      bRec?.attendingDoctor ||
-      "N/A",
+    bRec?.doctor_name ||
+    docObj.fullName ||
+    docObj.name ||
+    docObj.doctorName ||
+    bRec?.attendingDoctorName ||
+    bRec?.attendingDoctor ||
+    "N/A",
   );
   const displayInvoiceNo = targetId
     ? targetId.startsWith("BL-")
@@ -220,7 +219,7 @@ export function InvoiceDetailsPage() {
       )}
 
       {/* 1. PAGE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-2xl border border-[#E5E7EB] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <button
             type="button"
@@ -231,30 +230,7 @@ export function InvoiceDetailsPage() {
             <ArrowLeft size={16} />
             Back
           </button>
-          <div
-            className="flex items-center gap-2 text-xs text-[#64748B] mb-1 font-medium"
-            style={{ fontFamily: RB }}
-          >
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate(isPatient ? "/dashboard" : "/billing")}
-            >
-              Home
-            </button>
-            <ChevronRight size={12} />
-            <button
-              type="button"
-              className="hover:text-[#0D47A1] cursor-pointer"
-              onClick={() => navigate(backUrl)}
-            >
-              {isPatient ? "My Bills" : "Billing & Payments"}
-            </button>
-            <ChevronRight size={12} />
-            <span className="text-[#0D47A1] font-semibold">
-              Invoice Details
-            </span>
-          </div>
+
           <div className="flex items-center gap-3">
             <h1
               className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight"
@@ -708,18 +684,18 @@ export function InvoiceDetailsPage() {
               )}
               {(summaryData?.roundOffAmount ?? summaryData?.roundOff ?? 0) !==
                 0 && (
-                <div className="flex justify-between text-slate-500">
-                  <span>Round Off:</span>
-                  <span className="font-semibold">
-                    ₹
-                    {(
-                      summaryData?.roundOffAmount ??
-                      summaryData?.roundOff ??
-                      0
-                    ).toLocaleString()}
-                  </span>
-                </div>
-              )}
+                  <div className="flex justify-between text-slate-500">
+                    <span>Round Off:</span>
+                    <span className="font-semibold">
+                      ₹
+                      {(
+                        summaryData?.roundOffAmount ??
+                        summaryData?.roundOff ??
+                        0
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                )}
               <div className="flex justify-between text-sm font-bold text-[#111827] border-t border-slate-100 pt-2">
                 <span>Grand / Net Total:</span>
                 <span className="text-[#0D47A1]">

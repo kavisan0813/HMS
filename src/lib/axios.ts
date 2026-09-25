@@ -1,8 +1,8 @@
 import { getToken, setToken, removeToken } from "./cookie-token-storage";
 
-export const API_BASE_URL = "https://api.hms.viyaninfo.com";
-// (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
-// "";
+export const API_BASE_URL =
+  (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) ||
+  "";
 
 export interface ApiResponseData<T = unknown> {
   data: T;

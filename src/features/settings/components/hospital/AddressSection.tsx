@@ -1,4 +1,4 @@
-import { MapPin, Globe } from "lucide-react";
+import { MapPin } from "lucide-react";
 import type { HospitalInformationForm } from "../../types/settings.types";
 
 const PP = "'Poppins', system-ui, sans-serif";
@@ -284,8 +284,6 @@ export function AddressSection({ form, onChange }: AddressSectionProps) {
           fontSize: "12px",
         }}
       >
-        <Globe size={16} /> GPS Location Verified:{" "}
-        <strong>34.0522° N, 118.2437° W</strong> (Metropolis Central District)
       </div>
     </div>
   );

@@ -16,7 +16,35 @@ import type {
   OpdWeeklyScheduleDay,
 } from "../types/settings.types";
 
-const EMPTY_SCHEDULE: OpdWeeklySchedule = { weeklySchedule: [] };
+const DEFAULT_OPD_DAYS: OpdWeeklyScheduleDay[] = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+].map((day) => ({
+  dayOfWeek: day,
+  isOpen: day !== "SUNDAY",
+  workingIntervals: [
+    {
+      startTime: "09:00",
+      endTime: "17:00",
+    },
+  ],
+  breaks: [
+    {
+      breakName: "Lunch Break",
+      startTime: "13:00",
+      endTime: "14:00",
+    },
+  ],
+}));
+
+const DEFAULT_SCHEDULE: OpdWeeklySchedule = {
+  weeklySchedule: DEFAULT_OPD_DAYS,
+};
 
 function normalizeScheduleDay(day: OpdWeeklyScheduleDay): OpdWeeklyScheduleDay {
   const raw = day as unknown as Record<string, unknown>;
@@ -32,13 +60,16 @@ function normalizeScheduleDay(day: OpdWeeklyScheduleDay): OpdWeeklyScheduleDay {
 }
 
 function normalizeSchedule(schedule: OpdWeeklySchedule): OpdWeeklySchedule {
+  if (!schedule?.weeklySchedule || schedule.weeklySchedule.length === 0) {
+    return DEFAULT_SCHEDULE;
+  }
   return {
     weeklySchedule: schedule.weeklySchedule.map(normalizeScheduleDay),
   };
 }
 
 export function useOpdConfiguration(year = new Date().getFullYear()) {
-  const [schedule, setSchedule] = useState<OpdWeeklySchedule>(EMPTY_SCHEDULE);
+  const [schedule, setSchedule] = useState<OpdWeeklySchedule>(DEFAULT_SCHEDULE);
   const [holidays, setHolidays] = useState<OpdHoliday[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -76,10 +107,8 @@ export function useOpdConfiguration(year = new Date().getFullYear()) {
           fetchOpdHolidays(year),
         ]);
         if (cancelled) return;
-        if (!cancelled) {
-          setSchedule(normalizeSchedule(scheduleResult));
-          setHolidays(holidayResult);
-        }
+        setSchedule(normalizeSchedule(scheduleResult));
+        setHolidays(holidayResult);
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -87,7 +116,9 @@ export function useOpdConfiguration(year = new Date().getFullYear()) {
           );
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 

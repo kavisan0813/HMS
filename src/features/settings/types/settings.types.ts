@@ -64,7 +64,7 @@ export interface HospitalConfiguration {
 }
 
 export interface HospitalConfigurationPayload {
-  branding?: Partial<HospitalBranding>;
+  branding?: Partial<Omit<HospitalBranding, "logoUrl" | "headerBannerUrl">>;
   contact?: Partial<HospitalContact>;
   address?: Partial<HospitalAddress>;
   operationalDetails?: Partial<HospitalOperationalDetails>;

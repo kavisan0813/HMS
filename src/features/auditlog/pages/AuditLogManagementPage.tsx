@@ -4,9 +4,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
   Database,
   Download,
   Eye,
@@ -1102,13 +1099,6 @@ export function AuditLogManagementPage() {
 
   const currentPage = activeQuery.data?.number ?? page;
   const totalPages = activeQuery.data?.totalPages ?? 0;
-  const canGoNext = Boolean(
-    activeQuery.data &&
-    (activeQuery.data.last === false || currentPage + 1 < totalPages),
-  );
-  const lastUpdated = activeQuery.dataUpdatedAt
-    ? new Date(activeQuery.dataUpdatedAt).toLocaleString()
-    : "—";
 
   if (activeDetailsRecord) {
     return (
@@ -1125,27 +1115,8 @@ export function AuditLogManagementPage() {
       className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#F1F5F9]"
       style={{ fontFamily: RB }}
     >
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-              <span>Hospital</span>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-              <button
-                onClick={() => handleWorkspaceChange("All Logs")}
-                className="hover:text-gray-700"
-              >
-                Audit Logs
-              </button>
-              {!isAllWorkspace && (
-                <>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                  <span className="font-semibold text-gray-800">
-                    {filters.currentWorkspace}
-                  </span>
-                </>
-              )}
-            </div>
             <div className="flex items-center gap-3">
               {!isAllWorkspace && (
                 <button
@@ -1165,7 +1136,7 @@ export function AuditLogManagementPage() {
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">
                   Audit records are loaded directly from the hospital
-                  administration API.
+                  administration.
                 </p>
               </div>
             </div>
@@ -1199,7 +1170,6 @@ export function AuditLogManagementPage() {
             </button>
           </div>
         </div>
-      </div>
 
       <section className="space-y-3">
         {kpiCards.length > 0 ? (
@@ -1522,37 +1492,13 @@ export function AuditLogManagementPage() {
         emptyTitle="No Audit Records Found"
         emptySubtitle="The server returned no records matching the current search query or filters."
         pagination={true}
+        serverPagination={true}
+        page={currentPage + 1}
+        pageSize={PAGE_SIZE}
+        totalPages={totalPages}
+        totalCount={totalElements}
+        onPageChange={(newPage) => setPage(newPage - 1)}
       />
-
-      <footer className="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-gray-200 px-6 py-3 rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
-          <Clock className="w-4 h-4 text-gray-400" />
-          <span>Last loaded: {lastUpdated}</span>
-        </div>
-        <div className="text-xs font-semibold text-gray-700">
-          Page {currentPage + 1}
-          {totalPages ? ` of ${totalPages}` : ""}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((current) => Math.max(0, current - 1))}
-            disabled={page === 0 || activeQuery.isFetching}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((current) => current + 1)}
-            disabled={!canGoNext || activeQuery.isFetching}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-            style={{ backgroundColor: "#0D47A1" }}
-          >
-            Next
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </footer>
     </div>
   );
 }

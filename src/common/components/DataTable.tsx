@@ -43,6 +43,13 @@ export interface DataTableProps<T> {
   initialPageSize?: number;
   pageSizeOptions?: number[];
   totalCount?: number;
+  // Server-side / Controlled Pagination Options
+  page?: number;
+  pageSize?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  serverPagination?: boolean;
   // Custom Styling
   className?: string;
   tableClassName?: string;
@@ -72,6 +79,12 @@ export function DataTable<T>({
   initialPageSize = 10,
   pageSizeOptions = [5, 10, 20, 50],
   totalCount,
+  page,
+  pageSize: propPageSize,
+  totalPages: propTotalPages,
+  onPageChange,
+  onPageSizeChange,
+  serverPagination = false,
   className = "",
   tableClassName = "",
   maxHeightClass = "max-h-140",
@@ -171,16 +184,73 @@ export function DataTable<T>({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
+  const isServer = serverPagination || onPageChange !== undefined;
+  const activePageSize =
+    isServer && propPageSize !== undefined ? propPageSize : pageSize;
+  const activeCurrentPage =
+    isServer && page !== undefined ? page : currentPage;
+
   const totalElements =
     totalCount !== undefined ? totalCount : sortedData.length;
-  const totalPages = Math.ceil(sortedData.length / pageSize) || 1;
-  const safeCurrentPage = currentPage > totalPages ? 1 : currentPage;
+  const totalPages =
+    propTotalPages !== undefined
+      ? propTotalPages
+      : Math.ceil(totalElements / activePageSize) || 1;
+  const safeCurrentPage =
+    activeCurrentPage > totalPages ? 1 : activeCurrentPage;
 
   const paginatedData = useMemo(() => {
     if (!pagination) return sortedData;
-    const startIndex = (safeCurrentPage - 1) * pageSize;
-    return sortedData.slice(startIndex, startIndex + pageSize);
-  }, [sortedData, pagination, safeCurrentPage, pageSize]);
+    if (isServer) return sortedData;
+    const startIndex = (safeCurrentPage - 1) * activePageSize;
+    return sortedData.slice(startIndex, startIndex + activePageSize);
+  }, [sortedData, pagination, isServer, safeCurrentPage, activePageSize]);
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setCurrentPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (s: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(s);
+    } else {
+      setPageSize(s);
+      setCurrentPage(1);
+    }
+  };
+
+  const visiblePages = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (safeCurrentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (safeCurrentPage >= totalPages - 3) {
+      return [
+        1,
+        "...",
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+    return [
+      1,
+      "...",
+      safeCurrentPage - 1,
+      safeCurrentPage,
+      safeCurrentPage + 1,
+      "...",
+      totalPages,
+    ];
+  }, [totalPages, safeCurrentPage]);
 
   return (
     <div
@@ -402,33 +472,32 @@ export function DataTable<T>({
       )}
 
       {/* Pagination Footer */}
-      {pagination && !loading && sortedData.length > 0 && (
+      {pagination && !loading && (isServer ? totalElements > 0 : sortedData.length > 0) && (
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#64748B] border-t border-gray-100">
           <div className="flex items-center gap-3">
             <span>
               Showing{" "}
               <span className="font-bold text-[#111827]">
-                {(safeCurrentPage - 1) * pageSize + 1}
+                {totalElements === 0 ? 0 : (safeCurrentPage - 1) * activePageSize + 1}
               </span>{" "}
               to{" "}
               <span className="font-bold text-[#111827]">
-                {Math.min(safeCurrentPage * pageSize, sortedData.length)}
+                {isServer
+                  ? Math.min((safeCurrentPage - 1) * activePageSize + sortedData.length, totalElements)
+                  : Math.min(safeCurrentPage * activePageSize, sortedData.length)}
               </span>{" "}
               of{" "}
               <span className="font-bold text-[#111827]">
-                {sortedData.length}
+                {totalElements}
               </span>{" "}
-              records (total {totalElements})
+              records
             </span>
             <div className="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-3">
               <span>Rows:</span>
               <select
                 aria-label="Rows per page"
-                value={pageSize}
-                onChange={(e) => {
-                  setPageSize(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
+                value={activePageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 className="bg-white border border-[#E5E7EB] rounded-lg px-2 py-1 font-semibold text-[#111827] outline-none cursor-pointer"
               >
                 {pageSizeOptions.map((opt) => (
@@ -443,30 +512,43 @@ export function DataTable<T>({
           <div className="flex items-center gap-1.5">
             <button
               disabled={safeCurrentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(safeCurrentPage - 1, 1))}
               className="px-3 py-1.5 text-xs text-slate-700 bg-white border border-[#E5E7EB] rounded-lg font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               Previous
             </button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => setCurrentPage(p)}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    safeCurrentPage === p
-                      ? "bg-[#0D47A1] text-white"
-                      : "bg-white border border-[#E5E7EB] text-slate-700 hover:bg-slate-50"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {visiblePages.map((p, idx) => {
+                if (p === "...") {
+                  return (
+                    <span
+                      key={`dots-${idx}`}
+                      className="px-1.5 text-slate-400 font-bold select-none"
+                    >
+                      …
+                    </span>
+                  );
+                }
+                const pageNum = Number(p);
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      safeCurrentPage === pageNum
+                        ? "bg-[#0D47A1] text-white"
+                        : "bg-white border border-[#E5E7EB] text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
             </div>
             <button
               disabled={safeCurrentPage >= totalPages}
               onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                handlePageChange(Math.min(safeCurrentPage + 1, totalPages))
               }
               className="px-3 py-1.5 text-xs text-slate-700 bg-white border border-[#E5E7EB] rounded-lg font-semibold hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >

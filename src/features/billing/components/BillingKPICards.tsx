@@ -108,21 +108,40 @@ export function BillingKPICards({
       )
       .reduce((sum, i) => sum + i.balance, 0);
 
-  const countGenerated = invoices.length;
-  const countPaid = invoices.filter(
-    (i) => String(i.paymentStatus || "").toUpperCase() === "PAID",
-  ).length;
-  const countPending = invoices.filter((i) => {
-    const s = String(i.paymentStatus || "").toUpperCase();
-    return s === "PENDING" || s === "UNPAID" || s === "DRAFT";
-  }).length;
-  const countPartial = invoices.filter((i) => {
-    const s = String(i.paymentStatus || "").toUpperCase();
-    return s === "PARTIALLY PAID" || s === "PARTIALLY_PAID" || s === "PARTIAL";
-  }).length;
-  const countRefunded = invoices.filter(
-    (i) => String(i.paymentStatus || "").toUpperCase() === "REFUNDED",
-  ).length;
+  const countGenerated =
+    dashboardData?.finalized !== undefined
+      ? dashboardData.finalized + (dashboardData.draft || 0)
+      : invoices.length;
+  const countPaid =
+    dashboardData?.paid !== undefined
+      ? dashboardData.paid
+      : invoices.filter(
+          (i) => String(i.paymentStatus || "").toUpperCase() === "PAID",
+        ).length;
+  const countPending =
+    dashboardData?.unpaid !== undefined
+      ? dashboardData.unpaid
+      : invoices.filter((i) => {
+          const s = String(i.paymentStatus || "").toUpperCase();
+          return s === "PENDING" || s === "UNPAID" || s === "DRAFT";
+        }).length;
+  const countPartial =
+    dashboardData?.partiallyPaid !== undefined
+      ? dashboardData.partiallyPaid
+      : invoices.filter((i) => {
+          const s = String(i.paymentStatus || "").toUpperCase();
+          return (
+            s === "PARTIALLY PAID" ||
+            s === "PARTIALLY_PAID" ||
+            s === "PARTIAL"
+          );
+        }).length;
+  const countRefunded =
+    dashboardData?.refunded !== undefined
+      ? dashboardData.refunded
+      : invoices.filter(
+          (i) => String(i.paymentStatus || "").toUpperCase() === "REFUNDED",
+        ).length;
 
   const isReady = !isLoading;
 
