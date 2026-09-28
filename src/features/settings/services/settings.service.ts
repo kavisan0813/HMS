@@ -87,7 +87,7 @@ export function getUploadedFileUrl(result: UploadResponse): string {
     (value): value is string =>
       typeof value === "string" && value.trim().length > 0,
   );
-  if (direct) return direct.trim();
+  if (direct) return normalizeUploadUrl(direct);
 
   // Accept backend upload DTOs that wrap the URL in an arbitrary data object.
   for (const value of Object.values(result)) {
@@ -108,6 +108,30 @@ export function isUsableMediaUrl(value: string | undefined): value is string {
     console.log(err);
     return false;
   }
+}
+
+/**
+ * If the backend returns only a bare filename (e.g. "logo_xxx.png"),
+ * prepend "/uploads/" so the Vite proxy can route to the backend.
+ * Already-absolute URLs or paths starting with "/" are returned as-is.
+ */
+export function normalizeUploadUrl(url: string | undefined): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+
+  // Already an absolute URL or an absolute path — leave it alone
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("data:")
+  ) {
+    return trimmed;
+  }
+
+  // Bare filename → prefix with /uploads/
+  return `/uploads/${trimmed}`;
 }
 
 export async function fetchPrintHeaderPreview(): Promise<PrintHeaderPreview> {
@@ -211,9 +235,9 @@ export function mapConfigurationToForm(
     hospitalTagline: branding.tagline ?? "",
     registrationNumber: branding.registrationNumber ?? "",
     licenseNumber: branding.licenseNumber ?? "",
-    logoUrl: isUsableMediaUrl(branding.logoUrl) ? branding.logoUrl : "",
+    logoUrl: isUsableMediaUrl(branding.logoUrl) ? normalizeUploadUrl(branding.logoUrl) : "",
     bannerUrl: isUsableMediaUrl(branding.headerBannerUrl)
-      ? branding.headerBannerUrl
+      ? normalizeUploadUrl(branding.headerBannerUrl)
       : "",
     primaryPhone: contact.primaryPhone ?? "",
     secondaryPhone: contact.secondaryPhone ?? "",

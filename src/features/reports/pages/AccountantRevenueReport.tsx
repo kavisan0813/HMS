@@ -321,31 +321,18 @@ function AccountantRevenueReportScreen({
       style={{ fontFamily: RB }}
     >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <button
+                type="button"
+                onClick={() => (onBack ? onBack() : window.history.back())}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-all shadow-2xs cursor-pointer mr-1"
+                style={{ fontFamily: PP }}
+              >
+                <ArrowLeft size={14} />
+                Back
+              </button>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                >
-                  Accountant
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Daily Revenue Report
-                </span>
-              </nav>
               <div className="flex items-center gap-3">
                 <h1
                   className="text-2xl font-bold text-[#111827]"
@@ -353,9 +340,6 @@ function AccountantRevenueReportScreen({
                 >
                   Daily Revenue Report
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-                  Accountant Scoped
-                </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
                 Monitor daily revenue, payment collections and billing
@@ -365,15 +349,7 @@ function AccountantRevenueReportScreen({
 
             {/* Header Actions */}
             <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={() => (onBack ? onBack() : window.history.back())}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-all shadow-2xs cursor-pointer mr-1"
-                style={{ fontFamily: PP }}
-              >
-                <ArrowLeft size={14} />
-                Back
-              </button>
+              
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -433,7 +409,6 @@ function AccountantRevenueReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 mt-6">
@@ -577,40 +552,6 @@ function AccountantRevenueReportScreen({
             </div>
           </div>
         </div>
-
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-                setHasError(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate Daily Revenue report state
-          </span>
-        </div>
-
         {/* ERROR STATE */}
         {hasError && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 text-center">
@@ -1275,48 +1216,6 @@ function AccountantRevenueReportScreen({
                     <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
-              </div>
-            </div>
-
-            {/* FINANCIAL ACTIVITY TIMELINE */}
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-sm">
-              <h3
-                className="text-base font-bold text-[#111827] mb-4"
-                style={{ fontFamily: PP }}
-              >
-                Recent Revenue Activity Logs
-              </h3>
-              <div className="space-y-4 relative before:absolute before:inset-0 before:left-3.5 before:w-0.5 before:bg-[#E5E7EB]">
-                {(
-                  [] as Array<{
-                    id: string;
-                    title: string;
-                    time: string;
-                    action?: string;
-                    date?: string;
-                    detail?: string;
-                  }>
-                ).map((act) => (
-                  <div
-                    key={act.id}
-                    className="flex items-start gap-4 relative z-10"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-white border-2 border-[#0D47A1] flex items-center justify-center text-[#0D47A1] shrink-0">
-                      <DollarSign className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="bg-[#F1F5F9] rounded-xl p-3 border border-[#E5E7EB] flex-1 text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-[#111827]">
-                          {act.action}
-                        </span>
-                        <span className="text-[11px] text-[#64748B]">
-                          {act.date} â€¢ {act.time}
-                        </span>
-                      </div>
-                      <p className="text-[#64748B]">{act.detail}</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

@@ -896,27 +896,6 @@ export function DailyRevenueReportScreen({
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Hospital
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Daily Revenue Report
-                </span>
-              </nav>
               <div className="flex items-center gap-3">
                 <h1
                   className="text-2xl font-bold text-[#111827]"

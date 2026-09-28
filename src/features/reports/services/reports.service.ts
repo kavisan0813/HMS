@@ -343,8 +343,7 @@ export async function fetchDailyRevenue(
   filters?: ReportFilters,
 ): Promise<DailyRevenuePoint[]> {
   const qs = buildQuery({
-    fromDate: filters?.fromDate,
-    toDate: filters?.toDate,
+    date: filters?.date,
   });
   const res = await apiClient.get<ApiEnvelope<DailyRevenuePoint[]>>(
     `/api/v1/admin/reports/hospital/revenue/daily${qs}`,
@@ -357,7 +356,14 @@ export async function fetchDailyRevenue(
 export async function fetchDailyRevenueDetails(
   filters?: ReportFilters,
 ): Promise<PaginatedData<DailyRevenueDetail>> {
-  const qs = buildQuery(normalizeReportFilters(filters));
+  const qs = buildQuery({
+    date: filters?.date,
+    paymentMethod: filters?.paymentMethod,
+    departmentId: filters?.departmentId,
+    doctorId: filters?.doctorId,
+    page: filters?.page ?? 0,
+    size: filters?.size ?? 20,
+  });
   const res = await apiClient.get<
     ApiEnvelope<PaginatedData<DailyRevenueDetail>>
   >(`/api/v1/admin/reports/hospital/revenue/daily/details${qs}`);

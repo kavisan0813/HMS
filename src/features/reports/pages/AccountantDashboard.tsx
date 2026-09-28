@@ -600,23 +600,9 @@ export function AccountantReportsDashboardScreen({
       style={{ fontFamily: RB }}
     >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Accountant
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#111827] font-semibold">
-                  Financial Reports Dashboard
-                </span>
-              </nav>
               <div className="flex items-center gap-2">
                 <h1
                   className="text-xl font-bold text-[#111827]"
@@ -624,9 +610,6 @@ export function AccountantReportsDashboardScreen({
                 >
                   Financial Operations & Analytics
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-[#0D47A1] border border-blue-200">
-                  Accountant View
-                </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
                 Comprehensive overview of hospital revenue, collections, payment
@@ -664,7 +647,6 @@ export function AccountantReportsDashboardScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
