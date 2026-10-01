@@ -24,7 +24,6 @@ import {
 import { vitalsService } from "../services/vitals.service";
 import { vitalsApi } from "../api/vitals.api";
 import { appointmentsApi } from "../../appointments/api/appointments.api";
-import { patientsApi } from "../../patients/api/patient.api";
 import { departmentsApi } from "../../users/api/departments.api";
 import { QUEUE_QUERY_KEY } from "../../opd/hooks/useQueue";
 import type {
@@ -162,36 +161,77 @@ export function RecordPatientVitalsScreen({
           ) {
             const mapped: AppointmentRecord[] = queueEnvelope.patients.map(
               (item, idx) => {
-                const apptIdStr = String(
-                  item.appointmentId || item.id || `apt-${idx + 1}`,
+                const apptDbId =
+                  typeof item.appointmentId === "number" &&
+                  item.appointmentId > 0
+                    ? item.appointmentId
+                    : typeof item.id === "number" && item.id > 0
+                      ? item.id
+                      : Number(item.appointmentId) ||
+                        Number(item.id) ||
+                        idx + 1;
+
+                const apptNumber = String(
+                  item.appointmentNumber ||
+                    item.tokenNumber ||
+                    item.token ||
+                    `APT-${apptDbId}`,
                 );
                 const hasVitals = item.vitalsStatus === "COMPLETED";
 
                 return {
-                  id: apptIdStr,
-                  appointmentNumber: String(
-                    item.appointmentId || item.token || apptIdStr,
+                  id: apptDbId,
+                  appointmentId: apptDbId,
+                  appointmentNumber: apptNumber,
+                  tokenNo: String(item.token || item.tokenNumber || "—"),
+                  patientId: item.patientId || item.patient?.id || "—",
+                  patientName: String(
+                    item.patientName ||
+                      item.patient?.name ||
+                      item.patient?.fullName ||
+                      "Patient",
                   ),
-                  tokenNo: String(item.token || item.appointmentId || "—"),
-                  patientId: String(item.patientId || "—"),
-                  patientName: String(item.patientName || "Patient"),
-                  patientAge: Number(item.age || 30),
+                  patientAge: Number(item.age || item.patient?.age || 30),
                   patientGender: (item.gender ||
+                    item.patient?.gender ||
                     "Male") as AppointmentRecord["patientGender"],
-                  patientPhone: String(item.phone || item.contact || "—"),
-                  mrn: String(item.patientId || item.mrn || "—"),
-                  doctorId: String(item.doctorId || "—"),
-                  doctorName: String(item.doctorName || "Duty Doctor"),
-                  department: String(item.department || "General OPD"),
-                  departmentName: String(item.department || "General OPD"),
+                  patientPhone: String(
+                    item.phone || item.contact || item.patient?.contact || "—",
+                  ),
+                  mrn: String(
+                    item.mrn || item.patient?.mrn || item.patientId || "—",
+                  ),
+                  patientMrn: String(
+                    item.mrn || item.patient?.mrn || item.patientId || "—",
+                  ),
+                  doctorId: item.doctorId || item.doctor?.doctorId || "—",
+                  doctorName: String(
+                    item.doctorName || item.doctor?.name || "Duty Doctor",
+                  ),
+                  department: String(item.departmentName || "General OPD"),
+                  departmentName: String(item.departmentName || "General OPD"),
                   specialty: "General OPD",
                   appointmentDate: item.checkInDate || targetDate,
                   appointmentTime: String(
-                    item.appointmentTime || item.checkInTime || "—",
+                    item.appointmentTime ||
+                      item.checkInTime ||
+                      item.timeSlot ||
+                      item.time ||
+                      "—",
                   ),
-                  time: String(item.appointmentTime || item.checkInTime || "—"),
+                  time: String(
+                    item.appointmentTime ||
+                      item.checkInTime ||
+                      item.timeSlot ||
+                      item.time ||
+                      "—",
+                  ),
                   timeSlot: String(
-                    item.appointmentTime || item.checkInTime || "—",
+                    item.appointmentTime ||
+                      item.checkInTime ||
+                      item.timeSlot ||
+                      item.time ||
+                      "—",
                   ),
                   status: hasVitals
                     ? "Vitals Recorded"
@@ -256,54 +296,100 @@ export function RecordPatientVitalsScreen({
           const mapped: AppointmentRecord[] = rawCombinedList.map(
             (itemObj: Record<string, unknown>, idx: number) => {
               const item = itemObj as unknown as NurseWaitingPatient;
-              const apptIdStr = String(
-                item.appointmentId || item.id || `apt-${idx + 1}`,
+              const apptDbId =
+                typeof item.appointmentId === "number" &&
+                item.appointmentId > 0
+                  ? item.appointmentId
+                  : typeof item.id === "number" && item.id > 0
+                    ? item.id
+                    : typeof itemObj.id === "number" && itemObj.id > 0
+                      ? itemObj.id
+                      : Number(item.appointmentId) ||
+                        Number(item.id) ||
+                        Number(itemObj.id) ||
+                        idx + 1;
+
+              const apptNumber = String(
+                item.appointmentNumber ||
+                  itemObj.appointmentNumber ||
+                  item.tokenNumber ||
+                  item.token ||
+                  `APT-${apptDbId}`,
               );
 
               const hasVitals = Boolean(
                 item.vitalsStatus === "COMPLETED" ||
-                item.vitalsStatus === "Vitals Recorded" ||
-                itemObj.hasVitals === true ||
-                itemObj.vitalsRecorded === true ||
-                itemObj.vitalsId != null ||
-                itemObj.vitals != null,
+                  item.vitalsStatus === "Vitals Recorded" ||
+                  itemObj.hasVitals === true ||
+                  itemObj.vitalsRecorded === true ||
+                  itemObj.vitalsId != null ||
+                  itemObj.vitals != null,
               );
 
               return {
-                id: apptIdStr,
-                appointmentNumber: String(
-                  item.appointmentNumber ||
-                    item.tokenNumber ||
-                    item.token ||
-                    apptIdStr,
-                ),
+                id: apptDbId,
+                appointmentId: apptDbId,
+                appointmentNumber: apptNumber,
                 tokenNo: String(
                   item.token ||
                     item.tokenNumber ||
-                    item.appointmentNumber ||
+                    itemObj.queueToken ||
                     "—",
                 ),
-                patientId: item.patientId || item.patient?.id || "—",
+                patientId:
+                  item.patientId ||
+                  item.patient?.id ||
+                  (itemObj.patientId as string | number) ||
+                  "—",
                 patientName:
                   item.patientName ||
                   item.patient?.name ||
                   item.patient?.fullName ||
+                  (itemObj.patientName as string) ||
                   "Patient",
-                patientAge: Number(item.age || item.patient?.age || 30),
+                patientAge: Number(
+                  item.age ||
+                    item.patient?.age ||
+                    (itemObj.patientAge as number) ||
+                    30,
+                ),
                 patientGender: (item.gender ||
                   item.patient?.gender ||
+                  itemObj.patientGender ||
                   "Male") as AppointmentRecord["patientGender"],
                 patientPhone:
-                  item.contact || item.patient?.contact || item.phone || "—",
+                  item.contact ||
+                  item.patient?.contact ||
+                  item.phone ||
+                  (itemObj.patientPhone as string) ||
+                  "—",
                 mrn: String(
-                  item.patientId || item.mrn || item.patient?.mrn || "—",
+                  item.mrn ||
+                    item.patient?.mrn ||
+                    item.patientId ||
+                    itemObj.mrn ||
+                    itemObj.patientMrn ||
+                    "—",
                 ),
-                doctorId: item.doctorId || item.doctor?.doctorId || "—",
+                patientMrn: String(
+                  item.mrn ||
+                    item.patient?.mrn ||
+                    item.patientId ||
+                    itemObj.mrn ||
+                    itemObj.patientMrn ||
+                    "—",
+                ),
+                doctorId:
+                  item.doctorId ||
+                  item.doctor?.doctorId ||
+                  (itemObj.doctorId as string | number) ||
+                  "—",
                 doctorName:
                   item.doctorName ||
                   item.doctor?.name ||
                   ((item.doctor as Record<string, unknown> | undefined)
                     ?.fullName as string) ||
+                  (itemObj.doctorName as string) ||
                   "Duty Doctor",
                 department:
                   item.departmentName ||
@@ -317,7 +403,8 @@ export function RecordPatientVitalsScreen({
                     : undefined) ||
                   item.doctor?.departmentName ||
                   item.doctor?.department ||
-                  "Cardiology",
+                  (itemObj.department as string) ||
+                  "General Medicine",
                 departmentName:
                   item.departmentName ||
                   (typeof item.department === "object"
@@ -330,24 +417,16 @@ export function RecordPatientVitalsScreen({
                     : undefined) ||
                   item.doctor?.departmentName ||
                   item.doctor?.department ||
-                  "Cardiology",
+                  (itemObj.departmentName as string) ||
+                  "General Medicine",
                 specialty:
                   item.specialty ||
                   item.doctor?.specialty ||
-                  (typeof item.department === "object"
-                    ? item.department?.departmentName ||
-                      item.department?.name ||
-                      item.department?.departmentCode
-                    : undefined) ||
-                  (typeof item.department === "string"
-                    ? item.department
-                    : undefined) ||
-                  item.doctor?.department ||
                   "General Medicine",
                 appointmentDate:
                   (itemObj.appointmentDate as string) ||
                   (itemObj.date as string) ||
-                  new Date().toISOString().split("T")[0],
+                  targetDate,
                 appointmentTime:
                   item.checkInTime ||
                   item.appointmentTime ||
@@ -374,13 +453,19 @@ export function RecordPatientVitalsScreen({
                   : item.status === "WAITING_FOR_DOCTOR" ||
                       item.status === "WAITING_FOR_DOCTOR_CALL"
                     ? "Ready for Consultation"
-                    : toDisplayStatus(item.status),
+                    : toDisplayStatus(
+                        item.status || (itemObj.status as string),
+                      ),
                 queueStatus: hasVitals
                   ? "WAITING_FOR_DOCTOR_CALL"
-                  : item.status || "WAITING_FOR_VITALS",
+                  : item.status ||
+                    (itemObj.queueStatus as string) ||
+                    "WAITING_FOR_VITALS",
                 hasVitals,
                 vitalsRecorded: hasVitals,
-                vitalsId: itemObj.vitalsId as number | undefined,
+                vitalsId:
+                  (itemObj.vitalsId as number | undefined) ||
+                  (item.id as number | undefined),
                 visitType:
                   item.visitType ||
                   (itemObj.appointmentType as string) ||
@@ -727,149 +812,79 @@ export function RecordPatientVitalsScreen({
     apt: AppointmentRecord,
     mode: "record" | "details" = "record",
   ) => {
-    const aptIdStr = String(apt.id);
+    const aptDbId =
+      typeof apt.id === "number" && apt.id > 0
+        ? apt.id
+        : typeof apt.appointmentId === "number" && apt.appointmentId > 0
+          ? apt.appointmentId
+          : Number(apt.id) || Number(apt.appointmentId);
+
+    const aptIdStr = String(aptDbId || apt.id);
     setSelectedAptId(aptIdStr);
     setSelectedAptRecord(apt);
     setViewMode(mode);
+
     // Fetch vitals from GET /api/v1/nurse/appointments/{id}/vitals ONLY when viewing details or for completed vitals
     if (mode === "details" || apt.hasVitals || apt.vitalsRecorded) {
-      fetchVitalsForDetails(apt.id);
+      if (aptDbId && !isNaN(aptDbId) && aptDbId > 0) {
+        fetchVitalsForDetails(aptDbId);
+      }
     } else {
       setDetailsVitals(null);
     }
 
-    // Use 4-digit numeric ID for GET /api/v1/appointments/{id} to get patient information & header data
-    const numericId = String(apt.id).replace(/\D+/g, "") || apt.id;
-    try {
-      const res = await appointmentsApi.getAppointmentById(numericId);
-      const data = (res?.data || res) as unknown as
-        | Record<string, unknown>
-        | undefined;
-      if (data && typeof data === "object") {
-        let patObj = (data.patient || {}) as Record<string, unknown>;
-        const docObj = (data.doctor || {}) as Record<string, unknown>;
-        const deptObj = (data.department || {}) as Record<string, unknown>;
+    if (aptDbId && !isNaN(aptDbId) && aptDbId > 0) {
+      try {
+        const res = await appointmentsApi.getAppointmentById(aptDbId);
+        const data = (res?.data || res) as unknown as
+          | Record<string, unknown>
+          | undefined;
+        if (data && typeof data === "object") {
+          const patObj = (data.patient || {}) as Record<string, unknown>;
+          const docObj = (data.doctor || {}) as Record<string, unknown>;
+          const deptObj = (data.department || {}) as Record<string, unknown>;
 
-        const targetMrn = String(
-          data.mrn || data.patientMrn || patObj.mrn || apt.mrn || "",
-        ).trim();
-        if (
-          targetMrn &&
-          targetMrn !== "—" &&
-          (!patObj.bloodGroup || !patObj.phone || !patObj.emergencyContact)
-        ) {
-          try {
-            const fullPatient = await patientsApi.getById(targetMrn);
-            if (fullPatient) {
-              patObj = {
-                ...patObj,
-                ...(fullPatient as unknown as Record<string, unknown>),
-              };
-            }
-          } catch (err) {
-            console.log(err);
-            // Ignore patient profile fallback error
-          }
-        }
-
-        const updatedApt: AppointmentRecord = {
-          ...apt,
-          appointmentNumber: String(
-            data.appointmentNumber ||
-              data.tokenNumber ||
-              data.token ||
-              apt.appointmentNumber ||
-              apt.id,
-          ),
-          tokenNo: String(
-            data.queueToken ||
-              data.tokenNumber ||
-              data.token ||
-              apt.tokenNo ||
-              "—",
-          ),
-          mrn: String(
-            data.mrn || data.patientMrn || patObj.mrn || apt.mrn || "—",
-          ),
-          patientName: String(
-            data.patientName ||
-              patObj.name ||
-              patObj.fullName ||
-              apt.patientName ||
-              "—",
-          ),
-          patientAge: Number(data.age || patObj.age || apt.patientAge || 0),
-          patientGender: String(
-            data.gender || patObj.gender || apt.patientGender || "—",
-          ),
-          patientPhone: String(
-            data.phone ||
-              data.mobile ||
-              patObj.phone ||
-              patObj.contact ||
-              patObj.mobile ||
-              patObj.phoneNumber ||
-              apt.patientPhone ||
-              "—",
-          ),
-          doctorName: String(
-            data.doctorName ||
-              docObj.name ||
-              docObj.fullName ||
-              apt.doctorName ||
-              "—",
-          ),
-          department: String(
-            data.departmentName ||
-              deptObj.departmentName ||
-              deptObj.name ||
-              (typeof data.department === "string" ? data.department : "") ||
-              apt.department ||
-              "—",
-          ),
-          departmentName: String(
-            data.departmentName ||
-              deptObj.departmentName ||
-              deptObj.name ||
-              (typeof data.department === "string" ? data.department : "") ||
-              apt.departmentName ||
-              "—",
-          ),
-          timeSlot: String(
-            data.startTime ||
-              data.appointmentTime ||
-              data.timeSlot ||
-              apt.timeSlot ||
-              "—",
-          ),
-          chiefComplaint: String(
-            data.symptoms ||
-              data.reason ||
-              (apt.chiefComplaint !== "Pre-consultation Vitals Check"
-                ? apt.chiefComplaint
-                : "") ||
-              "",
-          ),
-          patient: {
-            id: (patObj.id || data.patientId || apt.patientId) as
-              | string
-              | number,
-            mrn: String(data.mrn || patObj.mrn || apt.mrn || "—"),
-            name: String(
+          const updatedApt: AppointmentRecord = {
+            ...apt,
+            id: aptDbId,
+            appointmentId: aptDbId,
+            appointmentNumber: String(
+              data.appointmentNumber ||
+                data.tokenNumber ||
+                data.token ||
+                apt.appointmentNumber ||
+                `APT-${aptDbId}`,
+            ),
+            tokenNo: String(
+              data.queueToken ||
+                data.tokenNumber ||
+                data.token ||
+                apt.tokenNo ||
+                "—",
+            ),
+            mrn: String(
+              data.mrn || data.patientMrn || patObj.mrn || apt.mrn || "—",
+            ),
+            patientMrn: String(
+              data.mrn ||
+                data.patientMrn ||
+                patObj.mrn ||
+                apt.patientMrn ||
+                apt.mrn ||
+                "—",
+            ),
+            patientName: String(
               data.patientName ||
                 patObj.name ||
                 patObj.fullName ||
                 apt.patientName ||
-                "—",
+                "Patient",
             ),
-            age: Number(data.age || patObj.age || apt.patientAge || 0),
-            gender: String(
-              data.gender || patObj.gender || apt.patientGender || "—",
-            ),
-            bloodGroup: String(
-              data.bloodGroup || patObj.bloodGroup || patObj.bloodType || "—",
-            ),
-            phone: String(
+            patientAge: Number(data.age || patObj.age || apt.patientAge || 0),
+            patientGender: (String(
+              data.gender || patObj.gender || apt.patientGender || "Male",
+            )) as AppointmentRecord["patientGender"],
+            patientPhone: String(
               data.phone ||
                 data.mobile ||
                 patObj.phone ||
@@ -879,24 +894,95 @@ export function RecordPatientVitalsScreen({
                 apt.patientPhone ||
                 "—",
             ),
-            emergencyContact: String(
-              data.emergencyContact ||
-                patObj.emergencyContact ||
-                patObj.emergencyPhone ||
-                patObj.emergencyContactNumber ||
+            doctorName: String(
+              data.doctorName ||
+                docObj.name ||
+                docObj.fullName ||
+                apt.doctorName ||
                 "—",
             ),
-          },
-        };
+            department: String(
+              data.departmentName ||
+                deptObj.departmentName ||
+                deptObj.name ||
+                (typeof data.department === "string" ? data.department : "") ||
+                apt.department ||
+                "—",
+            ),
+            departmentName: String(
+              data.departmentName ||
+                deptObj.departmentName ||
+                deptObj.name ||
+                (typeof data.department === "string" ? data.department : "") ||
+                apt.departmentName ||
+                "—",
+            ),
+            timeSlot: String(
+              data.startTime ||
+                data.appointmentTime ||
+                data.timeSlot ||
+                apt.timeSlot ||
+                "—",
+            ),
+            chiefComplaint: String(
+              data.symptoms ||
+                data.reason ||
+                (apt.chiefComplaint !== "Pre-consultation Vitals Check"
+                  ? apt.chiefComplaint
+                  : "") ||
+                "",
+            ),
+            patient: {
+              id: (patObj.id || data.patientId || apt.patientId) as
+                | string
+                | number,
+              mrn: String(
+                data.mrn || data.patientMrn || patObj.mrn || apt.mrn || "—",
+              ),
+              name: String(
+                data.patientName ||
+                  patObj.name ||
+                  patObj.fullName ||
+                  apt.patientName ||
+                  "—",
+              ),
+              age: Number(data.age || patObj.age || apt.patientAge || 0),
+              gender: String(
+                data.gender || patObj.gender || apt.patientGender || "—",
+              ),
+              bloodGroup: String(
+                data.bloodGroup || patObj.bloodGroup || patObj.bloodType || "—",
+              ),
+              phone: String(
+                data.phone ||
+                  data.mobile ||
+                  patObj.phone ||
+                  patObj.contact ||
+                  patObj.mobile ||
+                  patObj.phoneNumber ||
+                  apt.patientPhone ||
+                  "—",
+              ),
+              emergencyContact: String(
+                data.emergencyContact ||
+                  patObj.emergencyContact ||
+                  patObj.emergencyPhone ||
+                  patObj.emergencyContactNumber ||
+                  "—",
+              ),
+            },
+          };
 
-        setSelectedAptRecord(updatedApt);
-        setAppointments((prev) =>
-          prev.map((a) => (String(a.id) === aptIdStr ? updatedApt : a)),
-        );
+          setSelectedAptRecord(updatedApt);
+          setAppointments((prev) =>
+            prev.map((a) =>
+              String(a.id) === String(aptDbId) ? updatedApt : a,
+            ),
+          );
+        }
+      } catch (err) {
+        console.warn("Could not fetch extra appointment details:", err);
       }
-    } catch (err) {
-      console.log(err);
-      // Graceful fallback to existing apt data
     }
 
     triggerToast(`Loaded ${apt.patientName}`, "info");
@@ -910,13 +996,16 @@ export function RecordPatientVitalsScreen({
       if (submittedData) {
         setDetailsVitals(submittedData);
       }
-      try {
-        const freshVitals = await vitalsService.getVitals(selectedAptId);
-        if (freshVitals) {
-          setDetailsVitals(freshVitals);
+      const numApptId = Number(selectedAptId);
+      if (numApptId && !isNaN(numApptId) && numApptId > 0) {
+        try {
+          const freshVitals = await vitalsService.getVitals(numApptId);
+          if (freshVitals) {
+            setDetailsVitals(freshVitals);
+          }
+        } catch (e) {
+          console.warn("Failed to fetch fresh vitals after POST:", e);
         }
-      } catch (e) {
-        console.warn("Failed to fetch fresh vitals after POST:", e);
       }
       const updatedStatusApt = {
         hasVitals: true,

@@ -28,11 +28,11 @@ const unwrap = <T>(body: ApiEnvelope<T> | T): T => {
 
 export function extractNumericAppointmentId(
   id: string | number,
-): number | string {
-  if (typeof id === "number") return id;
-  const str = String(id).trim();
-  if (/^\d+$/.test(str)) return Number(str);
-  return id;
+): number {
+  if (typeof id === "number" && !isNaN(id) && id > 0) return id;
+  const num = Number(id);
+  if (!isNaN(num) && num > 0) return num;
+  throw new Error(`Invalid numeric appointmentId: ${id}`);
 }
 
 export const vitalsApi = {

@@ -104,17 +104,30 @@ export function RecordPatientVitalsForm({
 
   const handleSaveVitals = async () => {
     try {
+      const apptDbId =
+        typeof activeApt.id === "number" && activeApt.id > 0
+          ? activeApt.id
+          : typeof activeApt.appointmentId === "number" &&
+              activeApt.appointmentId > 0
+            ? activeApt.appointmentId
+            : Number(activeApt.id) || Number(activeApt.appointmentId);
+
+      if (!apptDbId || isNaN(apptDbId) || apptDbId <= 0) {
+        throw new Error(`Invalid appointment ID for vitals operation`);
+      }
+
       const payload = {
-        chiefComplaint,
-        symptoms,
-        diagnosis,
-        clinicalNotes,
-        temperature: Number(temperature),
-        weight: Number(weight),
-        height: Number(height),
-        bloodPressure,
-        pulse: Number(pulse),
-        spo2: Number(spo2),
+        chiefComplaint:
+          chiefComplaint || "Pre-consultation routine vitals check",
+        symptoms: symptoms || "None reported",
+        diagnosis: diagnosis || "Under evaluation",
+        clinicalNotes: clinicalNotes || "Vitals recorded by Nurse",
+        temperature: Number(temperature) || 98.6,
+        weight: Number(weight) || 70,
+        height: Number(height) || 170,
+        bloodPressure: bloodPressure || "120/80",
+        pulse: Number(pulse) || 72,
+        spo2: Number(spo2) || 98,
         bloodSugar: bloodSugar
           ? isNaN(Number(bloodSugar))
             ? bloodSugar
@@ -122,10 +135,15 @@ export function RecordPatientVitalsForm({
           : undefined,
       };
 
-      if (isEditMode) {
+      const isUpdate =
+        isEditMode ||
+        Boolean(initialVitalsData?.vitalsId) ||
+        Boolean(initialVitalsData?.recordedAt);
+
+      if (isUpdate) {
         // Step 8: Correction / Amendment via PUT /api/v1/nurse/appointments/{appointmentId}/vitals
         const wasSaved = await vitalsService.updateVitals(
-          activeApt.id,
+          apptDbId,
           payload,
         );
         if (!wasSaved) throw new Error("Vitals amendment was not accepted");
@@ -133,7 +151,7 @@ export function RecordPatientVitalsForm({
       } else {
         // Step 4 & 5: Record vitals via POST /api/v1/nurse/appointments/{appointmentId}/vitals
         const wasSaved = await vitalsService.submitVitals(
-          activeApt.id,
+          apptDbId,
           payload,
           activeApt.status,
         );

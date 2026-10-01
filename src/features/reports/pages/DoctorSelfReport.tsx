@@ -460,7 +460,7 @@ export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
     currentUser?.departmentName ||
     "Clinical Consultation / Outpatient";
   const doctorSpecialization =
-    currentUser?.specialization ||
+    ((currentUser as unknown as Record<string, unknown>)?.specialization as string) ||
     "General Medicine & Clinical Practice";
   const doctorStaffId = currentUser?.id ? `DOC-${currentUser.id}` : "DOC-2026-MED";
 
@@ -1738,5 +1738,6 @@ export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

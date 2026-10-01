@@ -14,8 +14,15 @@ export const vitalsService = {
   async getVitals(
     appointmentId: string | number,
   ): Promise<RecordedVitalsData | null> {
+    const numId =
+      typeof appointmentId === "number"
+        ? appointmentId
+        : Number(appointmentId);
+    if (!numId || isNaN(numId) || numId <= 0) {
+      return null;
+    }
     try {
-      const res = await vitalsApi.getVitals(appointmentId);
+      const res = await vitalsApi.getVitals(numId);
       if (!res?.success || !res.data) return null;
       const d = res.data;
 
@@ -336,7 +343,15 @@ export const vitalsService = {
       };
     }
 
-    const res = await vitalsApi.recordVitals(appointmentId, payload);
+    const numApptId =
+      typeof appointmentId === "number"
+        ? appointmentId
+        : Number(appointmentId);
+    if (!numApptId || isNaN(numApptId) || numApptId <= 0) {
+      throw new Error(`Invalid numeric appointmentId: ${appointmentId}`);
+    }
+
+    const res = await vitalsApi.recordVitals(numApptId, payload);
     if (res?.success !== false) {
       // Transition appointment status to WAITING_FOR_DOCTOR after vitals are recorded
       if (
@@ -346,7 +361,7 @@ export const vitalsService = {
       ) {
         try {
           await appointmentsApi.updateAppointmentStatus(
-            appointmentId,
+            numApptId,
             "WAITING_FOR_DOCTOR",
           );
         } catch (statusErr) {
@@ -380,6 +395,14 @@ export const vitalsService = {
           notes?: string;
         }),
   ): Promise<boolean> {
+    const numApptId =
+      typeof appointmentId === "number"
+        ? appointmentId
+        : Number(appointmentId);
+    if (!numApptId || isNaN(numApptId) || numApptId <= 0) {
+      throw new Error(`Invalid numeric appointmentId: ${appointmentId}`);
+    }
+
     let payload: NurseVitalsPayload;
 
     if (
@@ -447,7 +470,7 @@ export const vitalsService = {
       };
     }
 
-    const res = await vitalsApi.updateVitals(appointmentId, payload);
+    const res = await vitalsApi.updateVitals(numApptId, payload);
     return res?.success !== false;
   },
 };

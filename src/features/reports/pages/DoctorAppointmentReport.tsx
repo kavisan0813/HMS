@@ -1,4 +1,5 @@
-import React, { useReducer, useMemo, useTransition } from "react";
+import React, { useReducer, useMemo, useTransition, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Calendar,
   Download,
@@ -24,6 +25,11 @@ import {
   useDoctorSelfDailyAppointmentRegister,
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import { ROUTES } from "../../../app/routes/routes";
+import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useAuthStore } from "../../auth/store/auth.store";
 
 import {
   AreaChart,
@@ -100,6 +106,39 @@ export interface DoctorDailyAppointmentRecord {
   visitType: string;
   status: string;
   consultationStatus: string;
+}
+
+function formatDateDDMMYYYY(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr;
+}
+
+function formatDateTimeDDMMYYYY(date: Date = new Date()): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const strHours = String(hours).padStart(2, "0");
+  return `${day}-${month}-${year} ${strHours}:${minutes} ${ampm}`;
 }
 
 const getOffsetDateStr = (daysAgo: number): string => {
@@ -255,10 +294,72 @@ export function DoctorDailyAppointmentReportScreen({
   const [isPending, startTransition] = useTransition();
   const isLoading = isPending || showLoadingDemo;
 
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { logoUrl } = useHospitalBranding();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const effectiveHospitalName = "Safe Hands Hospital";
+
+  const doctorName =
+    user?.fullName || user?.name ? `Dr. ${user.fullName || user.name}` : "Dr. On Duty";
+  const doctorDept =
+    (user as { department?: string; departmentName?: string; specialization?: string })?.department ||
+    (user as { department?: string; departmentName?: string; specialization?: string })?.departmentName ||
+    (user as { department?: string; departmentName?: string; specialization?: string })?.specialization ||
+    "General Medicine / OPD";
+
+  const handleViewPatient = (item: DoctorDailyAppointmentRecord) => {
+    if (item.mrn) {
+      navigate(ROUTES.PATIENT_PROFILE.replace(":mrn", item.mrn));
+    } else {
+      navigate(ROUTES.DOCTOR_PATIENTS);
+    }
+  };
+
+  const handleViewConsultation = (item: DoctorDailyAppointmentRecord) => {
+    if (item.id) {
+      navigate(ROUTES.DOCTOR_CONSULTATION_ID.replace(":consultationId", item.id));
+    } else {
+      navigate(ROUTES.DOCTOR_CONSULTATION);
+    }
+  };
+
+  const handlePrintSlip = (item: DoctorDailyAppointmentRecord) => {
+    downloadAppointmentSlipPdf({
+      appointmentNumber: item.id,
+      mrn: item.mrn,
+      patientName: item.patientName,
+      appointmentDate: item.appointmentDate,
+      time: item.appointmentTime,
+      visitType: item.visitType,
+      status: item.status,
+      doctorName: doctorName,
+      department: doctorDept,
+    });
+  };
+
+  const handleExportRegister = () => {
+    exportDataToCsv(
+      `Doctor_Appointment_Register_${new Date().toISOString().slice(0, 10)}.csv`,
+      filteredAppointments.map((a, idx) => ({
+        "S.No": idx + 1,
+        "Appointment ID": a.id,
+        "Patient Name": a.patientName,
+        MRN: a.mrn,
+        "Appt Date": a.appointmentDate,
+        "Appt Time": a.appointmentTime,
+        "Visit Type": a.visitType,
+        Status: a.status,
+        "Consultation Status": a.consultationStatus,
+      })),
+    );
+  };
+
   // React Query Hooks for Doctor Personal Practice Reports
   const { refetch: refetchDash } = useDoctorSelfDailyAppointmentsDashboard();
   const { data: registerData, refetch: refetchRegister } =
-    useDoctorSelfDailyAppointmentRegister({ size: 50 });
+    useDoctorSelfDailyAppointmentRegister({ size: 200 });
 
   const handlePresetDateChange = (preset: string) => {
     setDateRange(preset);
@@ -284,9 +385,30 @@ export function DoctorDailyAppointmentReportScreen({
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  const handleExportAllCsv = () => {
-    const recordsToExport = filteredAppointments.map((rec) => ({
-      Section: "DOCTOR APPOINTMENT REPORT",
+  const handleExportCsv = () => {
+    const dataset = filteredAppointments;
+    const todayDateStr = new Date().toISOString().slice(0, 10);
+    const filename = `doctor_daily_appointment_report_${startDate || todayDateStr}.csv`;
+
+    if (dataset.length === 0) {
+      exportDataToCsv(filename, [
+        {
+          "S.No": "",
+          "Appointment ID": "",
+          "Patient Name": "No appointment records found for the selected date.",
+          MRN: "",
+          "Appointment Date": "",
+          "Appointment Time": "",
+          "Visit Type": "",
+          Status: "",
+          "Consultation Status": "",
+        },
+      ]);
+      return;
+    }
+
+    const recordsToExport = dataset.map((rec, idx) => ({
+      "S.No": idx + 1,
       "Appointment ID": rec.id,
       "Patient Name": rec.patientName,
       MRN: rec.mrn,
@@ -294,12 +416,10 @@ export function DoctorDailyAppointmentReportScreen({
       "Appointment Time": rec.appointmentTime,
       "Visit Type": rec.visitType,
       Status: rec.status,
+      "Consultation Status": rec.consultationStatus,
     }));
 
-    exportDataToCsv(
-      `Doctor_Daily_Appointment_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport,
-    );
+    exportDataToCsv(filename, recordsToExport);
   };
 
   const handleResetFilters = () => {
@@ -541,11 +661,274 @@ export function DoctorDailyAppointmentReportScreen({
   }, [filteredAppointments]);
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
-      {/* Top Header Section */}
+    <>
+      {/* ─── PRINT-SPECIFIC CSS RULES ─── */}
+      <style>{`
+        @media screen {
+          .doctor-appt-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+
+          html, body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Hide everything in normal screen UI when printing */
+          .doctor-appt-screen-ui,
+          .no-print,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          input,
+          select {
+            display: none !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .doctor-appt-print-only,
+          .doctor-appt-print-only * {
+            visibility: visible !important;
+          }
+
+          .doctor-appt-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .doctor-appt-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .doctor-appt-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .doctor-appt-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .doctor-appt-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .doctor-appt-print-table th,
+          .doctor-appt-print-table td {
+            word-break: break-word !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="doctor-appt-print-only font-sans">
+        {/* A. HOSPITAL HEADER */}
+        <div className="border-b-2 border-slate-800 pb-3 mb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                  {effectiveHospitalName}
+                </h1>
+                <p className="text-[10px] text-slate-600 font-medium leading-tight">
+                  Hospital Management &amp; Clinical Information System
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wider">
+                DAILY APPOINTMENT REPORT
+              </h2>
+              <p className="text-[11px] text-[#0D47A1] font-bold">
+                Doctor Access Scoped
+              </p>
+            </div>
+          </div>
+
+          {/* Metadata Grid */}
+          <div className="mt-3 grid grid-cols-4 gap-2 text-[10px] bg-slate-50 border border-slate-200 rounded p-2 text-slate-800">
+            <div>
+              <span className="font-bold text-slate-600">Doctor:</span>{" "}
+              <span className="font-semibold">{doctorName}</span>
+            </div>
+            <div>
+              <span className="font-bold text-slate-600">Department:</span>{" "}
+              <span className="font-semibold">{doctorDept}</span>
+            </div>
+            <div>
+              <span className="font-bold text-slate-600">Report Date:</span>{" "}
+              <span className="font-semibold">
+                {dateRange} ({startDate === endDate ? formatDateDDMMYYYY(startDate) : `${formatDateDDMMYYYY(startDate)} to ${formatDateDDMMYYYY(endDate)}`})
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-slate-600">Generated On:</span>{" "}
+              <span className="font-semibold">{formatDateTimeDDMMYYYY(new Date())}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* B. SUMMARY SECTION */}
+        <div className="mb-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-1.5 pb-1 border-b border-slate-200">
+            APPOINTMENT SUMMARY
+          </h3>
+          <table className="w-full text-left border-collapse text-[10px] border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold uppercase text-[9px]">
+                <th className="p-1.5 border-r border-slate-300">Total Appointments</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">Completed</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">In Progress / Pending</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">Cancelled</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">No Show</th>
+                <th className="p-1.5 text-center">Follow-ups</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 font-semibold text-slate-900">
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-bold text-[#0D47A1]">
+                  {kpi.totalAppointments}
+                </td>
+                <td className="p-1.5 border-r border-slate-300 text-center font-bold text-emerald-600">
+                  {kpi.completedCount}
+                </td>
+                <td className="p-1.5 border-r border-slate-300 text-center font-bold text-amber-600">
+                  {kpi.pendingCount}
+                </td>
+                <td className="p-1.5 border-r border-slate-300 text-center font-bold text-red-600">
+                  {kpi.cancelledCount}
+                </td>
+                <td className="p-1.5 border-r border-slate-300 text-center font-bold text-slate-700">
+                  {kpi.noShowCount}
+                </td>
+                <td className="p-1.5 text-center font-bold text-teal-600">
+                  {kpi.followUpCount}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* C. FULL APPOINTMENT DETAILS TABLE */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-200">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+              FULL APPOINTMENT DETAILS
+            </h3>
+            <span className="text-[10px] text-slate-600 font-semibold">
+              Total Records: {filteredAppointments.length}
+            </span>
+          </div>
+          <table className="doctor-appt-print-table w-full text-left border-collapse text-[9.5px] border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase text-[9px]">
+                <th className="p-1.5 border-r border-slate-300 w-8 text-center">S.No</th>
+                <th className="p-1.5 border-r border-slate-300 font-mono">Appointment No.</th>
+                <th className="p-1.5 border-r border-slate-300">Time</th>
+                <th className="p-1.5 border-r border-slate-300">Patient Name</th>
+                <th className="p-1.5 border-r border-slate-300 font-mono">MRN</th>
+                <th className="p-1.5 border-r border-slate-300">Visit Type</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">Status</th>
+                <th className="p-1.5 text-center">Consultation Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredAppointments.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-4 text-center text-slate-500 italic">
+                    No appointment records found for the selected date.
+                  </td>
+                </tr>
+              ) : (
+                filteredAppointments.map((rec, idx) => (
+                  <tr key={rec.id || idx} className="border-b border-slate-200">
+                    <td className="p-1.5 border-r border-slate-300 text-center font-medium text-slate-600">
+                      {idx + 1}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-mono text-[9px] font-bold text-[#0D47A1]">
+                      {rec.id}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 text-slate-700 font-medium whitespace-nowrap">
+                      {rec.appointmentTime}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-semibold text-slate-900">
+                      {rec.patientName}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-mono text-[9px] text-slate-600">
+                      {rec.mrn}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-medium text-slate-800">
+                      {rec.visitType}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 text-center">
+                      <span className="font-semibold text-slate-800">
+                        {rec.status}
+                      </span>
+                    </td>
+                    <td className="p-1.5 text-center text-slate-700">
+                      {rec.consultationStatus}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* D. FOOTER */}
+        <div className="mt-6 pt-3 border-t border-slate-300 flex items-center justify-between text-[9px] text-slate-500">
+          <div>Generated from Safe Hands HMS</div>
+          <div>Generated on: {formatDateTimeDDMMYYYY(new Date())}</div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI CONTAINER ─── */}
+      <div
+        className="doctor-appt-screen-ui no-print min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
+        {/* Top Header Section */}
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
@@ -603,22 +986,12 @@ export function DoctorDailyAppointmentReportScreen({
 
               <button
                 onClick={handleRefresh}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
                 />
                 <span>Refresh</span>
-              </button>
-
-              <button
-                onClick={() =>
-                  alert("Exporting Doctor Appointment Report (PDF)...")
-                }
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export PDF</span>
               </button>
 
               <button
@@ -630,11 +1003,11 @@ export function DoctorDailyAppointmentReportScreen({
               </button>
 
               <button
-                onClick={handleExportAllCsv}
+                onClick={handleExportCsv}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-slate-50 transition shadow-sm cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-600" />
-                <span>Export CSV for All</span>
+                <span>Export CSV</span>
               </button>
             </div>
           </div>
@@ -1353,10 +1726,8 @@ export function DoctorDailyAppointmentReportScreen({
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    alert("Exporting Appointment Register (CSV)...")
-                  }
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
+                  onClick={handleExportRegister}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
                   <span>Export Register</span>
@@ -1397,13 +1768,31 @@ export function DoctorDailyAppointmentReportScreen({
                           className="hover:bg-slate-50 transition-colors"
                         >
                           <td className="py-3.5 px-4 font-bold text-[#0D47A1]">
-                            {item.id}
+                            <button
+                              onClick={() => handleViewConsultation(item)}
+                              className="hover:underline text-left cursor-pointer font-bold text-[#0D47A1]"
+                              title="Start / View Consultation"
+                            >
+                              {item.id}
+                            </button>
                           </td>
                           <td className="py-3.5 px-4 font-bold text-[#111827]">
-                            {item.patientName}
+                            <button
+                              onClick={() => handleViewPatient(item)}
+                              className="hover:underline text-left cursor-pointer font-bold text-[#111827]"
+                              title="View Patient Profile"
+                            >
+                              {item.patientName}
+                            </button>
                           </td>
                           <td className="py-3.5 px-4 font-mono font-semibold text-[#0D47A1]">
-                            {item.mrn}
+                            <button
+                              onClick={() => handleViewPatient(item)}
+                              className="hover:underline text-left cursor-pointer font-mono font-semibold text-[#0D47A1]"
+                              title="View Patient Profile"
+                            >
+                              {item.mrn}
+                            </button>
                           </td>
                           <td className="py-3.5 px-4 text-[#64748B]">
                             {item.appointmentDate}
@@ -1427,31 +1816,23 @@ export function DoctorDailyAppointmentReportScreen({
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button
-                                onClick={() =>
-                                  alert(`Viewing patient ${item.patientName}`)
-                                }
-                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
-                                title="View Patient"
+                                onClick={() => handleViewPatient(item)}
+                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                                title="View Patient Profile"
                               >
                                 <Users className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() =>
-                                  alert(
-                                    `Viewing consultation for ${item.patientName}`,
-                                  )
-                                }
-                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition"
-                                title="View Consultation"
+                                onClick={() => handleViewConsultation(item)}
+                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition cursor-pointer"
+                                title="Start / View Consultation"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() =>
-                                  alert(`Printing summary for ${item.id}`)
-                                }
-                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
-                                title="Print Summary"
+                                onClick={() => handlePrintSlip(item)}
+                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                                title="Print Appointment Slip"
                               >
                                 <Printer className="w-4 h-4" />
                               </button>
@@ -1514,5 +1895,6 @@ export function DoctorDailyAppointmentReportScreen({
         </div>
       </div>
     </div>
+    </>
   );
 }
