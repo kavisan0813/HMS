@@ -21,6 +21,16 @@ export function useAppointments(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const doctorId = params?.doctorId;
+  const patientId = params?.patientId;
+  const mrn = params?.mrn;
+  const status = params?.status;
+  const fromDate = params?.fromDate;
+  const toDate = params?.toDate;
+  const page = params?.page;
+  const size = params?.size;
+  const sort = params?.sort;
+
   useEffect(() => {
     let active = true;
 
@@ -33,29 +43,29 @@ export function useAppointments(
 
         if (roleUpper === "DOCTOR") {
           items = await appointmentService.listDoctorAppointments(
-            params?.doctorId,
+            doctorId,
             date,
-            params?.status,
+            status,
           );
         } else if (
           roleUpper === "PATIENT" &&
-          (params?.patientId || params?.mrn)
+          (patientId || mrn)
         ) {
           items = await appointmentService.listPatientAppointments(
-            params.patientId || params.mrn || "",
+            patientId || mrn || "",
           );
         } else {
           items = await appointmentService.listAppointments({
-            doctorId: params?.doctorId,
-            patientId: params?.patientId,
-            mrn: params?.mrn,
-            date: date,
-            fromDate: params?.fromDate,
-            toDate: params?.toDate,
-            status: params?.status,
-            page: params?.page,
-            size: params?.size,
-            sort: params?.sort,
+            doctorId,
+            patientId,
+            mrn,
+            date,
+            fromDate,
+            toDate,
+            status,
+            page,
+            size,
+            sort,
           });
         }
         if (active) {
@@ -82,7 +92,19 @@ export function useAppointments(
     return () => {
       active = false;
     };
-  }, [userRole, date, params]);
+  }, [
+    userRole,
+    date,
+    doctorId,
+    patientId,
+    mrn,
+    status,
+    fromDate,
+    toDate,
+    page,
+    size,
+    sort,
+  ]);
 
   const refetch = useCallback(async () => {
     setIsLoading(true);
@@ -92,29 +114,29 @@ export function useAppointments(
       const roleUpper = String(userRole || "").toUpperCase();
       if (roleUpper === "DOCTOR") {
         items = await appointmentService.listDoctorAppointments(
-          params?.doctorId,
+          doctorId,
           date,
-          params?.status,
+          status,
         );
       } else if (
         roleUpper === "PATIENT" &&
-        (params?.patientId || params?.mrn)
+        (patientId || mrn)
       ) {
         items = await appointmentService.listPatientAppointments(
-          params.patientId || params.mrn || "",
+          patientId || mrn || "",
         );
       } else {
         items = await appointmentService.listAppointments({
-          doctorId: params?.doctorId,
-          patientId: params?.patientId,
-          mrn: params?.mrn,
-          date: date,
-          fromDate: params?.fromDate,
-          toDate: params?.toDate,
-          status: params?.status,
-          page: params?.page,
-          size: params?.size,
-          sort: params?.sort,
+          doctorId,
+          patientId,
+          mrn,
+          date,
+          fromDate,
+          toDate,
+          status,
+          page,
+          size,
+          sort,
         });
       }
       setAppointments(items);
@@ -128,7 +150,19 @@ export function useAppointments(
     } finally {
       setIsLoading(false);
     }
-  }, [userRole, date, params]);
+  }, [
+    userRole,
+    date,
+    doctorId,
+    patientId,
+    mrn,
+    status,
+    fromDate,
+    toDate,
+    page,
+    size,
+    sort,
+  ]);
 
   return {
     appointments,

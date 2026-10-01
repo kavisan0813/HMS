@@ -894,7 +894,8 @@ export function PatientDashboard({
                     </td>
                     <td className="px-5 py-3">
                       <button
-                        className="px-3 py-1 rounded-lg bg-blue-50 text-[#0D47A1] text-[11px] font-semibold hover:bg-blue-100 transition-colors"
+                        onClick={() => navigate(ROUTES.PATIENT_PRESCRIPTIONS)}
+                        className="px-3 py-1 rounded-lg bg-blue-50 text-[#0D47A1] text-[11px] font-semibold hover:bg-blue-100 transition-colors cursor-pointer"
                         style={{ fontFamily: PP }}
                       >
                         View Prescription
@@ -1011,7 +1012,22 @@ export function PatientDashboard({
                     </td>
                     <td className="px-5 py-3">
                       <button
-                        className="px-3 py-1 rounded-lg bg-slate-100 text-[#0D47A1] text-[11px] font-semibold hover:bg-blue-50 transition-colors"
+                        onClick={() => {
+                          const billIdentifier = String(
+                            b.billId || b.id || b.invoiceId || b.billNumber || "",
+                          ).trim();
+                          if (billIdentifier) {
+                            navigate(
+                              ROUTES.PATIENT_PORTAL_BILLING_DETAIL.replace(
+                                ":billId",
+                                billIdentifier,
+                              ),
+                            );
+                          } else {
+                            navigate(ROUTES.PATIENT_PORTAL_BILLING);
+                          }
+                        }}
+                        className="px-3 py-1 rounded-lg bg-slate-100 text-[#0D47A1] text-[11px] font-semibold hover:bg-blue-50 transition-colors cursor-pointer"
                         style={{ fontFamily: PP }}
                       >
                         View Invoice

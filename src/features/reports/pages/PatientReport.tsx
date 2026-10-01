@@ -151,6 +151,9 @@ import {
   extractList,
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 
 import { usePermissions } from "../../../permissions/usePermissions";
 import {
@@ -233,6 +236,22 @@ export function PatientReportScreen({
   } = state;
 
   // ─── API Data Hooks ──────────────────────────────────────────────────────
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress ||
+    "123 Healthcare Ave, Medical District, City";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 98765 43210";
+  const hospitalEmail =
+    configuration?.receipt?.hospitalEmail || "info@safehandshospital.com";
+  const hospitalGstin = configuration?.receipt?.hospitalGstin || "";
+
   const today = new Date().toISOString().slice(0, 10);
   const [fromDate] = useState(today);
   const [toDate] = useState(today);
@@ -353,123 +372,27 @@ export function PatientReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    // 1. KPI Cards Summary
-    const kpiRows = [
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Total Patient Registrations",
-        Count_or_Amount: `${computedPatientStats.totalReg} Patients`,
-        Percentage_Share: "100%",
-        Primary_Detail: "Total Registered OPD Patients",
-        Secondary_Detail: `Active Patients: ${computedPatientStats.activeCount}`,
-        Date_or_Status: "Total Registrations",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "New Patients",
-        Count_or_Amount: `${computedPatientStats.newCount} Patients`,
-        Percentage_Share: `${((computedPatientStats.newCount / (computedPatientStats.totalReg || 1)) * 100).toFixed(1)}%`,
-        Primary_Detail: "First-Time Registered Patients",
-        Secondary_Detail: "New Patient Registrations",
-        Date_or_Status: "New Patient",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Returning / Follow-Up Patients",
-        Count_or_Amount: `${computedPatientStats.returningCount} Patients`,
-        Percentage_Share: `${((computedPatientStats.returningCount / (computedPatientStats.totalReg || 1)) * 100).toFixed(1)}%`,
-        Primary_Detail: "Returning & Follow-up Visits",
-        Secondary_Detail: "Follow-up Registrations",
-        Date_or_Status: "Returning Patient",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Walk-In Patients",
-        Count_or_Amount: `${computedPatientStats.walkIns} Patients`,
-        Percentage_Share: `${((computedPatientStats.walkIns / (computedPatientStats.totalReg || 1)) * 100).toFixed(1)}%`,
-        Primary_Detail: "Walk-In Registrations",
-        Secondary_Detail: "Counter Registration",
-        Date_or_Status: "Walk-In",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Scheduled Patients",
-        Count_or_Amount: `${computedPatientStats.scheduled} Patients`,
-        Percentage_Share: `${((computedPatientStats.scheduled / (computedPatientStats.totalReg || 1)) * 100).toFixed(1)}%`,
-        Primary_Detail: "Pre-Booked Appointments",
-        Secondary_Detail: "Appointment Registrations",
-        Date_or_Status: "Scheduled",
-      },
-    ];
+    const recordsToExport =
+      sortedData.length > 0
+        ? sortedData
+        : filteredData;
 
-    // 2. Graph 1: Gender Distribution Graph Share (%)
-    const totalGender = dynamicGenderData.reduce((s, g) => s + g.value, 0) || 1;
-    const genderChartRows = dynamicGenderData.map((g) => {
-      const pct = ((g.value / totalGender) * 100).toFixed(1);
-      return {
-        Section: "2. GENDER DEMOGRAPHICS GRAPH SHARE",
-        Category_Item: g.name,
-        Count_or_Amount: `${g.value} Patients`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `${g.name} Patient Demographics`,
-        Secondary_Detail: "Gender Share Graph",
-        Date_or_Status: "Active",
-      };
-    });
-
-    // 3. Graph 2: Age Group Demographics Graph Share (%)
-    const totalAgeCount = dynamicAgeData.reduce((s, a) => s + a.count, 0) || 1;
-    const ageChartRows = dynamicAgeData.map((a) => {
-      const pct = ((a.count / totalAgeCount) * 100).toFixed(1);
-      return {
-        Section: "3. AGE GROUP DEMOGRAPHICS GRAPH SHARE",
-        Category_Item: `Age Group ${a.group}`,
-        Count_or_Amount: `${a.count} Patients`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Age Group ${a.group} Share`,
-        Secondary_Detail: "Age Demographics Graph",
-        Date_or_Status: "Active",
-      };
-    });
-
-    // 4. Graph 3: Department Registrations Share (%)
-    const totalDeptCount =
-      dynamicDeptData.reduce((s, d) => s + d.total, 0) || 1;
-    const deptChartRows = dynamicDeptData.map((d) => {
-      const pct = ((d.total / totalDeptCount) * 100).toFixed(1);
-      return {
-        Section: "4. DEPARTMENT PATIENTS GRAPH SHARE",
-        Category_Item: d.department,
-        Count_or_Amount: `${d.total} Patients`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Department Patient Volume`,
-        Secondary_Detail: "Department Share Graph",
-        Date_or_Status: "Active",
-      };
-    });
-
-    // 5. Table: Detailed Patient Registry Records
-    const recordRows = filteredData.map((rec) => ({
-      Section: "5. PATIENT MASTER TABLE REGISTRY",
-      Category_Item: rec.mrn,
-      Count_or_Amount: `Age: ${rec.age} | Gender: ${rec.gender}`,
-      Percentage_Share: rec.status === "Active" ? "100%" : "0%",
-      Primary_Detail: `Patient: ${rec.patientName} (Mobile: ${rec.mobile})`,
-      Secondary_Detail: `Doctor: ${rec.doctorName} | Dept: ${rec.department} | Visit: ${rec.visitType}`,
-      Date_or_Status: `Reg Date: ${rec.registrationDate} | Status: ${rec.status}`,
+    const csvRows = recordsToExport.map((rec) => ({
+      "MRN": rec.mrn,
+      "Patient Name": rec.patientName,
+      "Age": rec.age,
+      "Gender": rec.gender,
+      "Mobile": rec.mobile,
+      "Department": rec.department,
+      "Attending Doctor": rec.doctorName,
+      "Visit Type": rec.visitType,
+      "Registration Date": rec.registrationDate,
+      "Status": rec.status,
     }));
 
-    const allRows = [
-      ...kpiRows,
-      ...genderChartRows,
-      ...ageChartRows,
-      ...deptChartRows,
-      ...recordRows,
-    ];
-
     exportDataToCsv(
-      `Patient_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows,
+      `Patient_Report_${dates.fromDate || today}_to_${dates.toDate || today}.csv`,
+      csvRows,
     );
   };
 
@@ -801,55 +724,407 @@ export function PatientReportScreen({
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
+    <>
+      {/* ─── PRINT CSS STYLES (ISOLATION ONLY) ─── */}
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 8mm;
+        }
+        @media screen {
+          .patient-report-print-only {
+            display: none !important;
+          }
+        }
+        @media print {
+          html, body {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Hide application shell, navbar, sidebar, buttons, and normal screen UI */
+          .patient-report-screen-ui,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          .no-print {
+            display: none !important;
+          }
+          /* Show dedicated print document */
+          .patient-report-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-size: 9pt !important;
+            line-height: 1.3 !important;
+            overflow: visible !important;
+          }
+          .patient-report-print-only table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 6px !important;
+          }
+          .patient-report-print-only thead {
+            display: table-header-group !important;
+          }
+          .patient-report-print-only tbody {
+            display: table-row-group !important;
+          }
+          .patient-report-print-only tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .patient-report-print-only th,
+          .patient-report-print-only td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 4px 6px !important;
+            font-size: 8.5pt !important;
+            vertical-align: middle !important;
+          }
+          .patient-report-print-only th {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT DOCUMENT (LANDSCAPE A4) ─── */}
+      <div className="patient-report-print-only" style={{ fontFamily: PP }}>
+        {/* A. HOSPITAL / REPORT HEADER */}
+        <div className="border-b-2 border-slate-900 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {logoLoaded && (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  onError={() => setLogoLoaded(false)}
+                  className="w-14 h-14 object-contain rounded"
+                />
+              )}
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[9.5px] text-slate-600 mt-1">
+                  {hospitalAddress}
+                  {hospitalPhone && ` • Ph: ${hospitalPhone}`}
+                  {hospitalEmail && ` • Email: ${hospitalEmail}`}
+                  {hospitalGstin && ` • GSTIN: ${hospitalGstin}`}
+                </p>
+                <p className="text-[9px] text-slate-500 mt-0.5">
+                  Clinical Registrations • OPD Patient Master & Demographics Report
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <div className="inline-block px-2.5 py-1 bg-slate-900 text-white rounded text-[10px] font-bold tracking-wide uppercase">
+                PATIENT REPORT
+              </div>
+              <div className="text-[9.5px] text-slate-600 mt-1.5 space-y-0.5">
+                <div>
+                  <span className="font-semibold text-slate-800">Report Period: </span>
+                  <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Generated: </span>
+                  <span>{new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Total Records: </span>
+                  <span className="font-bold text-slate-900">{sortedData.length} Patients</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. COMPACT PATIENT SUMMARY */}
+        <div className="mb-3 border border-slate-300 rounded p-2.5 bg-slate-50/70">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Patient Registration & OPD Metrics Summary
+          </div>
+          <div className="grid grid-cols-6 gap-2 text-center">
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Total Registered</span>
+              <span className="text-sm font-bold text-slate-900 block">{computedPatientStats.totalReg}</span>
+              <span className="text-[8.5px] text-slate-500">Cumulative OPD</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">New Patients</span>
+              <span className="text-sm font-bold text-emerald-800 block">{computedPatientStats.newCount}</span>
+              <span className="text-[8.5px] text-emerald-700 font-medium">
+                {computedPatientStats.totalReg > 0 ? `${((computedPatientStats.newCount / computedPatientStats.totalReg) * 100).toFixed(1)}%` : "0%"} share
+              </span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Returning</span>
+              <span className="text-sm font-bold text-blue-900 block">{computedPatientStats.returningCount}</span>
+              <span className="text-[8.5px] text-slate-500">Follow-up Visits</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Walk-In Patients</span>
+              <span className="text-sm font-bold text-teal-800 block">{computedPatientStats.walkIns}</span>
+              <span className="text-[8.5px] text-slate-500">Direct Registration</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Scheduled</span>
+              <span className="text-sm font-bold text-slate-900 block">{computedPatientStats.scheduled}</span>
+              <span className="text-[8.5px] text-slate-500">Pre-Booked</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Active Status</span>
+              <span className="text-sm font-bold text-slate-900 block">{computedPatientStats.activeCount}</span>
+              <span className="text-[8.5px] text-slate-500">Registered Files</span>
+            </div>
+          </div>
+        </div>
+
+        {/* C. PATIENT DEMOGRAPHICS & DEPARTMENT BREAKDOWN SUMMARY */}
+        <div className="mb-3 grid grid-cols-3 gap-3">
+          {/* 1. Gender Distribution */}
+          <div className="border border-slate-300 rounded p-2 bg-white">
+            <div className="text-[9.5px] font-bold uppercase tracking-wide text-slate-800 mb-1 border-b border-slate-200 pb-0.5">
+              Gender Demographics
+            </div>
+            <table className="w-full text-[9px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 font-semibold">
+                  <th className="py-0.5 text-left">Gender</th>
+                  <th className="py-0.5 text-right">Patients</th>
+                  <th className="py-0.5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {dynamicGenderData.map((g) => {
+                  const totalG = dynamicGenderData.reduce((s, item) => s + item.value, 0) || 1;
+                  const pct = ((g.value / totalG) * 100).toFixed(1);
+                  return (
+                    <tr key={g.name}>
+                      <td className="py-0.5 text-slate-800 font-medium">{g.name}</td>
+                      <td className="py-0.5 text-right font-bold text-slate-900">{g.value}</td>
+                      <td className="py-0.5 text-right text-slate-600">{pct}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 2. Age Demographics */}
+          <div className="border border-slate-300 rounded p-2 bg-white">
+            <div className="text-[9.5px] font-bold uppercase tracking-wide text-slate-800 mb-1 border-b border-slate-200 pb-0.5">
+              Age Group Demographics
+            </div>
+            <table className="w-full text-[9px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 font-semibold">
+                  <th className="py-0.5 text-left">Age Group</th>
+                  <th className="py-0.5 text-right">Patients</th>
+                  <th className="py-0.5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {dynamicAgeData.slice(0, 4).map((a) => {
+                  const totalA = dynamicAgeData.reduce((s, item) => s + item.count, 0) || 1;
+                  const pct = ((a.count / totalA) * 100).toFixed(1);
+                  return (
+                    <tr key={a.group}>
+                      <td className="py-0.5 text-slate-800 font-medium">{a.group} yrs</td>
+                      <td className="py-0.5 text-right font-bold text-slate-900">{a.count}</td>
+                      <td className="py-0.5 text-right text-slate-600">{pct}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 3. Department Visits */}
+          <div className="border border-slate-300 rounded p-2 bg-white">
+            <div className="text-[9.5px] font-bold uppercase tracking-wide text-slate-800 mb-1 border-b border-slate-200 pb-0.5">
+              Top Specialty Visits
+            </div>
+            <table className="w-full text-[9px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 font-semibold">
+                  <th className="py-0.5 text-left">Department</th>
+                  <th className="py-0.5 text-right">Visits</th>
+                  <th className="py-0.5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {dynamicDeptData.slice(0, 4).map((d) => {
+                  const totalD = dynamicDeptData.reduce((s, item) => s + item.total, 0) || 1;
+                  const pct = ((d.total / totalD) * 100).toFixed(1);
+                  return (
+                    <tr key={d.department}>
+                      <td className="py-0.5 text-slate-800 font-medium truncate max-w-[90px]">{d.department}</td>
+                      <td className="py-0.5 text-right font-bold text-slate-900">{d.total}</td>
+                      <td className="py-0.5 text-right text-slate-600">{pct}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* D. ACTIVE REPORT FILTERS */}
+        <div className="mb-3 text-[9.5px] border border-slate-200 rounded px-2.5 py-1 bg-slate-100/70 flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
+          <div>
+            <span className="font-semibold text-slate-900">Period: </span>
+            <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Department: </span>
+            <span>{appliedFilters.dept || deptFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Doctor: </span>
+            <span>{appliedFilters.doctor || doctorFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Gender: </span>
+            <span>{appliedFilters.gender || genderFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Visit Type: </span>
+            <span>{appliedFilters.visitType || visitTypeFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Status: </span>
+            <span>{appliedFilters.regStatus || regStatusFilter}</span>
+          </div>
+          {searchQuery && (
+            <div>
+              <span className="font-semibold text-slate-900">Search: </span>
+              <span className="italic">{`"${searchQuery}"`}</span>
+            </div>
+          )}
+        </div>
+
+        {/* E. FULL PATIENT DETAIL TABLE */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>Patient Master Register</span>
+            <span className="text-[9px] font-normal text-slate-500">
+              Showing {sortedData.length} Records
+            </span>
+          </div>
+          <table className="patient-report-print-table w-full text-left border border-slate-300 text-[9.5px]">
+            <thead>
+              <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[90px]">MRN</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Patient Name</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[85px]">Age / Gender</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Mobile</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Department</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Attending Doctor</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[85px]">Visit Type</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[95px]">Reg. Date</th>
+                <th className="py-1.5 px-2 text-center w-[75px]">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-6 text-center text-slate-500 italic">
+                    No patient records match the selected filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                sortedData.map((item, index) => (
+                  <tr
+                    key={item.mrn + index}
+                    className={index % 2 === 1 ? "bg-slate-50/50" : "bg-white"}
+                  >
+                    <td className="py-1.5 px-2 font-mono font-bold text-[#0D47A1] border-r border-slate-200 whitespace-nowrap">
+                      {item.mrn}
+                    </td>
+                    <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">
+                      {item.patientName}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200 whitespace-nowrap">
+                      {item.age} yrs / {item.gender}
+                    </td>
+                    <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200 whitespace-nowrap">
+                      {item.mobile || "N/A"}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-800 border-r border-slate-200">
+                      {item.department}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-800 border-r border-slate-200 font-medium">
+                      {item.doctorName}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">
+                      {item.visitType}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-600 border-r border-slate-200 whitespace-nowrap">
+                      {item.registrationDate}
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-medium">
+                      <span className="text-[8.5px] px-1.5 py-0.5 rounded border border-slate-300 font-semibold uppercase">
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                <td colSpan={3} className="py-1.5 px-2 text-right border-r border-slate-300 uppercase text-[9.5px]">
+                  Total ({sortedData.length} Records):
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center border-r border-slate-300 text-emerald-800 whitespace-nowrap">
+                  New: {sortedData.filter((d) => d.visitType.toLowerCase().includes("new")).length}
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center border-r border-slate-300 text-blue-800 whitespace-nowrap">
+                  Walk-In: {sortedData.filter((d) => d.visitType.toLowerCase().includes("walk")).length}
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center text-teal-800 whitespace-nowrap">
+                  Active: {sortedData.filter((d) => d.status.toLowerCase() === "active").length}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* F. PRINT FOOTER */}
+        <div className="border-t border-slate-300 pt-2 flex items-center justify-between text-[8.5px] text-slate-500">
+          <div>
+            <strong>{hospitalName}</strong> • Confidential OPD Patient Master Register & Clinical Demographics
+          </div>
+          <div>
+            Printed on: {new Date().toLocaleString("en-IN")}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI (UNMODIFIED) ─── */}
+      <div
+        className="patient-report-screen-ui min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Hospital
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Patient Report
-                </span>
-              </nav>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Patient Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#009688] border border-teal-200">
-                  {role || "HOSPITAL_ADMIN"} RBAC Active
-                </span>
-              </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Analyze patient registrations, demographics, visit history and
-                OPD patient activity.
-              </p>
-            </div>
-
-            {/* Header Actions */}
-            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => (onBack ? onBack() : window.history.back())}
@@ -859,6 +1134,23 @@ export function PatientReportScreen({
                 <ArrowLeft size={14} />
                 Back
               </button>
+              <div className="flex items-center gap-3">
+                <h1
+                  className="text-2xl font-bold text-[#111827]"
+                  style={{ fontFamily: PP }}
+                >
+                  Patient Report
+                </h1>
+              </div>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Analyze patient registrations, demographics, visit history and
+                OPD patient activity.
+              </p>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
+              
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl mr-1">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -896,7 +1188,6 @@ export function PatientReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 mt-6">
@@ -1490,34 +1781,7 @@ export function PatientReportScreen({
           </div>
         )}
 
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                dispatch({ type: "LOAD_START" });
-                dispatch({ type: "SET_ERROR", payload: false });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                dispatch({ type: "SET_ERROR", payload: !hasError });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-300 text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate real-time patient register states
-          </span>
-        </div>
+
 
         {/* ERROR STATE */}
         {hasError && (
@@ -2450,5 +2714,6 @@ export function PatientReportScreen({
         </div>
       )}
     </div>
+    </>
   );
 }

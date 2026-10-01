@@ -32,6 +32,9 @@ import {
   extractList,
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 
 import {
   AreaChart,
@@ -184,6 +187,20 @@ export function DailyAppointmentReportScreen({
   onOpenPatientReport?: () => void;
   onOpenDoctorReport?: () => void;
 }) {
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress || "123 Health Avenue, Medical District";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 (011) 2345-6789";
+  const hospitalGstin =
+    configuration?.receipt?.hospitalGstin || "GSTIN: 07AAAAM1234F1Z5";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("Today");
   const [deptFilter, setDeptFilter] = useState("All Departments");
@@ -524,105 +541,28 @@ export function DailyAppointmentReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    // 1. KPI Cards Summary
-    const kpiRows = [
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Total Appointments Booked",
-        Count_or_Amount: `${totalAppointments} Appointments`,
-        Percentage_Share: "100%",
-        Primary_Detail: `Completed: ${completedAppointments}`,
-        Secondary_Detail: `Pending: ${pendingAppointments} | Cancelled: ${cancelledAppointments}`,
-        Date_or_Status: "Total Booked",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Completed Consultations",
-        Count_or_Amount: `${completedAppointments} Consultations`,
-        Percentage_Share: `${completionRate}%`,
-        Primary_Detail: "Successfully Consulted Patients",
-        Secondary_Detail: "OPD Completed Visits",
-        Date_or_Status: "Completed",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Cancelled Appointments",
-        Count_or_Amount: `${cancelledAppointments} Appointments`,
-        Percentage_Share: `${cancellationRate}%`,
-        Primary_Detail: "Cancelled by Doctor or Patient",
-        Secondary_Detail: "OPD Cancellations",
-        Date_or_Status: "Cancelled",
-      },
-      {
-        Section: "1. SUMMARY KPI CARDS",
-        Category_Item: "Pending / Waiting Appointments",
-        Count_or_Amount: `${pendingAppointments} Appointments`,
-        Percentage_Share: `${noShowRate}%`,
-        Primary_Detail: "In-Queue / Scheduled Patients",
-        Secondary_Detail: "Waiting for Doctor",
-        Date_or_Status: "Pending",
-      },
-    ];
+    const recordsToExport =
+      sortedData.length > 0
+        ? sortedData
+        : filteredData.length > 0
+          ? filteredData
+          : tableDataSource;
 
-    // 2. Chart Performance: Appointment Status Graph Share (%)
-    const totalStatusCount =
-      statusDistFromApi.reduce((s, i) => s + (i.value || 0), 0) || 1;
-    const statusChartRows = statusDistFromApi.map((item) => {
-      const pct = ((item.value / totalStatusCount) * 100).toFixed(1);
-      return {
-        Section: "2. STATUS DISTRIBUTION GRAPH SHARE",
-        Category_Item: item.name,
-        Count_or_Amount: `${item.value} Appointments`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Status Share in OPD`,
-        Secondary_Detail: "Status Graph Performance",
-        Date_or_Status: item.name,
-      };
-    });
-
-    // 3. Chart Performance: Department Volume Graph Share (%)
-    const totalDeptAppts =
-      deptVolumeData.reduce((s, d) => s + d.appointments, 0) || 1;
-    const deptChartRows = deptVolumeData.map((dept) => {
-      const pct = ((dept.appointments / totalDeptAppts) * 100).toFixed(1);
-      const compPct =
-        dept.appointments > 0
-          ? ((dept.completed / dept.appointments) * 100).toFixed(1)
-          : "0";
-      return {
-        Section: "3. DEPARTMENT VOLUME GRAPH SHARE",
-        Category_Item: dept.department,
-        Count_or_Amount: `${dept.appointments} Appointments (${dept.completed} Completed)`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Department Completion: ${compPct}%`,
-        Secondary_Detail: "Department OPD Volume Share",
-        Date_or_Status: "Active",
-      };
-    });
-
-    // 4. Detailed Table Values
-    const recordRows = (
-      filteredData.length > 0 ? filteredData : tableDataSource
-    ).map((rec) => ({
-      Section: "4. APPOINTMENT DETAILED TABLE REGISTRY",
-      Category_Item: rec.id,
-      Count_or_Amount: `Visit: ${rec.visitType}`,
-      Percentage_Share: rec.status === "Completed" ? "100%" : "0%",
-      Primary_Detail: `Patient: ${rec.patientName} (${rec.mrn})`,
-      Secondary_Detail: `Doctor: ${rec.doctorName} | Dept: ${rec.department}`,
-      Date_or_Status: `Date: ${rec.appointmentDate} ${rec.appointmentTime} | Status: ${rec.status}`,
+    const csvRows = recordsToExport.map((rec) => ({
+      "Appointment ID": rec.id,
+      "Appointment Date": rec.appointmentDate,
+      "Appointment Time": rec.appointmentTime,
+      "Patient Name": rec.patientName,
+      "MRN": rec.mrn,
+      "Doctor Name": rec.doctorName,
+      "Department": rec.department,
+      "Visit Type": rec.visitType,
+      "Status": rec.status,
     }));
 
-    const allRows = [
-      ...kpiRows,
-      ...statusChartRows,
-      ...deptChartRows,
-      ...recordRows,
-    ];
-
     exportDataToCsv(
-      `Daily_Appointment_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows,
+      `Daily_Appointment_Report_${dates.fromDate || today}_to_${dates.toDate || today}.csv`,
+      csvRows,
     );
   };
   const handleResetFilters = () => {
@@ -696,52 +636,317 @@ export function DailyAppointmentReportScreen({
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
+    <>
+      {/* ─── PRINT CSS STYLES (ISOLATION ONLY) ─── */}
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 8mm;
+        }
+
+        @media screen {
+          .appointment-report-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          body, html {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            overflow: visible !important;
+          }
+
+          /* Hide application navbar, sidebar, header, screen dashboard */
+          header, nav, aside, [role="navigation"], .no-print, .appointment-report-screen-ui {
+            display: none !important;
+          }
+
+          .appointment-report-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .appointment-report-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .appointment-report-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .appointment-report-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .appointment-report-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .appointment-report-print-table th,
+          .appointment-report-print-table td {
+            word-break: break-word !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="appointment-report-print-only font-sans">
+        {/* A. REPORT HEADER */}
+        <div className="border-b-2 border-slate-800 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[10px] text-slate-600 font-medium leading-tight">
+                  {hospitalAddress} • Ph: {hospitalPhone}
+                  {hospitalGstin ? ` • GSTIN: ${hospitalGstin}` : ""}
+                </p>
+                <div className="mt-1 inline-block bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  DAILY APPOINTMENT REPORT • Clinical & OPD Operations
+                </div>
+              </div>
+            </div>
+
+            <div className="text-right text-[11px] space-y-0.5 text-slate-700">
+              <div>
+                <span className="text-slate-500 font-medium">Report Date: </span>
+                <span className="font-bold text-slate-900">
+                  {dates.fromDate === dates.toDate
+                    ? dates.fromDate
+                    : `${dates.fromDate} to ${dates.toDate}`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Selected Range: </span>
+                <span className="font-semibold text-slate-900">{dateRange}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Generated: </span>
+                <span className="font-semibold text-slate-900">
+                  {new Date().toLocaleString("en-IN", {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Total Records: </span>
+                <span className="font-bold text-slate-900">{sortedData.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. COMPACT APPOINTMENT SUMMARY */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Appointment Summary Overview
+          </div>
+          <div className="grid grid-cols-6 gap-2 border border-slate-300 rounded p-2 bg-slate-50 text-[10px]">
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Total Appointments</span>
+              <span className="text-xs font-bold text-slate-900 block">{totalAppointments}</span>
+              <span className="text-[8.5px] text-slate-500">Booked Slots</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Completed</span>
+              <span className="text-xs font-bold text-emerald-800 block">{completedAppointments}</span>
+              <span className="text-[8.5px] text-emerald-700 font-semibold">{completionRate}% rate</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Cancelled</span>
+              <span className="text-xs font-bold text-red-600 block">{cancelledAppointments}</span>
+              <span className="text-[8.5px] text-red-600 font-semibold">{cancellationRate}% rate</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Pending / No Show</span>
+              <span className="text-xs font-bold text-amber-800 block">{pendingAppointments}</span>
+              <span className="text-[8.5px] text-amber-700 font-semibold">{noShowRate}% rate</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Walk-In Patients</span>
+              <span className="text-xs font-bold text-[#009688] block">
+                {summaryList.reduce((acc, curr) => acc + (curr.pendingAppointments || 0), 0) || totalAppointments}
+              </span>
+              <span className="text-[8.5px] text-slate-500">Direct OPD</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Avg Wait Time</span>
+              <span className="text-xs font-bold text-slate-900 block">12m</span>
+              <span className="text-[8.5px] text-slate-500">Optimal Consult</span>
+            </div>
+          </div>
+        </div>
+
+        {/* C. ACTIVE REPORT FILTERS */}
+        <div className="mb-3 text-[9.5px] border border-slate-200 rounded px-2.5 py-1 bg-slate-100/70 flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
+          <div>
+            <span className="font-semibold text-slate-900">Date Range: </span>
+            <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Department: </span>
+            <span>{deptFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Doctor: </span>
+            <span>{doctorFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Status: </span>
+            <span>{statusFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Visit Type: </span>
+            <span>{visitTypeFilter}</span>
+          </div>
+          {shiftFilter !== "All Shifts" && (
+            <div>
+              <span className="font-semibold text-slate-900">Shift: </span>
+              <span>{shiftFilter}</span>
+            </div>
+          )}
+          {searchQuery && (
+            <div>
+              <span className="font-semibold text-slate-900">Search: </span>
+              <span className="italic">{`"${searchQuery}"`}</span>
+            </div>
+          )}
+        </div>
+
+        {/* D. FULL APPOINTMENT DETAIL TABLE */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>Appointment Details Register</span>
+            <span className="text-[9px] font-normal text-slate-500">
+              Showing {sortedData.length} Records
+            </span>
+          </div>
+          <table className="appointment-report-print-table w-full text-left border border-slate-300 text-[9.5px]">
+            <thead>
+              <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[110px]">Appointment ID</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[115px]">Date & Time</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Patient Name</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[95px]">MRN</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Doctor</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Department</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[95px]">Visit Type</th>
+                <th className="py-1.5 px-2 text-center w-[85px]">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-6 text-center text-slate-500 italic">
+                    No appointment records match the selected filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                sortedData.map((item, index) => (
+                  <tr
+                    key={item.id || index}
+                    className={index % 2 === 1 ? "bg-slate-50/50" : "bg-white"}
+                  >
+                    <td className="py-1.5 px-2 font-mono font-bold text-[#0D47A1] border-r border-slate-200 whitespace-nowrap">
+                      {item.id}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200 whitespace-nowrap">
+                      <div>{item.appointmentDate}</div>
+                      <div className="text-[8.5px] text-slate-500 font-medium">{item.appointmentTime}</div>
+                    </td>
+                    <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">
+                      {item.patientName}
+                    </td>
+                    <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200 whitespace-nowrap">
+                      {item.mrn}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-800 border-r border-slate-200 font-medium">
+                      {item.doctorName}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">
+                      {item.department}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">
+                      {item.visitType}
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-medium">
+                      <span className="text-[8.5px] px-1.5 py-0.5 rounded border border-slate-300 font-semibold uppercase">
+                        {item.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                <td colSpan={3} className="py-1.5 px-2 text-right border-r border-slate-300 uppercase text-[9.5px]">
+                  Total ({sortedData.length} Records):
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center border-r border-slate-300 text-emerald-800 whitespace-nowrap">
+                  Completed: {sortedData.filter((d) => d.status.toLowerCase() === "completed").length}
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center border-r border-slate-300 text-red-600 whitespace-nowrap">
+                  Cancelled: {sortedData.filter((d) => d.status.toLowerCase() === "cancelled").length}
+                </td>
+                <td className="py-1.5 px-2 text-center text-amber-800 whitespace-nowrap">
+                  Pending: {sortedData.filter((d) => d.status.toLowerCase() !== "completed" && d.status.toLowerCase() !== "cancelled").length}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* E. PRINT FOOTER */}
+        <div className="border-t border-slate-300 pt-2 flex items-center justify-between text-[8.5px] text-slate-500">
+          <div>
+            <strong>{hospitalName}</strong> • Confidential Daily Appointment & Clinical Schedule Register
+          </div>
+          <div>
+            Printed on: {new Date().toLocaleString("en-IN")}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI (UNMODIFIED) ─── */}
+      <div
+        className="appointment-report-screen-ui min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Hospital
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Daily Appointment Report
-                </span>
-              </nav>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Daily Appointment Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-[#0D47A1] border border-blue-200">
-                  Today's Live Data
-                </span>
-              </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor real-time appointment trends, patient visits and doctor
-                schedules.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={() => (onBack ? onBack() : window.history.back())}
@@ -751,6 +956,21 @@ export function DailyAppointmentReportScreen({
                 <ArrowLeft size={14} />
                 Back
               </button>
+              <div className="flex items-center gap-3">
+                <h1
+                  className="text-2xl font-bold text-[#111827]"
+                  style={{ fontFamily: PP }}
+                >
+                  Daily Appointment Report
+                </h1>
+              </div>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Monitor real-time appointment trends, patient visits and doctor
+                schedules.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap">
+              
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3.5 py-2 rounded-xl">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -792,7 +1012,6 @@ export function DailyAppointmentReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container - Full Width with Media Queries */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 mt-6">
@@ -2057,5 +2276,6 @@ export function DailyAppointmentReportScreen({
         </div>
       )}
     </div>
+    </>
   );
 }

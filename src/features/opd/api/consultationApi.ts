@@ -159,17 +159,23 @@ export const consultationApi = {
 
   /**
    * POST /api/v1/encounters
-   * Create an encounter for an appointment
+   * Create an encounter for an appointment using the exact OpenAPI contract: { appointmentId: Long }
    */
   createEncounter: async (
     appointmentId: string | number,
-    patientId?: string | number,
+    _patientId?: string | number,
   ): Promise<Encounter> => {
     try {
-      const payload: Record<string, unknown> = { appointmentId };
-      if (patientId) {
-        payload.patientId = patientId;
+      const numApptId =
+        typeof appointmentId === "number"
+          ? appointmentId
+          : parseInt(String(appointmentId), 10);
+      if (!Number.isInteger(numApptId) || numApptId <= 0) {
+        throw new Error(
+          `Invalid numeric appointment DB ID for encounter creation: ${appointmentId}`,
+        );
       }
+      const payload = { appointmentId: numApptId };
       const response = await apiClient.post<ApiEnvelope<Encounter> | Encounter>(
         "/api/v1/encounters",
         payload,
@@ -188,10 +194,17 @@ export const consultationApi = {
     encounterId: string | number,
     chiefComplaint: string = "",
   ): Promise<Consultation> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<
         ApiEnvelope<Consultation> | Consultation
-      >(`/api/v1/encounters/${encounterId}/consultation`, { chiefComplaint });
+      >(`/api/v1/encounters/${numId}/consultation`, { chiefComplaint });
       return unwrap<Consultation>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -200,7 +213,8 @@ export const consultationApi = {
 
   /**
    * GET /api/v1/encounters/{encounterId}/vitals
-   * Load patient vitals for the encounter
+   * Load patient vitals for the encounter.
+   * If vitals are not yet recorded (404), cleanly returns null.
    */
   loadEncounterVitals: async (
     encounterId: string | number,
@@ -208,45 +222,25 @@ export const consultationApi = {
     if (!encounterId) {
       return null;
     }
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      // Never pass display identifiers or invalid numbers
+      return null;
+    }
+
     let raw: Record<string, unknown> | null = null;
 
-    // 1. Try GET /api/v1/encounters/{id}/vitals
     try {
       const response = await apiClient.get<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/vitals`);
+      >(`/api/v1/encounters/${numId}/vitals`);
       raw = unwrap<Record<string, unknown>>(response.data);
-    } catch (err) {
-      console.log(err);
-      // 2. Try GET /api/v1/encounters/{id}/workspace
-      const ws = await consultationApi
-        .getWorkspace(encounterId)
-        .catch(() => null);
-      if (ws?.vitals) {
-        raw = ws.vitals as Record<string, unknown>;
-      } else {
-        // 3. Fallback: target ID might be an appointment ID. Try nurse appointment vitals
-        try {
-          const nurseVitals = await apiClient.get<
-            ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-          >(`/api/v1/nurse/appointments/${encounterId}/vitals`);
-          raw = unwrap<Record<string, unknown>>(nurseVitals.data);
-        } catch (err) {
-          console.log(err);
-          // 4. Resolve encounter ID via createEncounter(appointmentId)
-          const encRes = await consultationApi
-            .createEncounter(encounterId)
-            .catch(() => null);
-          if (encRes?.encounterId) {
-            const ws2 = await consultationApi
-              .getWorkspace(encRes.encounterId)
-              .catch(() => null);
-            if (ws2?.vitals) {
-              raw = ws2.vitals as Record<string, unknown>;
-            }
-          }
-        }
-      }
+    } catch (err: unknown) {
+      // 404 means vitals not yet recorded for this encounter - cleanly return null
+      return null;
     }
 
     if (!raw) return null;
@@ -285,6 +279,14 @@ export const consultationApi = {
     encounterId: string | number,
     vitals: Partial<PatientVitals>,
   ): Promise<PatientVitals> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
+
     const stripUnit = (s?: string) => {
       if (!s) return undefined;
       return parseFloat(String(s).replace(/[^0-9.-]/g, "")) || undefined;
@@ -323,7 +325,7 @@ export const consultationApi = {
     try {
       const response = await apiClient.post<
         ApiEnvelope<PatientVitals> | PatientVitals
-      >(`/api/v1/encounters/${encounterId}/vitals`, dto);
+      >(`/api/v1/encounters/${numId}/vitals`, dto);
       return unwrap<PatientVitals>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -338,9 +340,16 @@ export const consultationApi = {
     encounterId: string | number,
     diagnosis: { diagnosisCode: string; diagnosisName: string },
   ): Promise<Diagnosis> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<ApiEnvelope<Diagnosis> | Diagnosis>(
-        `/api/v1/encounters/${encounterId}/diagnoses`,
+        `/api/v1/encounters/${numId}/diagnoses`,
         diagnosis,
       );
       return unwrap<Diagnosis>(response.data);
@@ -356,9 +365,16 @@ export const consultationApi = {
   finalizeConsultation: async (
     encounterId: string | number,
   ): Promise<Encounter> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<ApiEnvelope<Encounter> | Encounter>(
-        `/api/v1/encounters/${encounterId}/finalize`,
+        `/api/v1/encounters/${numId}/finalize`,
         { confirmation: true },
       );
       return unwrap<Encounter>(response.data);
@@ -368,20 +384,29 @@ export const consultationApi = {
   },
 
   /**
-   * GET /api/v1/consultations/{consultationId}
-  /**
    * GET /api/v1/encounters/{encounterId}/consultation
    * Get consultation details
    */
   getConsultationDetails: async (
     consultationId: string | number,
   ): Promise<Consultation | null> => {
+    const numId =
+      typeof consultationId === "number"
+        ? consultationId
+        : parseInt(String(consultationId), 10);
+    if (
+      !Number.isInteger(numId) ||
+      numId <= 0 ||
+      isNaN(Number(consultationId))
+    ) {
+      return null;
+    }
     try {
       // 1. Primary endpoint: GET /api/v1/encounters/{encounterId}/consultation
       try {
         const response = await apiClient.get<
           ApiEnvelope<Consultation> | Consultation
-        >(`/api/v1/encounters/${consultationId}/consultation`);
+        >(`/api/v1/encounters/${numId}/consultation`);
         const data = unwrap<Consultation>(response.data);
         if (data) return data;
       } catch (err) {
@@ -389,7 +414,7 @@ export const consultationApi = {
         // Fallback: GET /api/v1/consultations/{consultationId}
         const response = await apiClient.get<
           ApiEnvelope<Consultation> | Consultation
-        >(`/api/v1/consultations/${consultationId}`);
+        >(`/api/v1/consultations/${numId}`);
         const data = unwrap<Consultation>(response.data);
         if (data) return data;
       }
@@ -407,11 +432,18 @@ export const consultationApi = {
   getEncounter: async (
     encounterId: string | number,
   ): Promise<Encounter | null> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.get<{
         data?: Encounter;
         content?: Encounter;
-      }>(`/api/v1/encounters/${encounterId}`);
+      }>(`/api/v1/encounters/${numId}`);
       return response.data?.data || response.data?.content || null;
     } catch (err) {
       console.log(err);
@@ -424,11 +456,18 @@ export const consultationApi = {
    * Get all diagnoses for an encounter
    */
   getDiagnoses: async (encounterId: string | number): Promise<Diagnosis[]> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return [];
+    }
     try {
       const response = await apiClient.get<{
         data?: Diagnosis[];
         content?: Diagnosis[];
-      }>(`/api/v1/encounters/${encounterId}/diagnoses`);
+      }>(`/api/v1/encounters/${numId}/diagnoses`);
       const list = response.data?.data || response.data;
       return Array.isArray(list) ? list : [];
     } catch (err) {
@@ -444,10 +483,17 @@ export const consultationApi = {
   getPrescription: async (
     encounterId: string | number,
   ): Promise<EncounterPrescription | null> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.get<
         ApiEnvelope<EncounterPrescription> | EncounterPrescription
-      >(`/api/v1/encounters/${encounterId}/prescription`);
+      >(`/api/v1/encounters/${numId}/prescription`);
       return unwrap<EncounterPrescription>(response.data);
     } catch (err) {
       console.log(err);
@@ -571,10 +617,17 @@ export const consultationApi = {
    * Get aggregated encounter workspace (patient, appointment, vitals, prior encounters)
    */
   getWorkspace: async (encounterId: string | number) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.get<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/workspace`);
+      >(`/api/v1/encounters/${numId}/workspace`);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (err) {
       console.log(err);
@@ -595,6 +648,13 @@ export const consultationApi = {
     missingItems?: string[];
     prescriptionOutcome?: string;
   }> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return { ready: true, canFinalize: true, checks: [], missingItems: [] };
+    }
     try {
       const response = await apiClient.get<
         ApiEnvelope<{
@@ -604,7 +664,7 @@ export const consultationApi = {
           missingItems?: string[];
           prescriptionOutcome?: string;
         }>
-      >(`/api/v1/encounters/${encounterId}/finalization-check`);
+      >(`/api/v1/encounters/${numId}/finalization-check`);
       const res = unwrap(response.data);
       const ready = res.ready ?? res.canFinalize ?? true;
       const checks = Array.isArray(res.checks) ? res.checks : [];
@@ -650,9 +710,16 @@ export const consultationApi = {
     encounterId: string | number,
     resolution: { outcome: string },
   ): Promise<Encounter> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<ApiEnvelope<Encounter> | Encounter>(
-        `/api/v1/encounters/${encounterId}/prescription-resolution`,
+        `/api/v1/encounters/${numId}/prescription-resolution`,
         resolution,
       );
       return unwrap<Encounter>(response.data);
@@ -687,10 +754,17 @@ export const consultationApi = {
     encounterId: string | number,
     draft: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.put<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/draft`, draft);
+      >(`/api/v1/encounters/${numId}/draft`, draft);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -738,10 +812,17 @@ export const consultationApi = {
     encounterId: string | number,
     vitals: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.put<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/vitals`, vitals);
+      >(`/api/v1/encounters/${numId}/vitals`, vitals);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -756,10 +837,17 @@ export const consultationApi = {
     encounterId: string | number,
     vitals: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.patch<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/vitals`, vitals);
+      >(`/api/v1/encounters/${numId}/vitals`, vitals);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -774,10 +862,17 @@ export const consultationApi = {
     encounterId: string | number,
     amendment: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/amendments`, amendment);
+      >(`/api/v1/encounters/${numId}/amendments`, amendment);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -789,10 +884,17 @@ export const consultationApi = {
    * Get amendment history
    */
   getAmendments: async (encounterId: string | number) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return [];
+    }
     try {
       const response = await apiClient.get<
         ApiEnvelope<Record<string, unknown>[]> | Record<string, unknown>[]
-      >(`/api/v1/encounters/${encounterId}/amendments`);
+      >(`/api/v1/encounters/${numId}/amendments`);
       const list = unwrap<Record<string, unknown>[]>(response.data);
       return Array.isArray(list) ? list : [];
     } catch (err) {
@@ -806,10 +908,17 @@ export const consultationApi = {
    * Get consultation clinical notes & follow-up data
    */
   getConsultation: async (encounterId: string | number) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.get<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/consultation`);
+      >(`/api/v1/encounters/${numId}/consultation`);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (err) {
       console.log(err);
@@ -826,10 +935,17 @@ export const consultationApi = {
     encounterId: string | number,
     payload: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.put<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/consultation`, payload);
+      >(`/api/v1/encounters/${numId}/consultation`, payload);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -844,10 +960,17 @@ export const consultationApi = {
     encounterId: string | number,
     payload: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.post<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/consultation`, payload);
+      >(`/api/v1/encounters/${numId}/consultation`, payload);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);
@@ -859,10 +982,17 @@ export const consultationApi = {
     diagnosisId: string | number,
     payload: Record<string, unknown>,
   ) => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.put<
         ApiEnvelope<Record<string, unknown>> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/diagnoses/${diagnosisId}`, payload);
+      >(`/api/v1/encounters/${numId}/diagnoses/${diagnosisId}`, payload);
       return unwrap<Record<string, unknown>>(response.data);
     } catch (error: unknown) {
       return handleApiError(error);

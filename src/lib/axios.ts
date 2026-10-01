@@ -191,7 +191,8 @@ async function customFetch<T = unknown>(
           );
         }
 
-        // Backend returns: { data: { accessToken: "...", refreshToken: "..." } } or { accessToken: "...", refreshToken: "..." }
+        // Backend refresh returns: { data: { accessToken, tokenType, expiresIn } }
+        // It does NOT return a new refreshToken — the existing one stays valid.
         const tokenData =
           typeof refreshData === "object" && refreshData !== null
             ? ((refreshData as { data?: Record<string, string> }).data ??
@@ -199,20 +200,46 @@ async function customFetch<T = unknown>(
             : undefined;
 
         const newAccessToken = tokenData?.accessToken;
-        const newRefreshToken = tokenData?.refreshToken;
 
-        if (!newAccessToken || !newRefreshToken) {
+        if (!newAccessToken) {
           throw new ApiError(
-            "Invalid refresh response: accessToken or refreshToken is missing.",
+            "Invalid refresh response: accessToken is missing.",
             401,
             refreshData,
           );
         }
 
-        // IMPORTANT: Backend uses refresh-token rotation (RTR).
-        // Save BOTH newly issued tokens.
+        // Save the new access token. Keep the existing refresh token unchanged
+        // since the backend does not rotate it on refresh.
         setToken("accessToken", newAccessToken);
-        setToken("refreshToken", newRefreshToken);
+
+        // If the backend ever starts returning a rotated refresh token,
+        // use it; otherwise keep the one we already have.
+        const newRefreshToken = tokenData?.refreshToken;
+        if (newRefreshToken) {
+          setToken("refreshToken", newRefreshToken);
+        }
+
+        if (typeof localStorage !== "undefined") {
+          try {
+            const rawStorage = localStorage.getItem("hms-auth-storage:v1");
+            if (rawStorage) {
+              const parsed = JSON.parse(rawStorage);
+              if (parsed && parsed.tokens) {
+                parsed.tokens.accessToken = newAccessToken;
+                if (newRefreshToken) {
+                  parsed.tokens.refreshToken = newRefreshToken;
+                }
+                localStorage.setItem(
+                  "hms-auth-storage:v1",
+                  JSON.stringify(parsed),
+                );
+              }
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
 
         processQueue(null, newAccessToken);
 

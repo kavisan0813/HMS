@@ -92,6 +92,8 @@ function CircularProgress({
 import { useDailyRevenueDetails, extractList } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
 import type { DailyRevenueDetail } from "../types/reports.types";
+import { useNavigate } from "react-router";
+import { ROUTES } from "../../../app/routes/routes";
 
 function AccountantRevenueReportScreen({
   onBack,
@@ -99,6 +101,7 @@ function AccountantRevenueReportScreen({
   onBack?: () => void;
   onOpenBillingReport?: () => void;
 }) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("Today");
   const [paymentStatusFilter, setPaymentStatusFilter] = useState(
@@ -1155,29 +1158,42 @@ function AccountantRevenueReportScreen({
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() =>
-                                  alert(`Viewing invoice ${item.invoiceId}`)
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
+                                  )
                                 }
-                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
+                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
                                 title="View Invoice"
                               >
                                 <CreditCard className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() =>
-                                  alert(
-                                    `Printing receipt for ${item.invoiceId}`,
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
                                   )
                                 }
-                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition"
+                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition cursor-pointer"
                                 title="Print Invoice"
                               >
                                 <Printer className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() =>
-                                  alert(`Downloading PDF for ${item.invoiceId}`)
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
+                                  )
                                 }
-                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
+                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                 title="Download PDF"
                               >
                                 <Download className="w-4 h-4" />

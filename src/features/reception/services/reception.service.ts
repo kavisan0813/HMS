@@ -35,42 +35,30 @@ export const receptionService = {
   async checkInPatient(
     payloadOrId: ArrivalCheckInPayload | string | number,
   ): Promise<CheckInResponseData> {
-    const appointmentId =
+    const rawId =
       (typeof payloadOrId === "object"
         ? payloadOrId.appointmentId || payloadOrId.queueItemId
         : payloadOrId) || "";
+    let appointmentId = rawId;
+    if (typeof rawId === "string" && rawId.includes("-")) {
+      const parsed = parseInt(rawId.split("-").pop() || "", 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        appointmentId = parsed;
+      }
+    }
     try {
-      // 1. Send PATCH check-in request to backend
+      // 1. Send check-in request to backend
       const patchRes = await receptionApi.patchCheckIn(appointmentId);
 
-      // 2. Fetch token details from backend
-      const tokenRes = await receptionApi.getAppointmentToken(appointmentId);
-      const tokenNumber =
-        tokenRes?.tokenNumber ||
-        tokenRes?.token ||
-        patchRes?.tokenNumber ||
-        `TK-${String(appointmentId).slice(-4)}`;
-
-      // 3. Update status to WAITING_FOR_VITALS via appointment status API
-      await appointmentsApi.updateAppointmentStatus(
-        appointmentId,
-        "WAITING_FOR_VITALS",
-      );
-
-      // 4. Fetch queue position from backend worklist
-      let queueNumber: number | undefined;
-      try {
-        const worklist = await receptionApi.getWorklist();
-        const idx = worklist.findIndex(
-          (item) =>
-            item.appointmentId === appointmentId || item.id === appointmentId,
-        );
-        if (idx >= 0) {
-          queueNumber = idx + 1;
+      // 2. Fetch token details from backend if not present in check-in response
+      let tokenNumber = patchRes?.tokenNumber || "";
+      if (!tokenNumber) {
+        try {
+          const tokenRes = await receptionApi.getAppointmentToken(appointmentId);
+          tokenNumber = tokenRes?.tokenNumber || tokenRes?.token || "";
+        } catch (tokenErr) {
+          console.warn("[receptionService] Token fetch error:", tokenErr);
         }
-      } catch (err) {
-        console.log(err);
-        // queue position is optional
       }
 
       return {

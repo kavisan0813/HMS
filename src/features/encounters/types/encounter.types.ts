@@ -23,6 +23,7 @@ export interface CreateEncounterRequest {
  * POST /api/v1/encounters (Response) & POST /api/v1/encounters/{encounterId}/finalize (Response)
  */
 export interface Encounter {
+  id?: string | number;
   encounterId: string | number;
   encounterNumber?: string;
   appointmentId?: string | number;

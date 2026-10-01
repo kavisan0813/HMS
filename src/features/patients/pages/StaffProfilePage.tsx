@@ -131,19 +131,20 @@ export function StaffProfilePage({ currentRole }: { currentRole: Role }) {
     const loadProfile = async () => {
       try {
         let data: UserDetailData | null = null;
-        try {
-          const response = await usersApi.adminGetUserById(userId);
-          data = response.data || null;
-        } catch (err) {
-          console.log(err);
-          // If non-admin (Nurse, Receptionist, Accountant), admin endpoint will 403.
-          // Fall back to authService.getProfile() / auth/me or current authStore user:
+        const isSelf = String(user?.id) === String(userId);
+        if (isSelf) {
           try {
             const meRes = await authService.getProfile();
             data = meRes.data as unknown as UserDetailData;
-          } catch (err) {
-            console.log(err);
+          } catch {
             data = user as unknown as UserDetailData;
+          }
+        } else {
+          try {
+            const response = await usersApi.adminGetUserById(userId);
+            data = response.data || null;
+          } catch {
+            data = null;
           }
         }
 

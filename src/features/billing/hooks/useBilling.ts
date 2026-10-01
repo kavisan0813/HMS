@@ -54,6 +54,7 @@ export function useBilling(patientMrn?: string) {
     queryKey: billingKeys.patient(patientMrn || ""),
     queryFn: () => billingService.getPatientBilling(patientMrn || ""),
     enabled: !!patientMrn,
+    staleTime: 30_000,
   });
 
   return {
@@ -87,12 +88,15 @@ export function useBillingList(params?: {
 }) {
   const { enabled: paramEnabled, ...queryParams } = params ?? {};
   const isAllowed = isStaffBillingAllowed();
+  const hasParams = params && Object.keys(queryParams).length > 0;
   return useQuery({
     queryKey: billingKeys.list(
-      queryParams as Record<string, unknown> | undefined,
+      hasParams ? (queryParams as Record<string, unknown>) : undefined,
     ),
-    queryFn: () => billingService.searchBills(queryParams),
+    queryFn: () =>
+      billingService.searchBills(hasParams ? queryParams : undefined),
     enabled: isAllowed && paramEnabled !== false,
+    staleTime: 30_000,
   });
 }
 
@@ -126,10 +130,22 @@ export function useReadyForBillingSearch(
 export function useInvoice(billId?: number | string) {
   const queryClient = useQueryClient();
 
+  const numericBillId =
+    typeof billId === "number"
+      ? Number.isInteger(billId) && billId > 0
+        ? billId
+        : undefined
+      : typeof billId === "string" && /^\d+$/.test(billId.trim())
+        ? Number(billId.trim())
+        : undefined;
+
+  const isValidId = numericBillId !== undefined;
+
   const billQuery = useQuery({
-    queryKey: billingKeys.detail(billId || ""),
-    queryFn: () => billingService.getBill(billId!),
-    enabled: !!billId,
+    queryKey: billingKeys.detail(numericBillId ?? billId ?? ""),
+    queryFn: () => billingService.getBill(numericBillId ?? billId!),
+    enabled: isValidId,
+    staleTime: 30_000,
     retry: (failureCount, error: { status?: number }) => {
       if (error?.status && error.status >= 400 && error.status < 500)
         return false;
@@ -138,9 +154,10 @@ export function useInvoice(billId?: number | string) {
   });
 
   const summaryQuery = useQuery({
-    queryKey: billingKeys.summary(billId || ""),
-    queryFn: () => billingService.getBillSummary(billId!),
-    enabled: !!billId,
+    queryKey: billingKeys.summary(numericBillId ?? billId ?? ""),
+    queryFn: () => billingService.getBillSummary(numericBillId ?? billId!),
+    enabled: isValidId,
+    staleTime: 30_000,
     retry: (failureCount, error: { status?: number }) => {
       if (error?.status && error.status >= 400 && error.status < 500)
         return false;
@@ -297,10 +314,11 @@ export function useInvoice(billId?: number | string) {
   const normalizedBill: NormalizedBillWorkspace | null = workspace
     ? {
         ...workspace,
-        id: String(rawBill?.id ?? rawBill?.billId ?? billId ?? ""),
+        id: String(rawBill?.id ?? rawBill?.billId ?? numericBillId ?? billId ?? ""),
         billId:
           rawBill?.id ??
           rawBill?.billId ??
+          numericBillId ??
           (typeof billId === "number" ? billId : Number(billId) || undefined),
         billNumber: String(
           rawBill?.billNumber || workspace.bill?.billNumber || billId || "",
@@ -377,10 +395,22 @@ export function useInvoice(billId?: number | string) {
 export function usePayment(billId?: number | string) {
   const queryClient = useQueryClient();
 
+  const numericBillId =
+    typeof billId === "number"
+      ? Number.isInteger(billId) && billId > 0
+        ? billId
+        : undefined
+      : typeof billId === "string" && /^\d+$/.test(billId.trim())
+        ? Number(billId.trim())
+        : undefined;
+
+  const isValidId = numericBillId !== undefined;
+
   const paymentHistoryQuery = useQuery({
-    queryKey: billingKeys.payments(billId || ""),
-    queryFn: () => billingService.getPaymentHistory(billId!),
-    enabled: !!billId,
+    queryKey: billingKeys.payments(numericBillId ?? billId ?? ""),
+    queryFn: () => billingService.getPaymentHistory(numericBillId ?? billId!),
+    enabled: isValidId,
+    staleTime: 30_000,
     retry: (failureCount, error: { status?: number }) => {
       if (error?.status && error.status >= 400 && error.status < 500)
         return false;
@@ -440,10 +470,22 @@ export function usePayment(billId?: number | string) {
 // ── useReceipt ──────────────────────────────────────────────────────────────
 
 export function useReceipt(billId?: number | string) {
+  const numericBillId =
+    typeof billId === "number"
+      ? Number.isInteger(billId) && billId > 0
+        ? billId
+        : undefined
+      : typeof billId === "string" && /^\d+$/.test(billId.trim())
+        ? Number(billId.trim())
+        : undefined;
+
+  const isValidId = numericBillId !== undefined;
+
   const receiptQuery = useQuery({
-    queryKey: billingKeys.receipt(billId || ""),
-    queryFn: () => billingService.getReceipt(billId!),
-    enabled: !!billId,
+    queryKey: billingKeys.receipt(numericBillId ?? billId ?? ""),
+    queryFn: () => billingService.getReceipt(numericBillId ?? billId!),
+    enabled: isValidId,
+    staleTime: 30_000,
   });
 
   return {
@@ -462,10 +504,15 @@ export function useBillingDashboard(params?: {
 }) {
   const { enabled: paramEnabled, ...queryParams } = params ?? {};
   const isAllowed = isStaffBillingAllowed();
+  const hasParams = params && Object.keys(queryParams).length > 0;
   return useQuery({
-    queryKey: billingKeys.dashboard(queryParams),
-    queryFn: () => billingService.getDashboardSummary(queryParams),
+    queryKey: billingKeys.dashboard(
+      hasParams ? queryParams : undefined,
+    ),
+    queryFn: () =>
+      billingService.getDashboardSummary(hasParams ? queryParams : undefined),
     enabled: isAllowed && paramEnabled !== false,
+    staleTime: 30_000,
   });
 }
 

@@ -23,48 +23,67 @@ import type {
 } from "../types/billing.types";
 import { mapApiBillToInvoiceRecord } from "../utils/billing.utils";
 
+import { useAuthStore } from "../../auth/store/auth.store";
+
 const billIdCache = new Map<string, number>();
 
-async function resolveBillId(rawId: number | string): Promise<number | string> {
-  if (rawId === null || rawId === undefined) return rawId;
+async function resolveBillId(rawId: number | string): Promise<number> {
+  if (rawId === null || rawId === undefined) {
+    throw new Error("Valid numeric billId is required");
+  }
   const strId = String(rawId).trim();
-  if (!strId) return rawId;
+  if (!strId) {
+    throw new Error("Valid numeric billId is required");
+  }
 
   if (/^\d+$/.test(strId)) {
-    return Number(strId);
+    const parsed = Number(strId);
+    if (Number.isInteger(parsed) && parsed > 0) {
+      return parsed;
+    }
   }
 
   if (billIdCache.has(strId)) {
     return billIdCache.get(strId)!;
   }
 
-  try {
-    const response = await billingApi.searchBills({
-      search: strId,
-      page: 0,
-      size: 10,
-    });
-    const content =
-      (response.data as unknown as { content?: Array<Record<string, unknown>> })
-        ?.content || [];
-    const found = content.find(
-      (b: Record<string, unknown>) =>
-        b.billNumber === strId ||
-        b.invoiceId === strId ||
-        (b.billNumber &&
-          String(b.billNumber).toLowerCase() === strId.toLowerCase()),
-    );
-    const numericId = found?.billId ?? found?.id;
-    if (numericId != null && !isNaN(Number(numericId))) {
-      const parsed = Number(numericId);
-      billIdCache.set(strId, parsed);
-      return parsed;
+  // Only attempt search if the user's role is allowed to search bills (staff/admin)
+  const role = useAuthStore.getState().user?.role;
+  const isUnauthorizedRole = ["DOCTOR", "NURSE", "PATIENT"].includes(
+    String(role || "").toUpperCase(),
+  );
+
+  if (!isUnauthorizedRole) {
+    try {
+      const response = await billingApi.searchBills({
+        search: strId,
+        page: 0,
+        size: 10,
+      });
+      const content =
+        (response.data as unknown as { content?: Array<Record<string, unknown>> })
+          ?.content || [];
+      const found = content.find(
+        (b: Record<string, unknown>) =>
+          b.billNumber === strId ||
+          b.invoiceId === strId ||
+          (b.billNumber &&
+            String(b.billNumber).toLowerCase() === strId.toLowerCase()),
+      );
+      const numericId = found?.billId ?? found?.id;
+      if (numericId != null && !isNaN(Number(numericId))) {
+        const parsed = Number(numericId);
+        if (Number.isInteger(parsed) && parsed > 0) {
+          billIdCache.set(strId, parsed);
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not resolve numeric billId for string:", strId, err);
     }
-  } catch (err) {
-    console.warn("Could not resolve numeric billId for string:", strId, err);
   }
 
-  return rawId;
+  throw new Error(`Valid numeric billId is required. Received: '${strId}'`);
 }
 
 export const billingService = {

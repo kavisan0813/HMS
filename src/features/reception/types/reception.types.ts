@@ -59,5 +59,5 @@ export interface WalkInRegistrationPayload {
   doctorId: string | number;
   consultationFee: number;
   visitType: "WALK_IN" | "EMERGENCY";
-  paymentMode: "CASH" | "CARD" | "UPI" | "INSURANCE" | "PENDING";
+  paymentMode: "CASH" | "CARD" | "UPI" | "PENDING";
 }

@@ -32,17 +32,6 @@ export function extractNumericAppointmentId(
   if (typeof id === "number") return id;
   const str = String(id).trim();
   if (/^\d+$/.test(str)) return Number(str);
-  const parts = str.split("-");
-  const lastPart = parts[parts.length - 1];
-  if (lastPart && /^\d+$/.test(lastPart)) {
-    const num = parseInt(lastPart, 10);
-    if (!isNaN(num)) return num;
-  }
-  const digitsOnly = str.replace(/\D/g, "");
-  if (digitsOnly) {
-    const num = parseInt(digitsOnly, 10);
-    if (!isNaN(num)) return num;
-  }
   return id;
 }
 
@@ -243,11 +232,20 @@ export const vitalsApi = {
   async createEncounter(
     appointmentId: string | number,
   ): Promise<{ encounterId: string | number }> {
+    const numApptId =
+      typeof appointmentId === "number"
+        ? appointmentId
+        : parseInt(String(appointmentId), 10);
+    if (!Number.isInteger(numApptId) || numApptId <= 0) {
+      throw new Error(
+        `Invalid appointmentId for encounter creation: ${appointmentId}`,
+      );
+    }
     try {
       const response = await apiClient.post<
         | ApiEnvelope<{ encounterId: string | number }>
         | { encounterId: string | number }
-      >("/api/v1/encounters", { appointmentId });
+      >("/api/v1/encounters", { appointmentId: numApptId });
       return unwrap(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -276,9 +274,16 @@ export const vitalsApi = {
       heightVal?: number;
     },
   ): Promise<NurseVitalsApiResponse<unknown>> {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      throw new Error(`Invalid numeric encounterId: ${encounterId}`);
+    }
     try {
       const response = await apiClient.post<NurseVitalsApiResponse<unknown>>(
-        `/api/v1/encounters/${encounterId}/vitals`,
+        `/api/v1/encounters/${numId}/vitals`,
         payload,
       );
       return response.data;
@@ -298,10 +303,17 @@ export const vitalsApi = {
    * Fetch vitals directly for an encounter (Swagger spec B)
    */
   async getVitalsByEncounterId(encounterId: string | number) {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     try {
       const response = await apiClient.get<
         NurseVitalsApiResponse<unknown> | Record<string, unknown>
-      >(`/api/v1/encounters/${encounterId}/vitals`);
+      >(`/api/v1/encounters/${numId}/vitals`);
       return response.data;
     } catch (err) {
       console.log(err);

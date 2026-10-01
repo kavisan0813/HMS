@@ -13,4 +13,5 @@ export {
   markNotificationAsUnread,
   markAllNotificationsAsRead,
   deleteNotification,
+  triggerInternalNotification,
 } from "../api/notification.api";

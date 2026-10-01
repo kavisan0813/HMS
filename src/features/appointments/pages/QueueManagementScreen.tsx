@@ -130,10 +130,7 @@ export function QueueManagementScreen({
   const handleExecuteCheckIn = async (apt: AppointmentRecord) => {
     try {
       const res = await receptionService.checkInPatient(apt.id);
-      const genToken =
-        res.tokenNumber ||
-        apt.queueToken ||
-        `TK-${tokenCounter + Number(apt.id)}`;
+      const genToken = res.tokenNumber || apt.queueToken || "";
 
       setQueueItems((prev) =>
         prev.map((i) =>
@@ -167,7 +164,7 @@ export function QueueManagementScreen({
     } catch (err) {
       triggerToast(
         (err instanceof Error ? err.message : null) ||
-          "Check-in is only allowed on the appointment date.",
+          "Check-in failed. Please try again.",
         "error",
       );
     }

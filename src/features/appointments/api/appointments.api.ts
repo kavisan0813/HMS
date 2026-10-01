@@ -165,7 +165,55 @@ export const appointmentsApi = {
     appointmentId: string | number,
   ): Promise<ApiResponse<AppointmentRecord>> => {
     const rawStr = String(appointmentId).trim();
-    const numericStr = rawStr.replace(/\D+/g, "");
+    const isPureNumber = /^\d+$/.test(rawStr);
+
+    if (isPureNumber) {
+      try {
+        const response = await apiClient.get<ApiResponse<AppointmentRecord>>(
+          `/api/v1/appointments/${rawStr}`,
+        );
+        return response.data;
+      } catch (error: unknown) {
+        return handleApiError(error);
+      }
+    }
+
+    // If it is an appointment display number (e.g. "APT-20261001-0001")
+    try {
+      const listRes = await apiClient.get<
+        ApiResponse<
+          | { content?: AppointmentRecord[]; data?: AppointmentRecord[] }
+          | AppointmentRecord[]
+        >
+      >(`/api/v1/appointments`);
+      const listData = listRes.data?.data || listRes.data;
+      const items = Array.isArray(listData)
+        ? listData
+        : (
+              listData as {
+                content?: AppointmentRecord[];
+                data?: AppointmentRecord[];
+              }
+            )?.content ||
+          (
+            listData as {
+              content?: AppointmentRecord[];
+              data?: AppointmentRecord[];
+            }
+          )?.data ||
+          [];
+      const found = items.find(
+        (a) =>
+          String(a.appointmentNumber || "").toUpperCase() ===
+            rawStr.toUpperCase() ||
+          String(a.appointmentId || "").toUpperCase() === rawStr.toUpperCase(),
+      );
+      if (found) {
+        return { success: true, message: "Success", data: found };
+      }
+    } catch {
+      // Ignore and attempt direct GET if list resolution didn't find it
+    }
 
     try {
       const response = await apiClient.get<ApiResponse<AppointmentRecord>>(
@@ -173,16 +221,6 @@ export const appointmentsApi = {
       );
       return response.data;
     } catch (error: unknown) {
-      if (numericStr && numericStr !== rawStr) {
-        try {
-          const fallbackRes = await apiClient.get<
-            ApiResponse<AppointmentRecord>
-          >(`/api/v1/appointments/${numericStr}`);
-          return fallbackRes.data;
-        } catch (err) {
-          console.log(err);
-        }
-      }
       return handleApiError(error);
     }
   },
@@ -438,12 +476,17 @@ export const appointmentsApi = {
   receptionCheckIn: async (
     appointmentId: string | number,
   ): Promise<ApiResponse<QueueActionResponse>> => {
+    let numericId = appointmentId;
+    if (typeof appointmentId === "string" && appointmentId.includes("-")) {
+      const parsed = parseInt(appointmentId.split("-").pop() || "", 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        numericId = parsed;
+      }
+    }
     try {
       const response = await apiClient.patch<ApiResponse<QueueActionResponse>>(
-        `/api/v1/reception/appointments/${appointmentId}/check-in`,
-        {},
+        `/api/v1/reception/appointments/${numericId}/check-in`,
       );
-
       return response.data;
     } catch (error: unknown) {
       return handleApiError(error);

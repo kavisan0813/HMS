@@ -48,6 +48,11 @@ import type {
   DoctorDailyAnalyticsData,
   DoctorPatientAnalyticsData,
 } from "../../../features/doctors/types/doctorReports.types";
+import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useAuthStore } from "../../auth/store/auth.store";
+import { exportDataToCsv } from "../utils/export.utils";
 
 const PP = "Poppins, system-ui, sans-serif";
 const RB = "Roboto, system-ui, sans-serif";
@@ -147,9 +152,11 @@ const SAMPLE_DOCTOR_CONSULTATIONS: DoctorConsultationRecord[] = [
 const DoctorDashboardHeader = ({
   isRefreshing,
   onRefresh,
+  onExportCsv,
 }: {
   isRefreshing: boolean;
   onRefresh: () => void;
+  onExportCsv: () => void;
 }) => (
   <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -187,7 +194,7 @@ const DoctorDashboardHeader = ({
 
         <button
           onClick={onRefresh}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
         >
           <RefreshCw
             className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
@@ -196,16 +203,16 @@ const DoctorDashboardHeader = ({
         </button>
 
         <button
-          onClick={() => alert("Exporting Doctor Summary (PDF)...")}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
+          onClick={onExportCsv}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
-          <span>Export PDF</span>
+          <span>Export CSV</span>
         </button>
 
         <button
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
         >
           <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
           <span>Print Report</span>
@@ -1173,112 +1180,160 @@ const DoctorConsultationsTable = ({
   filteredConsultations,
 }: {
   filteredConsultations: DoctorConsultationRecord[];
-}) => (
-  <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden mb-6">
-    <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div>
-        <h3
-          className="text-base font-bold text-[#111827]"
-          style={{ fontFamily: PP }}
-        >
-          Recent Patient Consultations
-        </h3>
-        <p className="text-xs text-[#64748B]">
-          Logged-in Doctor active consultation history register
-        </p>
-      </div>
-      <button
-        onClick={() => alert("Exporting Consultation Summary (CSV)...")}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
-      >
-        <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
-        <span>Export Summary</span>
-      </button>
-    </div>
+}) => {
+  const navigate = useNavigate();
 
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
-            <th className="py-3.5 px-4">Patient Name</th>
-            <th className="py-3.5 px-4">MRN</th>
-            <th className="py-3.5 px-4">Appt Date</th>
-            <th className="py-3.5 px-4">Consult Time</th>
-            <th className="py-3.5 px-4">Diagnosis</th>
-            <th className="py-3.5 px-4">Prescription</th>
-            <th className="py-3.5 px-4">Visit Type</th>
-            <th className="py-3.5 px-4 text-center">Status</th>
-            <th className="py-3.5 px-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#E5E7EB] text-xs">
-          {filteredConsultations.length === 0 ? (
-            <tr>
-              <td colSpan={9} className="py-8 text-center text-[#64748B]">
-                No consultation records match your filter criteria.
-              </td>
+  const handleExportCsv = () => {
+    if (!filteredConsultations || filteredConsultations.length === 0) {
+      alert("No consultation records available to export.");
+      return;
+    }
+
+    const rows = filteredConsultations.map((item, idx) => ({
+      "S.No": idx + 1,
+      "Patient Name": item.patientName || "N/A",
+      "MRN": item.mrn || "N/A",
+      "Appt Date": item.appointmentDate || "N/A",
+      "Consult Time": item.consultationTime || "N/A",
+      "Diagnosis": item.diagnosis || "Clinical Consultation",
+      "Prescription": item.prescription || "Standard Rx",
+      "Visit Type": item.visitType || "N/A",
+      "Status": item.status || "N/A",
+    }));
+
+    exportDataToCsv(
+      `doctor-recent-consultations-${new Date().toISOString().slice(0, 10)}.csv`,
+      rows,
+    );
+  };
+
+  const handleViewConsultation = (item: DoctorConsultationRecord) => {
+    if (item.id && !String(item.id).startsWith("reg-api-")) {
+      navigate(`/doctor/consultation/${item.id}`, {
+        state: { mrn: item.mrn, patientName: item.patientName },
+      });
+    } else if (item.mrn && item.mrn !== "N/A") {
+      navigate(`/patients/profile/${item.mrn}`);
+    } else {
+      navigate(ROUTES.DOCTOR_CONSULTATION);
+    }
+  };
+
+  const handlePrintSummary = (item: DoctorConsultationRecord) => {
+    downloadAppointmentSlipPdf({
+      id: item.id,
+      appointmentNumber: item.id,
+      patientName: item.patientName,
+      mrn: item.mrn,
+      appointmentDate: item.appointmentDate,
+      timeSlot: item.consultationTime,
+      status: item.status,
+      visitType: item.visitType,
+      reason: item.diagnosis,
+      remarks: item.prescription,
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden mb-6">
+      <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3
+            className="text-base font-bold text-[#111827]"
+            style={{ fontFamily: PP }}
+          >
+            Recent Patient Consultations
+          </h3>
+          <p className="text-xs text-[#64748B]">
+            Logged-in Doctor active consultation history register
+          </p>
+        </div>
+        <button
+          onClick={handleExportCsv}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
+          <span>Export Summary</span>
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
+              <th className="py-3.5 px-4">Patient Name</th>
+              <th className="py-3.5 px-4">MRN</th>
+              <th className="py-3.5 px-4">Appt Date</th>
+              <th className="py-3.5 px-4">Consult Time</th>
+              <th className="py-3.5 px-4">Diagnosis</th>
+              <th className="py-3.5 px-4">Prescription</th>
+              <th className="py-3.5 px-4">Visit Type</th>
+              <th className="py-3.5 px-4 text-center">Status</th>
+              <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
-          ) : (
-            filteredConsultations.map((item) => (
-              <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                <td className="py-3.5 px-4 font-bold text-[#111827]">
-                  {item.patientName}
-                </td>
-                <td className="py-3.5 px-4 font-mono font-semibold text-[#0D47A1]">
-                  {item.mrn}
-                </td>
-                <td className="py-3.5 px-4 text-[#64748B]">
-                  {item.appointmentDate}
-                </td>
-                <td className="py-3.5 px-4 text-[#111827] font-medium">
-                  {item.consultationTime}
-                </td>
-                <td className="py-3.5 px-4 font-semibold text-[#111827]">
-                  {item.diagnosis}
-                </td>
-                <td className="py-3.5 px-4 text-[#009688] font-medium">
-                  {item.prescription}
-                </td>
-                <td className="py-3.5 px-4 text-[#64748B] font-medium">
-                  {item.visitType}
-                </td>
-                <td className="py-3.5 px-4 text-center">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${item.status === "Completed" ? "bg-teal-50 text-[#009688] border border-teal-200" : item.status === "In Progress" ? "bg-amber-50 text-[#F59E0B] border border-amber-200" : "bg-slate-100 text-[#64748B]"}`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() =>
-                        alert(
-                          `Viewing consultation details for ${item.patientName}`,
-                        )
-                      }
-                      className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
-                      title="View Consultation"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        alert(`Printing summary for ${item.patientName}`)
-                      }
-                      className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
-                      title="Print Summary"
-                    >
-                      <Printer className="w-4 h-4" />
-                    </button>
-                  </div>
+          </thead>
+          <tbody className="divide-y divide-[#E5E7EB] text-xs">
+            {filteredConsultations.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="py-8 text-center text-[#64748B]">
+                  No consultation records match your filter criteria.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+            ) : (
+              filteredConsultations.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3.5 px-4 font-bold text-[#111827]">
+                    {item.patientName}
+                  </td>
+                  <td className="py-3.5 px-4 font-mono font-semibold text-[#0D47A1]">
+                    {item.mrn}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#64748B]">
+                    {item.appointmentDate}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#111827] font-medium">
+                    {item.consultationTime}
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-[#111827]">
+                    {item.diagnosis}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#009688] font-medium">
+                    {item.prescription}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#64748B] font-medium">
+                    {item.visitType}
+                  </td>
+                  <td className="py-3.5 px-4 text-center">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${item.status === "Completed" ? "bg-teal-50 text-[#009688] border border-teal-200" : item.status === "In Progress" ? "bg-amber-50 text-[#F59E0B] border border-amber-200" : "bg-slate-100 text-[#64748B]"}`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleViewConsultation(item)}
+                        className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                        title="View Consultation"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handlePrintSummary(item)}
+                        className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                        title="Print Summary"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
     {/* Table Pagination / Footer */}
     <div className="p-4 bg-[#F1F5F9] border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
@@ -1303,7 +1358,8 @@ const DoctorConsultationsTable = ({
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // Main Screen Component
 export function DoctorReportsDashboardScreen({
@@ -1410,12 +1466,41 @@ export function DoctorReportsDashboardScreen({
       toDate: endDate,
       period: `${trendDays}days`,
     });
-  const { refetch: refetchPatReg } = useDoctorPatientRegister({
-    fromDate: startDate,
-    toDate: endDate,
-    search: searchQuery || undefined,
-    size: 50,
-  });
+  const { data: patientRegister, refetch: refetchPatReg } =
+    useDoctorPatientRegister({
+      fromDate: startDate,
+      toDate: endDate,
+      search: searchQuery || undefined,
+      size: 50,
+    });
+
+  const { logoUrl } = useHospitalBranding();
+  const currentUser = useAuthStore((s) => s.user);
+  const [logoLoaded, setLogoLoaded] = React.useState(true);
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName = "Safe Hands Hospital";
+  const hospitalAddress = "123 Healthcare Ave, Medical District";
+  const hospitalPhone = "+91 (011) 2345-6789";
+  const hospitalGstin = "GSTIN: 07AAAAM1234F1Z5";
+
+  const doctorDisplayName =
+    dailyDashboard?.doctor?.name ||
+    currentUser?.fullName ||
+    currentUser?.name ||
+    "Dr. Medical Practitioner";
+  const doctorDept =
+    currentUser?.department ||
+    currentUser?.departmentName ||
+    "Clinical Consultation / Outpatient";
+  const reportPeriodText =
+    startDate && endDate && startDate === endDate
+      ? startDate
+      : `${startDate || todayStr} to ${endDate || todayStr}`;
+  const generatedTimestamp = `${new Date().toLocaleDateString("en-GB")} ${new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })}`;
 
   const handlePresetDateChange = (preset: string) => {
     setDateRangeFilter(preset);
@@ -1566,119 +1651,479 @@ export function DoctorReportsDashboardScreen({
     };
   }, [dailyDashboard, patientDashboard, filteredConsultations]);
 
+  const handleExportCsv = () => {
+    const csvFilename = `doctor-report-${startDate || todayStr}.csv`;
+    const exportRows = filteredConsultations.map((item, idx) => ({
+      "S.No": idx + 1,
+      "Appointment ID": item.id,
+      "Patient Name": item.patientName,
+      MRN: item.mrn,
+      "Appointment Date": item.appointmentDate,
+      "Appointment Time": item.consultationTime,
+      "Visit Type": item.visitType,
+      "Consultation Status": item.status,
+      "Diagnosis / Clinical Notes": item.diagnosis || "Clinical Consultation",
+      Prescription: item.prescription || "Standard Rx",
+    }));
+
+    exportDataToCsv(csvFilename, exportRows);
+  };
+
   return (
     <div
       className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
       style={{ fontFamily: RB }}
     >
-      {/* Top Header Section */}
-      <DoctorDashboardHeader
-        isRefreshing={isRefreshing}
-        onRefresh={handleRefresh}
-      />
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 10mm;
+        }
 
-      {/* Main Container Full Width */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
-        {/* 1. TOP 5 DOCTOR KPI CARDS */}
-        {!isLoading && !hasError && (
-          <DoctorKpiCards kpi={kpi} navigate={navigate} />
+        @media screen {
+          .doctor-report-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          /* Hide application navbar, sidebar, header, screen dashboard and buttons */
+          header, nav, aside, [role="navigation"], .no-print, .doctor-report-screen-ui {
+            display: none !important;
+            visibility: hidden !important;
+          }
+
+          body, html {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          #root, main, div[class*="min-h-screen"], div[class*="overflow-"] {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+          }
+
+          .doctor-report-print-only {
+            display: block !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .doctor-report-print-only * {
+            visibility: visible !important;
+          }
+
+          .doctor-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .doctor-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .doctor-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .doctor-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .doctor-print-table th,
+          .doctor-print-table td {
+            word-break: break-word !important;
+            white-space: normal !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="doctor-report-print-only font-sans">
+        {/* A. REPORT HEADER */}
+        <div className="border-b-2 border-slate-800 pb-4 mb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[11px] text-slate-600 font-medium leading-tight">
+                  {hospitalAddress} • Ph: {hospitalPhone}
+                  {hospitalGstin ? ` • ${hospitalGstin}` : ""}
+                </p>
+                <div className="mt-1.5 inline-block bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded">
+                  DOCTOR ACTIVITY REPORT
+                </div>
+              </div>
+            </div>
+
+            <div className="text-right text-[11px] text-slate-600 space-y-0.5">
+              <div>
+                <span className="font-semibold text-slate-800">Doctor:</span>{" "}
+                {doctorDisplayName}
+              </div>
+              {doctorDept && (
+                <div>
+                  <span className="font-semibold text-slate-800">Department:</span>{" "}
+                  {doctorDept}
+                </div>
+              )}
+              <div>
+                <span className="font-semibold text-slate-800">Report Period:</span>{" "}
+                {reportPeriodText}
+              </div>
+              <div>
+                <span className="font-semibold text-slate-800">Generated:</span>{" "}
+                {generatedTimestamp}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. DOCTOR SUMMARY */}
+        <div className="mb-4">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5 bg-slate-100 px-2.5 py-1 border border-slate-300">
+            DOCTOR SUMMARY
+          </div>
+          <table className="doctor-print-table w-full text-xs border border-slate-300">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-300 text-left">
+                <th className="p-2 font-bold text-slate-800">Metric</th>
+                <th className="p-2 font-bold text-slate-800 text-right">Value</th>
+                <th className="p-2 font-bold text-slate-800">Metric</th>
+                <th className="p-2 font-bold text-slate-800 text-right">Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 text-slate-700 font-medium">Today's Appointments</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.todayAppointments}</td>
+                <td className="p-2 text-slate-700 font-medium">My Patients</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.myPatients}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 text-slate-700 font-medium">Completed Consultations</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.completedConsultations}</td>
+                <td className="p-2 text-slate-700 font-medium">Follow-up Patients</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.scheduledFollowUps}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 text-slate-700 font-medium">Avg Consultation Time</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.avgConsultTime}</td>
+                <td className="p-2 text-slate-700 font-medium">New Patients</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.newPatients}</td>
+              </tr>
+              <tr>
+                <td className="p-2 text-slate-700 font-medium">Returning Patients</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.returningPatients}</td>
+                <td className="p-2 text-slate-700 font-medium">Monthly Consultations</td>
+                <td className="p-2 text-slate-900 font-bold text-right">{kpi.monthlyConsultations}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* C. APPOINTMENT STATUS BREAKDOWN */}
+        <div className="mb-4">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5 bg-slate-100 px-2.5 py-1 border border-slate-300">
+            APPOINTMENT STATUS BREAKDOWN
+          </div>
+          <table className="doctor-print-table w-full text-xs border border-slate-300">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-300 text-left">
+                <th className="p-2 font-bold text-slate-800">Status</th>
+                <th className="p-2 font-bold text-slate-800 text-center">Count</th>
+                <th className="p-2 font-bold text-slate-800 text-right">Percentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 text-emerald-800 font-medium">Completed</td>
+                <td className="p-2 text-slate-900 font-bold text-center">{kpi.completedToday}</td>
+                <td className="p-2 text-slate-700 text-right">
+                  {filteredConsultations.length > 0
+                    ? Math.round((kpi.completedToday / filteredConsultations.length) * 100)
+                    : 0}%
+                </td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 text-amber-800 font-medium">Pending / Scheduled</td>
+                <td className="p-2 text-slate-900 font-bold text-center">{kpi.pendingToday}</td>
+                <td className="p-2 text-slate-700 text-right">
+                  {filteredConsultations.length > 0
+                    ? Math.round((kpi.pendingToday / filteredConsultations.length) * 100)
+                    : 0}%
+                </td>
+              </tr>
+              <tr>
+                <td className="p-2 text-red-800 font-medium">Cancelled</td>
+                <td className="p-2 text-slate-900 font-bold text-center">{kpi.cancelledToday}</td>
+                <td className="p-2 text-slate-700 text-right">
+                  {filteredConsultations.length > 0
+                    ? Math.round((kpi.cancelledToday / filteredConsultations.length) * 100)
+                    : 0}%
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* D. DETAILED CONSULTATION ACTIVITY */}
+        <div className="mb-4">
+          <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5 bg-slate-100 px-2.5 py-1 border border-slate-300">
+            DETAILED ACTIVITY RECORDS ({filteredConsultations.length})
+          </div>
+          {filteredConsultations.length === 0 ? (
+            <div className="p-4 border border-slate-300 text-center text-xs text-slate-500 italic">
+              No doctor activity records found for the selected report period.
+            </div>
+          ) : (
+            <table className="doctor-print-table w-full text-xs border border-slate-300">
+              <thead>
+                <tr className="bg-slate-100 border-b border-slate-300 text-left">
+                  <th className="p-2 font-bold text-slate-800 w-10 text-center">#</th>
+                  <th className="p-2 font-bold text-slate-800">Appt ID</th>
+                  <th className="p-2 font-bold text-slate-800">Patient Name</th>
+                  <th className="p-2 font-bold text-slate-800">MRN</th>
+                  <th className="p-2 font-bold text-slate-800">Date</th>
+                  <th className="p-2 font-bold text-slate-800">Time</th>
+                  <th className="p-2 font-bold text-slate-800">Visit Type</th>
+                  <th className="p-2 font-bold text-slate-800">Status</th>
+                  <th className="p-2 font-bold text-slate-800">Clinical Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredConsultations.map((c, idx) => (
+                  <tr key={c.id || idx} className="border-b border-slate-200">
+                    <td className="p-2 text-slate-500 text-center">{idx + 1}</td>
+                    <td className="p-2 font-mono font-medium text-slate-800">{c.id}</td>
+                    <td className="p-2 font-semibold text-slate-900">{c.patientName}</td>
+                    <td className="p-2 font-mono text-slate-600">{c.mrn}</td>
+                    <td className="p-2 text-slate-700">{c.appointmentDate}</td>
+                    <td className="p-2 text-slate-700">{c.consultationTime}</td>
+                    <td className="p-2 text-slate-700">{c.visitType}</td>
+                    <td className="p-2">
+                      <span
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          c.status === "Completed"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : c.status === "Cancelled"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-amber-100 text-amber-800"
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="p-2 text-slate-600 text-[11px]">
+                      {c.diagnosis || "Clinical Consultation"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* E. PATIENT ROSTER (IF PRESENT) */}
+        {patientRegister?.content && patientRegister.content.length > 0 && (
+          <div className="mb-4">
+            <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-1.5 bg-slate-100 px-2.5 py-1 border border-slate-300">
+              PATIENT FOLLOW-UP ROSTER ({patientRegister.content.length})
+            </div>
+            <table className="doctor-print-table w-full text-xs border border-slate-300">
+              <thead>
+                <tr className="bg-slate-100 border-b border-slate-300 text-left">
+                  <th className="p-2 font-bold text-slate-800 w-10 text-center">#</th>
+                  <th className="p-2 font-bold text-slate-800">Patient Name</th>
+                  <th className="p-2 font-bold text-slate-800">MRN</th>
+                  <th className="p-2 font-bold text-slate-800">Last Consult</th>
+                  <th className="p-2 font-bold text-slate-800 text-center">Total Visits</th>
+                  <th className="p-2 font-bold text-slate-800">Visit Type</th>
+                  <th className="p-2 font-bold text-slate-800">Next Follow-Up</th>
+                  <th className="p-2 font-bold text-slate-800">Compliance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {patientRegister.content.map((p, idx) => (
+                  <tr key={p.patientId || idx} className="border-b border-slate-200">
+                    <td className="p-2 text-slate-500 text-center">{idx + 1}</td>
+                    <td className="p-2 font-semibold text-slate-900">{p.patientName}</td>
+                    <td className="p-2 font-mono text-slate-600">{p.mrn}</td>
+                    <td className="p-2 text-slate-700">{p.lastConsultationDate || "—"}</td>
+                    <td className="p-2 text-slate-900 text-center font-bold">{p.totalConsultations}</td>
+                    <td className="p-2 text-slate-700">{p.lastVisitType || "—"}</td>
+                    <td className="p-2 text-slate-700">{p.nextFollowUpDate || "—"}</td>
+                    <td className="p-2 font-medium text-slate-800">{p.followUpStatus || "Active"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
-        {/* 2. DOCTOR FILTERS SECTION */}
-        <DoctorFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          dateRangeFilter={dateRangeFilter}
-          setDateRangeFilter={setDateRangeFilter}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          visitTypeFilter={visitTypeFilter}
-          setVisitTypeFilter={setVisitTypeFilter}
-          onApply={handleRefresh}
-          onReset={handleResetFilters}
-          handlePresetDateChange={handlePresetDateChange}
+        {/* F. REPORT TOTALS */}
+        <div className="border border-slate-300 bg-slate-50 p-3 mb-4 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-medium text-slate-700">
+            <div>Total Appts: <strong className="text-slate-900">{filteredConsultations.length}</strong></div>
+            <div>Completed: <strong className="text-emerald-800">{kpi.completedToday}</strong></div>
+            <div>Pending: <strong className="text-amber-800">{kpi.pendingToday}</strong></div>
+            <div>Cancelled: <strong className="text-red-800">{kpi.cancelledToday}</strong></div>
+            <div>Total Patients: <strong className="text-slate-900">{kpi.myPatients}</strong></div>
+            <div>Follow-Ups: <strong className="text-slate-900">{kpi.scheduledFollowUps}</strong></div>
+            <div>New Patients: <strong className="text-slate-900">{kpi.newPatients}</strong></div>
+            <div>Avg Time: <strong className="text-slate-900">{kpi.avgConsultTime}</strong></div>
+          </div>
+        </div>
+
+        {/* G. PRINT FOOTER */}
+        <div className="pt-3 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500">
+          <div>Generated from Safe Hands Hospital Management System</div>
+          <div>Confidential Medical Practice Record • Generated on: {generatedTimestamp}</div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN VIEW (VISUALLY UNCHANGED) ─── */}
+      <div className="doctor-report-screen-ui no-print">
+        {/* Top Header Section */}
+        <DoctorDashboardHeader
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onExportCsv={handleExportCsv}
         />
 
-        {/* ERROR STATE */}
-        {hasError && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 text-center">
-            <AlertCircle className="w-10 h-10 text-[#EF4444] mx-auto mb-2" />
-            <h3
-              className="text-base font-bold text-[#111827]"
-              style={{ fontFamily: PP }}
-            >
-              Unable to Load Doctor Reports
-            </h3>
-            <p className="text-xs text-[#64748B] mt-1 max-w-md mx-auto">
-              Connection timeout while loading your consultation metrics. Please
-              retry.
-            </p>
-            <button
-              onClick={() => setHasError(false)}
-              className="mt-4 px-4 py-2 bg-[#EF4444] text-white rounded-xl text-xs font-semibold hover:bg-red-600 transition"
-            >
-              Retry Loading
-            </button>
-          </div>
-        )}
+        {/* Main Container Full Width */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+          {/* 1. TOP 5 DOCTOR KPI CARDS */}
+          {!isLoading && !hasError && (
+            <DoctorKpiCards kpi={kpi} navigate={navigate} />
+          )}
 
-        {/* LOADING SKELETON STATE */}
-        {isLoading && (
-          <div className="space-y-6 mb-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white rounded-2xl border border-[#E5E7EB] p-4 h-32 animate-pulse"
-                ></div>
-              ))}
+          {/* 2. DOCTOR FILTERS SECTION */}
+          <DoctorFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            dateRangeFilter={dateRangeFilter}
+            setDateRangeFilter={setDateRangeFilter}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            visitTypeFilter={visitTypeFilter}
+            setVisitTypeFilter={setVisitTypeFilter}
+            onApply={handleRefresh}
+            onReset={handleResetFilters}
+            handlePresetDateChange={handlePresetDateChange}
+          />
+
+          {/* ERROR STATE */}
+          {hasError && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 text-center">
+              <AlertCircle className="w-10 h-10 text-[#EF4444] mx-auto mb-2" />
+              <h3
+                className="text-base font-bold text-[#111827]"
+                style={{ fontFamily: PP }}
+              >
+                Unable to Load Doctor Reports
+              </h3>
+              <p className="text-xs text-[#64748B] mt-1 max-w-md mx-auto">
+                Connection timeout while loading your consultation metrics. Please
+                retry.
+              </p>
+              <button
+                onClick={() => setHasError(false)}
+                className="mt-4 px-4 py-2 bg-[#EF4444] text-white rounded-xl text-xs font-semibold hover:bg-red-600 transition"
+              >
+                Retry Loading
+              </button>
             </div>
-            <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 h-64 animate-pulse"></div>
-          </div>
-        )}
+          )}
 
-        {/* MAIN DASHBOARD CONTENT (FULL SCREEN WIDTH) */}
-        {!isLoading && !hasError && (
-          <div className="w-full space-y-6">
-            {/* 3. AVAILABLE DOCTOR REPORTS CARDS */}
-            <AvailableDoctorReports
-              onOpenReport={onOpenReport}
-            />
+          {/* LOADING SKELETON STATE */}
+          {isLoading && (
+            <div className="space-y-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white rounded-2xl border border-[#E5E7EB] p-4 h-32 animate-pulse"
+                  ></div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 h-64 animate-pulse"></div>
+            </div>
+          )}
 
-            {/* 3. DASHBOARD CHARTS */}
-            <DoctorDashboardCharts
-              trendDays={trendDays}
-              setTrendDays={setTrendDays}
-              dailyAnalytics={dailyAnalytics}
-              patientAnalytics={patientAnalytics}
-              filteredConsultations={filteredConsultations}
-            />
+          {/* MAIN DASHBOARD CONTENT (FULL SCREEN WIDTH) */}
+          {!isLoading && !hasError && (
+            <div className="w-full space-y-6">
+              {/* 3. AVAILABLE DOCTOR REPORTS CARDS */}
+              <AvailableDoctorReports onOpenReport={onOpenReport} />
 
-            {/* 4. RECENT CONSULTATIONS TABLE */}
-            <DoctorConsultationsTable
-              filteredConsultations={filteredConsultations}
-            />
-          </div>
-        )}
+              {/* 3. DASHBOARD CHARTS */}
+              <DoctorDashboardCharts
+                trendDays={trendDays}
+                setTrendDays={setTrendDays}
+                dailyAnalytics={dailyAnalytics}
+                patientAnalytics={patientAnalytics}
+                filteredConsultations={filteredConsultations}
+              />
 
-        {/* FOOTER */}
-        <div className="mt-8 pt-4 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-2">
-          <div>
-            Showing{" "}
-            <strong className="text-[#111827]">
-              {filteredConsultations.length} Consultations
-            </strong>
-          </div>
-          <div>Hospital Management System • Doctor Reports Dashboard v1.0</div>
-          <div>
-            Last Refreshed:{" "}
-            <strong className="text-[#111827]">
-              {new Date().toLocaleString()}
-            </strong>
+              {/* 4. RECENT CONSULTATIONS TABLE */}
+              <DoctorConsultationsTable
+                filteredConsultations={filteredConsultations}
+              />
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <div className="mt-8 pt-4 border-t border-[#E5E7EB] flex flex-col sm:flex-row items-center justify-between text-xs text-[#64748B] gap-2">
+            <div>
+              Showing{" "}
+              <strong className="text-[#111827]">
+                {filteredConsultations.length} Consultations
+              </strong>
+            </div>
+            <div>Hospital Management System • Doctor Reports Dashboard v1.0</div>
+            <div>
+              Last Refreshed:{" "}
+              <strong className="text-[#111827]">
+                {new Date().toLocaleString()}
+              </strong>
+            </div>
           </div>
         </div>
       </div>

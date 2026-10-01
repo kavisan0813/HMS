@@ -63,7 +63,7 @@ export function BrandingPanel() {
           {[
             "Secure Patient Management",
             "Appointment Scheduling",
-            "Billing & Insurance",
+            "Billing",
             "Clinical Workflows",
           ].map((feature) => (
             <div key={feature} className="flex items-center gap-2.5">

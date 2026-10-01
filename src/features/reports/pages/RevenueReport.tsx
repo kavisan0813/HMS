@@ -34,6 +34,9 @@ import {
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
 import { formatCompactCurrency } from "../../billing/utils/billing.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 
 import {
   AreaChart,
@@ -336,6 +339,20 @@ export function DailyRevenueReportScreen({
   onOpenBillingReport?: () => void;
 }) {
   const [state, dispatch] = useReducer(revenueReportReducer, DEFAULT_STATE);
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress ||
+    "123 Health Avenue, Medical District";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 (011) 2345-6789";
+  const hospitalGstin =
+    configuration?.receipt?.hospitalGstin || "GSTIN: 07AAAAM1234F1Z5";
+  const effectiveLogo = logoUrl || safehandshospital_logo;
   const {
     searchQuery,
     dateRange,
@@ -562,6 +579,23 @@ export function DailyRevenueReportScreen({
     return list;
   }, [filteredData]);
 
+  const paymentMethodSummary = useMemo(() => {
+    const map: Record<string, { count: number; amount: number }> = {};
+    for (const item of filteredData) {
+      const method = item.paymentMethod || "Other";
+      if (!map[method]) {
+        map[method] = { count: 0, amount: 0 };
+      }
+      map[method].count += 1;
+      map[method].amount += item.collectedAmount;
+    }
+    return Object.entries(map).map(([method, data]) => ({
+      method,
+      count: data.count,
+      amount: data.amount,
+    }));
+  }, [filteredData]);
+
   const deptRevenueData = useMemo(() => {
     const map: Record<string, { department: string; revenue: number }> = {};
     for (const d of filteredData) {
@@ -707,115 +741,35 @@ export function DailyRevenueReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    // 1. KPI Summary
-    const kpiSummaryRows = [
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Revenue Billed",
-        Amount_or_Count: `INR ${computedRevenueStats.totalRev}`,
-        Percentage_Share: "100%",
-        Primary_Detail: "Total Billed Across All Services",
-        Secondary_Detail: "Hospital Operational Revenue",
-        Status_or_Date: "Total Billed",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Revenue Collected",
-        Amount_or_Count: `INR ${computedRevenueStats.collectedRev}`,
-        Percentage_Share: `${computedRevenueStats.collectionRate}%`,
-        Primary_Detail: "Total Realized Collections",
-        Secondary_Detail: "Bank & Cash Realization",
-        Status_or_Date: "Collected",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Outstanding Balance",
-        Amount_or_Count: `INR ${computedRevenueStats.outstanding}`,
-        Percentage_Share: `${(100 - Number(computedRevenueStats.collectionRate || 0)).toFixed(1)}%`,
-        Primary_Detail: "Uncollected Due Amounts",
-        Secondary_Detail: "Pending Receivables",
-        Status_or_Date: "Outstanding",
-      },
-    ];
+    const recordsToExport =
+      sortedData.length > 0
+        ? sortedData
+        : filteredData.length > 0
+          ? filteredData
+          : revenueTableSource;
 
-    // 2. Graph 1: Payment Method Share (%)
-    const totalMethodValue =
-      paymentMethodShareData.reduce((sum, m) => sum + (m.value || 0), 0) || 1;
-    const methodRows = paymentMethodShareData.map((m) => {
-      const pct = ((m.value / totalMethodValue) * 100).toFixed(1);
+    const csvRows = recordsToExport.map((rec) => {
+      const outAmt =
+        rec.outstandingAmount ||
+        Math.max(0, rec.invoiceAmount - rec.collectedAmount);
       return {
-        Section: "2. PAYMENT METHOD GRAPH SHARE",
-        Category_Item: m.name,
-        Amount_or_Count: `INR ${m.value}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Collections via ${m.name}`,
-        Secondary_Detail: "Method Distribution Graph",
-        Status_or_Date: "Active",
+        "Invoice ID": rec.id,
+        "Date": rec.invoiceDate ? rec.invoiceDate.slice(0, 10) : "",
+        "Patient Name": rec.patientName,
+        "MRN": rec.mrn,
+        "Doctor Name": rec.doctorName,
+        "Department": rec.department,
+        "Billed Amount (INR)": rec.invoiceAmount,
+        "Collected Amount (INR)": rec.collectedAmount,
+        "Outstanding Amount (INR)": outAmt,
+        "Payment Method": rec.paymentMethod,
+        "Payment Status": rec.paymentStatus,
       };
     });
-
-    // 3. Graph 2: Department Revenue Share (%)
-    const totalDeptVal =
-      deptRevenueData.reduce((sum, d) => sum + (d.revenue || 0), 0) || 1;
-    const deptRows = deptRevenueData.map((d) => {
-      const pct = ((d.revenue / totalDeptVal) * 100).toFixed(1);
-      return {
-        Section: "3. DEPARTMENT REVENUE GRAPH SHARE",
-        Category_Item: d.department,
-        Amount_or_Count: `INR ${d.revenue}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Department Revenue Total`,
-        Secondary_Detail: "Department Distribution Graph",
-        Status_or_Date: "Active",
-      };
-    });
-
-    // 4. Graph 3: Doctor Revenue Performance Share (%)
-    const totalDocVal =
-      doctorRevenueData.reduce((sum, d) => sum + (d.revenue || 0), 0) || 1;
-    const doctorRows = doctorRevenueData.map((d) => {
-      const pct = ((d.revenue / totalDocVal) * 100).toFixed(1);
-      return {
-        Section: "4. DOCTOR PERFORMANCE GRAPH SHARE",
-        Category_Item: d.doctor,
-        Amount_or_Count: `INR ${d.revenue}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Doctor Revenue Generated`,
-        Secondary_Detail: "Doctor Contribution Graph",
-        Status_or_Date: "Active",
-      };
-    });
-
-    // 5. Table: Complete Revenue Transaction Records
-    const recordRows = (
-      filteredData.length > 0 ? filteredData : revenueTableSource
-    ).map((rec) => {
-      const pct =
-        rec.invoiceAmount > 0
-          ? ((rec.collectedAmount / rec.invoiceAmount) * 100).toFixed(1)
-          : "0";
-      return {
-        Section: "5. REVENUE TRANSACTION TABLE REGISTRY",
-        Category_Item: rec.id,
-        Amount_or_Count: `Billed: INR ${rec.invoiceAmount} (Collected: INR ${rec.collectedAmount})`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Patient: ${rec.patientName} (${rec.mrn})`,
-        Secondary_Detail: `Doctor: ${rec.doctorName} | Dept: ${rec.department} | Method: ${rec.paymentMethod}`,
-        Status_or_Date: `Date: ${rec.invoiceDate} | Status: ${rec.paymentStatus}`,
-      };
-    });
-
-    const allRows = [
-      ...kpiSummaryRows,
-      ...methodRows,
-      ...deptRows,
-      ...doctorRows,
-      ...recordRows,
-    ];
 
     exportDataToCsv(
-      `Daily_Revenue_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows,
+      `Daily_Revenue_Report_${dates.fromDate || today}_to_${dates.toDate || today}.csv`,
+      csvRows,
     );
   };
 
@@ -887,34 +841,405 @@ export function DailyRevenueReportScreen({
   // Status Chip helper
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
+    <>
+      <style>{`
+        .daily-revenue-print-only {
+          display: none;
+        }
+
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 8mm;
+          }
+
+          html, body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Hide everything in normal screen UI when printing */
+          .daily-revenue-screen-ui,
+          .no-print,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          input,
+          select {
+            display: none !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .daily-revenue-print-only,
+          .daily-revenue-print-only * {
+            visibility: visible !important;
+          }
+
+          .daily-revenue-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .daily-revenue-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .daily-revenue-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .daily-revenue-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .daily-revenue-print-table tbody {
+            display: table-row-group !important;
+          }
+
+          .daily-revenue-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .daily-revenue-print-table th,
+          .daily-revenue-print-table td {
+            word-break: break-word !important;
+            vertical-align: top;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="daily-revenue-print-only font-sans">
+        {/* 1. REPORT HEADER */}
+        <div className="border-b-2 border-slate-800 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[10px] text-slate-600 font-medium leading-tight">
+                  {hospitalAddress} • Ph: {hospitalPhone}
+                  {hospitalGstin ? ` • ${hospitalGstin}` : ""}
+                </p>
+                <div className="mt-1 inline-block bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  Daily Revenue Report
+                </div>
+              </div>
+            </div>
+
+            <div className="text-right text-[11px] space-y-0.5 text-slate-700">
+              <div>
+                <span className="text-slate-500 font-medium">Report Date: </span>
+                <span className="font-bold text-slate-900">
+                  {dates.fromDate === dates.toDate
+                    ? dates.fromDate
+                    : `${dates.fromDate} to ${dates.toDate}`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Generated: </span>
+                <span className="font-semibold text-slate-900">
+                  {new Date().toLocaleString("en-IN", {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Total Invoices: </span>
+                <span className="font-bold text-slate-900">{sortedData.length}</span>
+              </div>
+              {(deptFilter !== "All Departments" ||
+                doctorFilter !== "All Doctors" ||
+                paymentStatusFilter !== "All Statuses" ||
+                paymentMethodFilter !== "All Methods") && (
+                <div className="text-[9.5px] text-slate-500 mt-1">
+                  Filters:{" "}
+                  {[
+                    deptFilter !== "All Departments" ? `Dept: ${deptFilter}` : null,
+                    doctorFilter !== "All Doctors" ? `Dr: ${doctorFilter}` : null,
+                    paymentStatusFilter !== "All Statuses"
+                      ? `Status: ${paymentStatusFilter}`
+                      : null,
+                    paymentMethodFilter !== "All Methods"
+                      ? `Method: ${paymentMethodFilter}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" | ")}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2. COMPACT FINANCIAL SUMMARY */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Financial Summary Overview
+          </div>
+          <div className="grid grid-cols-6 gap-2 border border-slate-300 rounded p-2 bg-slate-50 text-[10px]">
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Total Revenue
+              </span>
+              <span className="text-xs font-bold text-slate-900 block">
+                {formatCurrency(computedRevenueStats.totalRev)}
+              </span>
+              <span className="text-[8.5px] text-slate-500 font-mono">
+                ₹{Number(computedRevenueStats.totalRev).toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Collected Revenue
+              </span>
+              <span className="text-xs font-bold text-emerald-700 block">
+                {formatCurrency(computedRevenueStats.collectedRev)}
+              </span>
+              <span className="text-[8.5px] text-emerald-600 font-mono">
+                ₹{Number(computedRevenueStats.collectedRev).toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Outstanding Amount
+              </span>
+              <span className="text-xs font-bold text-amber-700 block">
+                {formatCurrency(computedRevenueStats.outstanding)}
+              </span>
+              <span className="text-[8.5px] text-amber-600 font-mono">
+                ₹{Number(computedRevenueStats.outstanding).toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Collection Rate
+              </span>
+              <span className="text-xs font-bold text-slate-900 block">
+                {computedRevenueStats.collectionRate}%
+              </span>
+              <span className="text-[8.5px] text-slate-500">
+                Due: {(100 - Number(computedRevenueStats.collectionRate || 0)).toFixed(1)}%
+              </span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Avg Invoice Value
+              </span>
+              <span className="text-xs font-bold text-slate-900 block">
+                {formatCurrency(computedRevenueStats.avgValue)}
+              </span>
+              <span className="text-[8.5px] text-slate-500 font-mono">
+                ₹{Number(computedRevenueStats.avgValue).toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                Invoices Breakdown
+              </span>
+              <span className="text-xs font-bold text-slate-900 block">
+                {computedRevenueStats.invoicesCount} Total
+              </span>
+              <span className="text-[8.5px] text-slate-600">
+                Paid: {computedRevenueStats.paidInvoices} | Pending: {computedRevenueStats.pendingInvoices} | Void: {computedRevenueStats.voidInvoices}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. PAYMENT METHOD SUMMARY */}
+        {paymentMethodSummary.length > 0 && (
+          <div className="mb-3">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+              Payment Method Summary
+            </div>
+            <div className="border border-slate-300 rounded overflow-hidden">
+              <table className="w-full text-[9.5px] border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-700 border-b border-slate-300 font-semibold text-left">
+                    <th className="py-1 px-2.5">Payment Method</th>
+                    <th className="py-1 px-2.5 text-center">Transactions / Bills</th>
+                    <th className="py-1 px-2.5 text-right">Collected Amount</th>
+                    <th className="py-1 px-2.5 text-right">Share (%)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {paymentMethodSummary.map((item) => {
+                    const totalCollected = computedRevenueStats.collectedRev || 1;
+                    const share = ((item.amount / totalCollected) * 100).toFixed(1);
+                    return (
+                      <tr key={item.method} className="hover:bg-slate-50">
+                        <td className="py-1 px-2.5 font-medium text-slate-800">{item.method}</td>
+                        <td className="py-1 px-2.5 text-center text-slate-600">{item.count}</td>
+                        <td className="py-1 px-2.5 text-right font-mono font-medium text-slate-900">
+                          {formatCurrency(item.amount)} (₹{item.amount.toLocaleString("en-IN")})
+                        </td>
+                        <td className="py-1 px-2.5 text-right font-semibold text-slate-700">{share}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* 4. FULL REVENUE DETAIL TABLE */}
+        <div className="mb-2">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>Detailed Revenue Register</span>
+            <span className="text-[9px] text-slate-500 font-normal">
+              Showing all {sortedData.length} records
+            </span>
+          </div>
+
+          <table className="daily-revenue-print-table w-full text-[9px] border-collapse border border-slate-300">
+            <thead>
+              <tr className="bg-slate-800 text-white font-semibold text-left">
+                <th className="py-1.5 px-2 border-r border-slate-700 w-16">Date</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 w-24">Invoice ID</th>
+                <th className="py-1.5 px-2 border-r border-slate-700">Patient</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 w-20">MRN</th>
+                <th className="py-1.5 px-2 border-r border-slate-700">Doctor</th>
+                <th className="py-1.5 px-2 border-r border-slate-700">Department</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 text-right w-20">Billed</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 text-right w-20">Collected</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 text-right w-20">Outstanding</th>
+                <th className="py-1.5 px-2 border-r border-slate-700 text-center w-16">Method</th>
+                <th className="py-1.5 px-2 text-center w-16">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-6 text-center text-slate-500 italic">
+                    No billing records match the selected filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                sortedData.map((item, idx) => {
+                  const outAmt =
+                    item.outstandingAmount ||
+                    Math.max(0, item.invoiceAmount - item.collectedAmount);
+                  return (
+                    <tr key={item.id || idx} className="border-b border-slate-200">
+                      <td className="py-1.5 px-2 border-r border-slate-200 font-mono text-slate-600">
+                        {item.invoiceDate ? item.invoiceDate.slice(0, 10) : "-"}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 font-bold text-slate-900">
+                        {item.id}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 font-medium text-slate-900">
+                        {item.patientName}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-slate-600 font-mono">
+                        {item.mrn}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-slate-800">
+                        {item.doctorName}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-slate-600">
+                        {item.department}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-right font-mono font-semibold text-slate-900">
+                        {formatCurrency(item.invoiceAmount)}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-right font-mono font-semibold text-emerald-700">
+                        {formatCurrency(item.collectedAmount)}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-right font-mono font-semibold text-amber-700">
+                        {formatCurrency(outAmt)}
+                      </td>
+                      <td className="py-1.5 px-2 border-r border-slate-200 text-center text-slate-700">
+                        {item.paymentMethod}
+                      </td>
+                      <td className="py-1.5 px-2 text-center font-semibold text-[8.5px]">
+                        {item.paymentStatus}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+            {/* 5. REPORT TOTALS */}
+            <tfoot>
+              <tr className="border-t-2 border-b-2 border-slate-800 font-bold bg-slate-100 text-slate-900">
+                <td colSpan={6} className="py-2 px-2 text-left uppercase text-[9px]">
+                  Total ({sortedData.length} records)
+                </td>
+                <td className="py-2 px-2 text-right text-[9.5px] font-mono whitespace-nowrap">
+                  {formatCurrency(computedRevenueStats.totalRev)}
+                </td>
+                <td className="py-2 px-2 text-right text-[9.5px] font-mono whitespace-nowrap text-emerald-700">
+                  {formatCurrency(computedRevenueStats.collectedRev)}
+                </td>
+                <td className="py-2 px-2 text-right text-[9.5px] font-mono whitespace-nowrap text-amber-700">
+                  {formatCurrency(computedRevenueStats.outstanding)}
+                </td>
+                <td colSpan={2} className="py-2 px-2 text-center text-[8.5px] text-slate-600">
+                  Collection: {computedRevenueStats.collectionRate}%
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* REPORT FOOTER */}
+        <div className="mt-4 pt-2 border-t border-slate-300 flex items-center justify-between text-[9px] text-slate-500">
+          <div>Hospital Management System • Daily Revenue Report • Confidential</div>
+          <div>Generated on {new Date().toLocaleString("en-IN")}</div>
+        </div>
+      </div>
+
+      {/* ─── EXISTING SCREEN UI (HIDDEN IN PRINT) ─── */}
+      <div
+        className="daily-revenue-screen-ui no-print min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Daily Revenue Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#009688] border border-teal-200">
-                  OPD Finance Verified
-                </span>
-              </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor hospital revenue, collections and billing performance
-                for operations.
-              </p>
-            </div>
-
-            {/* Header Actions */}
-            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => (onBack ? onBack() : window.history.back())}
@@ -924,6 +1249,22 @@ export function DailyRevenueReportScreen({
                 <ArrowLeft size={14} />
                 Back
               </button>
+              <div className="flex items-center gap-3">
+                <h1
+                  className="text-2xl font-bold text-[#111827]"
+                  style={{ fontFamily: PP }}
+                >
+                  Daily Revenue Report
+                </h1>
+              </div>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Monitor hospital revenue, collections and billing performance
+                for operations.
+              </p>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl mr-1">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -961,7 +1302,6 @@ export function DailyRevenueReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 mt-6 space-y-6">
@@ -1575,36 +1915,6 @@ export function DailyRevenueReportScreen({
           </div>
         )}
 
-        {/* State Controls for Demo */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                dispatch({ type: "SET_LOADING", payload: !state.isLoading });
-                dispatch({ type: "SET_ERROR", payload: false });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${state.isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                dispatch({ type: "SET_ERROR", payload: !state.hasError });
-                dispatch({ type: "SET_LOADING", payload: false });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${state.hasError ? "bg-red-50 border-red-300 text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate real-time billing states
-          </span>
-        </div>
-
         {/* ERROR STATE */}
         {hasError && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 text-center">
@@ -2000,8 +2310,8 @@ export function DailyRevenueReportScreen({
                   </p>
                 </div>
                 <button
-                  onClick={() => alert("Exporting Billing Register (CSV)...")}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
+                  onClick={handleExportAllCsv}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
                   <span>Export Ledger</span>
@@ -2471,6 +2781,7 @@ export function DailyRevenueReportScreen({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

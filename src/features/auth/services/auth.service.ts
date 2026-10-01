@@ -67,13 +67,13 @@ export const authService = {
     if (!storedRefreshToken) throw new Error("No refresh token found");
 
     const response = await authApi.refreshToken(storedRefreshToken);
-    const newAccessToken =
-      response.data?.accessToken || response.data?.tokenType || "";
+    const newAccessToken = response.data?.accessToken || "";
 
-    useAuthStore.updateTokens({
-      accessToken: newAccessToken,
-      refreshToken: storedRefreshToken,
-    });
+    if (newAccessToken) {
+      useAuthStore.updateTokens({
+        accessToken: newAccessToken,
+      });
+    }
 
     return response;
   },

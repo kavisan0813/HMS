@@ -1,4 +1,4 @@
-import { useReducer, useMemo } from "react";
+import { useState, useReducer, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { ROUTES } from "../../../app/routes/routes";
 import {
@@ -20,6 +20,8 @@ import {
   ChevronRight as ChevronRightIcon,
   AlertCircle,
 } from "lucide-react";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
 import {
   useReceptionDashboardSummary,
   useReceptionSummaryWidget,
@@ -36,6 +38,8 @@ import type {
   ReceptionQueuePerformanceData,
   ReceptionRegistrationTrendData,
 } from "../../reception/types/receptionReports.types";
+import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
+import { exportDataToCsv } from "../utils/export.utils";
 import {
   AreaChart,
   Area,
@@ -206,11 +210,15 @@ const SAMPLE_RECEPTION_ACTIVITIES: ReceptionistActivityRecord[] = [
 type ReceptionDashboardHeaderProps = {
   isRefreshing: boolean;
   onRefresh: () => void;
+  onExportCsv: () => void;
+  onPrint: () => void;
 };
 
 const ReceptionDashboardHeader = ({
   isRefreshing,
   onRefresh,
+  onExportCsv,
+  onPrint,
 }: ReceptionDashboardHeaderProps) => (
   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
@@ -257,17 +265,15 @@ const ReceptionDashboardHeader = ({
       </button>
 
       <button
-        onClick={() =>
-          alert("Exporting Reception Reports Dashboard (PDF)...")
-        }
+        onClick={onExportCsv}
         className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm cursor-pointer"
       >
         <Download className="w-3.5 h-3.5" />
-        <span>Export PDF</span>
+        <span>Export CSV</span>
       </button>
 
       <button
-        onClick={() => window.print()}
+        onClick={onPrint}
         className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
       >
         <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
@@ -1289,152 +1295,213 @@ const ReceptionRegisterTable = ({
   filteredActivities,
 }: {
   filteredActivities: ReceptionistActivityRecord[];
-}) => (
-  <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
-    <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div>
-        <h3
-          className="text-base font-bold text-[#111827]"
-          style={{ fontFamily: PP }}
-        >
-          Recent Reception Register
-        </h3>
-        <p className="text-xs text-[#64748B]">
-          Live reception patient check-in and queue register
-        </p>
-      </div>
-      <button
-        onClick={() => alert("Exporting Reception Register (CSV)...")}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
-      >
-        <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
-        <span>Export Register</span>
-      </button>
-    </div>
+}) => {
+  const navigate = useNavigate();
 
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
-            <th className="py-3.5 px-4">MRN</th>
-            <th className="py-3.5 px-4">Patient Name</th>
-            <th className="py-3.5 px-4">Appointment ID</th>
-            <th className="py-3.5 px-4">Visit Type</th>
-            <th className="py-3.5 px-4">Reg Time</th>
-            <th className="py-3.5 px-4">Check-In Time</th>
-            <th className="py-3.5 px-4">Queue Status</th>
-            <th className="py-3.5 px-4 text-center">Appt Status</th>
-            <th className="py-3.5 px-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-[#E5E7EB] text-xs">
-          {filteredActivities.length === 0 ? (
-            <tr>
-              <td colSpan={9} className="py-8 text-center text-[#64748B]">
-                No reception records match your search or filter criteria.
-              </td>
+  const handleViewPatient = (item: ReceptionistActivityRecord) => {
+    if (item.mrn) {
+      navigate(ROUTES.PATIENT_PROFILE.replace(":mrn", item.mrn));
+    } else {
+      navigate(ROUTES.PATIENTS);
+    }
+  };
+
+  const handleViewAppointment = (item: ReceptionistActivityRecord) => {
+    if (item.appointmentId) {
+      navigate(ROUTES.APPOINTMENT_DETAILS.replace(":id", item.appointmentId));
+    } else {
+      navigate(ROUTES.APPOINTMENTS);
+    }
+  };
+
+  const handlePrintSlip = (item: ReceptionistActivityRecord) => {
+    downloadAppointmentSlipPdf({
+      appointmentNumber: item.appointmentId,
+      mrn: item.mrn,
+      patientName: item.patientName,
+      visitType: item.visitType,
+      time: item.checkInTime || item.registrationTime,
+      status: item.appointmentStatus,
+    });
+  };
+
+  const handleExportRegister = () => {
+    exportDataToCsv(
+      `Reception_Register_${new Date().toISOString().slice(0, 10)}.csv`,
+      filteredActivities.map((a) => ({
+        MRN: a.mrn,
+        "Patient Name": a.patientName,
+        "Appointment ID": a.appointmentId,
+        "Visit Type": a.visitType,
+        "Registration Time": a.registrationTime,
+        "Check-In Time": a.checkInTime,
+        "Queue Status": a.queueStatus,
+        "Appt Status": a.appointmentStatus,
+      })),
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E5E7EB] shadow-sm overflow-hidden">
+      <div className="p-5 border-b border-[#E5E7EB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h3
+            className="text-base font-bold text-[#111827]"
+            style={{ fontFamily: PP }}
+          >
+            Recent Reception Register
+          </h3>
+          <p className="text-xs text-[#64748B]">
+            Live reception patient check-in and queue register
+          </p>
+        </div>
+        <button
+          onClick={handleExportRegister}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
+          <span>Export Register</span>
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-[#F1F5F9] text-[11px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E5E7EB]">
+              <th className="py-3.5 px-4">MRN</th>
+              <th className="py-3.5 px-4">Patient Name</th>
+              <th className="py-3.5 px-4">Appointment ID</th>
+              <th className="py-3.5 px-4">Visit Type</th>
+              <th className="py-3.5 px-4">Reg Time</th>
+              <th className="py-3.5 px-4">Check-In Time</th>
+              <th className="py-3.5 px-4">Queue Status</th>
+              <th className="py-3.5 px-4 text-center">Appt Status</th>
+              <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
-          ) : (
-            filteredActivities.map((item) => (
-              <tr
-                key={
-                  item.appointmentId ||
-                  `${item.mrn}-${item.visitType}-${item.checkInTime || item.registrationTime || ""}`
-                }
-                className="hover:bg-slate-50 transition-colors"
-              >
-                <td className="py-3.5 px-4 font-mono font-bold text-[#0D47A1]">
-                  {item.mrn}
-                </td>
-                <td className="py-3.5 px-4 font-bold text-[#111827]">
-                  {item.patientName}
-                </td>
-                <td className="py-3.5 px-4 font-semibold text-[#0D47A1]">
-                  {item.appointmentId}
-                </td>
-                <td className="py-3.5 px-4 font-medium text-[#111827]">
-                  {item.visitType}
-                </td>
-                <td className="py-3.5 px-4 text-[#64748B]">
-                  {item.registrationTime}
-                </td>
-                <td className="py-3.5 px-4 text-[#111827] font-semibold">
-                  {item.checkInTime}
-                </td>
-                <td className="py-3.5 px-4 text-[#009688] font-medium">
-                  {item.queueStatus}
-                </td>
-                <td className="py-3.5 px-4 text-center">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${item.appointmentStatus === "Completed" ? "bg-teal-50 text-[#009688] border border-teal-200" : item.appointmentStatus === "Checked-In" ? "bg-emerald-50 text-[#66BB6A] border border-emerald-200" : item.appointmentStatus === "In Progress" ? "bg-amber-50 text-[#F59E0B] border border-amber-200" : "bg-slate-100 text-[#64748B]"}`}
-                  >
-                    {item.appointmentStatus}
-                  </span>
-                </td>
-                <td className="py-3.5 px-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={() =>
-                        alert(`Viewing patient ${item.patientName}`)
-                      }
-                      className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
-                      title="View Patient"
-                    >
-                      <Users className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        alert(`Viewing appointment ${item.appointmentId}`)
-                      }
-                      className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition"
-                      title="View Appointment"
-                    >
-                      <Calendar className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => alert(`Printing summary for ${item.mrn}`)}
-                      className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
-                      title="Print Summary"
-                    >
-                      <Printer className="w-4 h-4" />
-                    </button>
-                  </div>
+          </thead>
+          <tbody className="divide-y divide-[#E5E7EB] text-xs">
+            {filteredActivities.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="py-8 text-center text-[#64748B]">
+                  No reception records match your search or filter criteria.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+            ) : (
+              filteredActivities.map((item) => (
+                <tr
+                  key={
+                    item.appointmentId ||
+                    `${item.mrn}-${item.visitType}-${item.checkInTime || item.registrationTime || ""}`
+                  }
+                  className="hover:bg-slate-50 transition-colors"
+                >
+                  <td className="py-3.5 px-4 font-mono font-bold text-[#0D47A1]">
+                    <button
+                      onClick={() => handleViewPatient(item)}
+                      className="hover:underline text-left cursor-pointer font-mono font-bold text-[#0D47A1]"
+                      title="View Patient Profile"
+                    >
+                      {item.mrn}
+                    </button>
+                  </td>
+                  <td className="py-3.5 px-4 font-bold text-[#111827]">
+                    <button
+                      onClick={() => handleViewPatient(item)}
+                      className="hover:underline text-left cursor-pointer font-bold text-[#111827]"
+                      title="View Patient Profile"
+                    >
+                      {item.patientName}
+                    </button>
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-[#0D47A1]">
+                    <button
+                      onClick={() => handleViewAppointment(item)}
+                      className="hover:underline text-left cursor-pointer font-semibold text-[#0D47A1]"
+                      title="View Appointment Details"
+                    >
+                      {item.appointmentId}
+                    </button>
+                  </td>
+                  <td className="py-3.5 px-4 font-medium text-[#111827]">
+                    {item.visitType}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#64748B]">
+                    {item.registrationTime}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#111827] font-semibold">
+                    {item.checkInTime}
+                  </td>
+                  <td className="py-3.5 px-4 text-[#009688] font-medium">
+                    {item.queueStatus}
+                  </td>
+                  <td className="py-3.5 px-4 text-center">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${item.appointmentStatus === "Completed" ? "bg-teal-50 text-[#009688] border border-teal-200" : item.appointmentStatus === "Checked-In" ? "bg-emerald-50 text-[#66BB6A] border border-emerald-200" : item.appointmentStatus === "In Progress" ? "bg-amber-50 text-[#F59E0B] border border-amber-200" : "bg-slate-100 text-[#64748B]"}`}
+                    >
+                      {item.appointmentStatus}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleViewPatient(item)}
+                        className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
+                        title="View Patient Profile"
+                      >
+                        <Users className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleViewAppointment(item)}
+                        className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition cursor-pointer"
+                        title="View Appointment Details"
+                      >
+                        <Calendar className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handlePrintSlip(item)}
+                        className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                        title="Print Appointment Slip"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-    {/* Table Pagination */}
-    <div className="p-4 bg-[#F1F5F9] border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
-      <span>
-        Showing 1 to {filteredActivities.length} of {filteredActivities.length}{" "}
-        entries
-      </span>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="Previous page"
-          disabled
-          className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <span className="font-semibold text-[#111827]">Page 1 of 1</span>
-        <button
-          type="button"
-          aria-label="Next page"
-          disabled
-          className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
-        >
-          <ChevronRightIcon className="w-4 h-4" />
-        </button>
+      {/* Table Pagination */}
+      <div className="p-4 bg-[#F1F5F9] border-t border-[#E5E7EB] flex items-center justify-between text-xs text-[#64748B]">
+        <span>
+          Showing 1 to {filteredActivities.length} of {filteredActivities.length}{" "}
+          entries
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Previous page"
+            disabled
+            className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="font-semibold text-[#111827]">Page 1 of 1</span>
+          <button
+            type="button"
+            aria-label="Next page"
+            disabled
+            className="p-1 rounded-lg border border-[#E5E7EB] opacity-50 cursor-not-allowed"
+          >
+            <ChevronRightIcon className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 
@@ -1470,6 +1537,8 @@ export const ReceptionistReportsDashboardScreen: React.FC<
   ReceptionistReportsDashboardScreenProps
 > = () => {
   const navigate = useNavigate();
+  const { logoUrl } = useHospitalBranding();
+  const [logoError, setLogoError] = useState(false);
   const [state, dispatch] = useReducer(
     (
       prev: {
@@ -1718,6 +1787,79 @@ export const ReceptionistReportsDashboardScreen: React.FC<
     };
   }, [summaryWidget, dashboardSummary, queuePerformance, filteredActivities]);
 
+  const generatedDateStr = useMemo(() => {
+    return new Date().toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, []);
+
+  const handleExportCsv = () => {
+    if (!filteredActivities || filteredActivities.length === 0) {
+      alert("No reception activity records available to export.");
+      return;
+    }
+
+    const headers = [
+      "S.No",
+      "MRN",
+      "Patient Name",
+      "Appointment ID",
+      "Visit Type",
+      "Registration Date",
+      "Registration Time",
+      "Check-In Time",
+      "Queue Status",
+      "Appointment Status",
+    ];
+
+    const rows = filteredActivities.map((item, idx) => [
+      idx + 1,
+      item.mrn || "—",
+      item.patientName || "—",
+      item.appointmentId || "—",
+      item.visitType || "—",
+      item.registrationDate || "—",
+      item.registrationTime || "—",
+      item.checkInTime || "—",
+      item.queueStatus || "—",
+      item.appointmentStatus || "—",
+    ]);
+
+    const csvRows = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((val) => {
+            const escaped = String(val ?? "").replace(/"/g, '""');
+            return `"${escaped}"`;
+          })
+          .join(","),
+      ),
+    ];
+
+    // UTF-8 BOM for Excel compatibility on Windows
+    const csvContent = "\uFEFF" + csvRows.join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dateStr = startDate || getOffsetDateStr(0);
+    link.href = url;
+    link.download = `reception-report-${dateStr}.csv`;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     refetchSummary();
@@ -1748,93 +1890,369 @@ export const ReceptionistReportsDashboardScreen: React.FC<
       className="flex-1 min-h-screen bg-[#F1F5F9] text-[#111827] p-6 space-y-6 pb-12 font-sans"
       style={{ fontFamily: RB }}
     >
-      {/* Header */}
-      <ReceptionDashboardHeader
-        isRefreshing={isRefreshing}
-        onRefresh={handleRefresh}
-      />
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 10mm;
+        }
 
-      {/* 1. TOP SECTION: RECEPTION KPI CARDS */}
-      <ReceptionKpiCards kpi={kpi} navigate={navigate} />
+        .print-only {
+          display: none;
+        }
 
-      {/* 2. SECOND SECTION: CONNECTED FILTERS WITH DATE FILTER */}
-      <ReceptionFilters
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-        startDate={startDate}
-        setStartDate={setStartDate}
-        endDate={endDate}
-        setEndDate={setEndDate}
-        apptStatusFilter={apptStatusFilter}
-        setApptStatusFilter={setApptStatusFilter}
-        checkInStatusFilter={checkInStatusFilter}
-        setCheckInStatusFilter={setCheckInStatusFilter}
-        queueStatusFilter={queueStatusFilter}
-        setQueueStatusFilter={setQueueStatusFilter}
-        visitTypeFilter={visitTypeFilter}
-        setVisitTypeFilter={setVisitTypeFilter}
-        onReset={handleResetFilters}
-        onApply={handleRefresh}
-      />
+        @media print {
+          /* Hide portal chrome, headers, navigation, dashboard cards and non-print elements */
+          header, nav, aside, footer, .no-print, .no-print * {
+            display: none !important;
+            visibility: hidden !important;
+          }
 
-      {/* Demo State Controls */}
-      
-      {/* <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-[#111827]">
-            Demo State Toggles:
-          </span>
-          <button
-            onClick={() => {
-              setIsLoading(!isLoading);
-              setHasError(false);
-            }}
-            className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-          >
-            Toggle Loading Skeleton
-          </button>
-          <button
-            onClick={() => {
-              setHasError(!hasError);
-              setIsLoading(false);
-            }}
-            className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-          >
-            Toggle Error State
-          </button>
+          html, body {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            height: auto !important;
+            width: 100% !important;
+          }
+
+          /* Ensure parent scroll/layout wrappers do not clip */
+          #root, main, div[class*="min-h-screen"], div[class*="overflow-"] {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+          }
+
+          .print-only {
+            display: block !important;
+            visibility: visible !important;
+          }
+
+          .reception-print-root {
+            display: block !important;
+            visibility: visible !important;
+            width: 100% !important;
+            max-width: none !important;
+            height: auto !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            background: #ffffff !important;
+            color: #111827 !important;
+          }
+
+          .reception-print-root * {
+            visibility: visible !important;
+          }
+
+          .reception-print-root table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+          }
+
+          .reception-print-root thead {
+            display: table-header-group !important;
+          }
+
+          .reception-print-root tfoot {
+            display: table-footer-group !important;
+          }
+
+          .reception-print-root tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .reception-print-root th,
+          .reception-print-root td {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            vertical-align: middle;
+          }
+        }
+      `}</style>
+
+      {/* ── NORMAL SCREEN VIEW (VISUALLY UNCHANGED) ── */}
+      <div className="no-print space-y-6">
+        {/* Header */}
+        <ReceptionDashboardHeader
+          isRefreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          onExportCsv={handleExportCsv}
+          onPrint={handlePrint}
+        />
+
+        {/* 1. TOP SECTION: RECEPTION KPI CARDS */}
+        <ReceptionKpiCards kpi={kpi} navigate={navigate} />
+
+        {/* 2. SECOND SECTION: CONNECTED FILTERS WITH DATE FILTER */}
+        <ReceptionFilters
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          apptStatusFilter={apptStatusFilter}
+          setApptStatusFilter={setApptStatusFilter}
+          checkInStatusFilter={checkInStatusFilter}
+          setCheckInStatusFilter={setCheckInStatusFilter}
+          queueStatusFilter={queueStatusFilter}
+          setQueueStatusFilter={setQueueStatusFilter}
+          visitTypeFilter={visitTypeFilter}
+          setVisitTypeFilter={setVisitTypeFilter}
+          onReset={handleResetFilters}
+          onApply={handleRefresh}
+        />
+
+        {hasError && (
+          <ReceptionDashboardError onRetry={() => setHasError(false)} />
+        )}
+        {isLoading && <ReceptionDashboardLoading />}
+        {!isLoading && !hasError && (
+          <>
+            {/* 3. CHARTS SECTION WITH CONNECTED API DATA */}
+            <ReceptionDashboardCharts
+              trendDays={trendDays}
+              setTrendDays={setTrendDays}
+              filteredActivities={filteredActivities}
+              apptStatus={apptStatus}
+              checkinAnalytics={checkinAnalytics}
+              queuePerformance={queuePerformance}
+              registrationTrend={registrationTrend}
+            />
+
+            {/* 4. RECEPTION REGISTER DATA TABLE */}
+            <ReceptionRegisterTable filteredActivities={filteredActivities} />
+          </>
+        )}
+
+        {/* FOOTER */}
+        <ReceptionDashboardFooter resultCount={filteredActivities.length} />
+      </div>
+
+      {/* ── DEDICATED PRINT REPORT SECTION (ISOLATED DOCUMENT) ── */}
+      <section
+        id="reception-print-report"
+        className="print-only reception-print-root p-6 bg-white text-slate-800 text-xs"
+        style={{ fontFamily: RB }}
+      >
+        {/* 1. HOSPITAL / REPORT HEADER */}
+        <div className="flex items-center justify-between border-b-2 border-[#0D47A1] pb-4 mb-4">
+          <div className="flex items-center gap-3">
+            {!logoError && (
+              <img
+                src={logoUrl || safehandshospital_logo}
+                alt=""
+                onError={() => setLogoError(true)}
+                className="h-12 w-auto object-contain shrink-0"
+              />
+            )}
+            <div>
+              <h2
+                className="text-lg font-bold text-[#0D47A1] tracking-tight"
+                style={{ fontFamily: PP }}
+              >
+                Safe Hands Hospital
+              </h2>
+              <p className="text-[11px] text-slate-600">
+                NABH Accredited Healthcare Center • Reception & Front Desk Operations
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <h1
+              className="text-sm font-bold text-slate-900 tracking-wide uppercase"
+              style={{ fontFamily: PP }}
+            >
+              RECEPTION DAILY REPORT
+            </h1>
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              Report Date:{" "}
+              <strong className="text-slate-800">
+                {startDate && endDate && startDate !== endDate
+                  ? `${startDate} to ${endDate}`
+                  : startDate || getOffsetDateStr(0)}
+              </strong>
+            </p>
+            <p className="text-[10px] text-slate-500">
+              Generated On: {generatedDateStr}
+            </p>
+            <p className="text-[10px] text-slate-500">
+              Scope: <strong className="text-slate-700">Reception</strong>
+            </p>
+          </div>
         </div>
-        <span className="text-[11px] text-[#64748B]">
-          Simulate Receptionist reports state
-        </span>
-      </div> */}
 
-      {hasError && (
-        <ReceptionDashboardError onRetry={() => setHasError(false)} />
-      )}
-      {isLoading && <ReceptionDashboardLoading />}
-      {!isLoading && !hasError && (
-        <>
-          {/* 3. CHARTS SECTION WITH CONNECTED API DATA */}
-          <ReceptionDashboardCharts
-            trendDays={trendDays}
-            setTrendDays={setTrendDays}
-            filteredActivities={filteredActivities}
-            apptStatus={apptStatus}
-            checkinAnalytics={checkinAnalytics}
-            queuePerformance={queuePerformance}
-            registrationTrend={registrationTrend}
-          />
+        {/* 2. COMPACT RECEPTION SUMMARY */}
+        <div className="mb-4">
+          <div
+            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1"
+            style={{ fontFamily: PP }}
+          >
+            RECEPTION SUMMARY
+          </div>
+          <div className="grid grid-cols-6 gap-2">
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Today's Registrations
+              </div>
+              <div
+                className="text-sm font-bold text-[#0D47A1] mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.todayRegistrations}
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Today's Appointments
+              </div>
+              <div
+                className="text-sm font-bold text-[#009688] mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.todayAppointments}
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Checked In
+              </div>
+              <div
+                className="text-sm font-bold text-[#66BB6A] mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.checkedInPatients}
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Reception Queue
+              </div>
+              <div
+                className="text-sm font-bold text-[#F59E0B] mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.receptionQueue}
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Completed Check-Ins
+              </div>
+              <div
+                className="text-sm font-bold text-[#0D47A1] mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.completedCheckIns}
+              </div>
+            </div>
+            <div className="border border-slate-200 rounded-lg p-2 bg-slate-50">
+              <div className="text-[10px] text-slate-500 font-medium uppercase">
+                Average Wait Time
+              </div>
+              <div
+                className="text-sm font-bold text-slate-800 mt-0.5"
+                style={{ fontFamily: PP }}
+              >
+                {kpi.avgWaitingTime}
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* 4. RECEPTION REGISTER DATA TABLE */}
-          <ReceptionRegisterTable filteredActivities={filteredActivities} />
+        {/* 3. DETAILED REPORT TABLE */}
+        <div className="mb-4">
+          <div
+            className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-200 pb-1"
+            style={{ fontFamily: PP }}
+          >
+            DETAILED RECEPTION REPORT ({filteredActivities.length} Records)
+          </div>
+          <table className="w-full border-collapse text-xs border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 text-slate-800 border-b border-slate-300 font-bold text-[10px] uppercase">
+                <th className="p-2 border border-slate-300 text-center w-10">S.No</th>
+                <th className="p-2 border border-slate-300 text-left">MRN</th>
+                <th className="p-2 border border-slate-300 text-left">Patient Name</th>
+                <th className="p-2 border border-slate-300 text-left">Appointment ID</th>
+                <th className="p-2 border border-slate-300 text-left">Visit Type</th>
+                <th className="p-2 border border-slate-300 text-left">Reg Date</th>
+                <th className="p-2 border border-slate-300 text-left">Reg Time</th>
+                <th className="p-2 border border-slate-300 text-left">Check-In Time</th>
+                <th className="p-2 border border-slate-300 text-left">Queue Status</th>
+                <th className="p-2 border border-slate-300 text-center">Appt Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredActivities.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="p-4 text-center text-slate-500 border border-slate-300"
+                  >
+                    No reception activity records found for the selected criteria.
+                  </td>
+                </tr>
+              ) : (
+                filteredActivities.map((act, index) => (
+                  <tr
+                    key={`${act.appointmentId || act.mrn}-${index}`}
+                    className="border-b border-slate-200"
+                  >
+                    <td className="p-2 border border-slate-200 text-center text-slate-500">
+                      {index + 1}
+                    </td>
+                    <td className="p-2 border border-slate-200 font-mono font-medium text-[#0D47A1]">
+                      {act.mrn}
+                    </td>
+                    <td className="p-2 border border-slate-200 font-medium text-slate-900">
+                      {act.patientName}
+                    </td>
+                    <td className="p-2 border border-slate-200 font-mono text-slate-700">
+                      {act.appointmentId}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-slate-700">
+                      {act.visitType}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-slate-600 whitespace-nowrap">
+                      {act.registrationDate || "—"}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-slate-600 whitespace-nowrap">
+                      {act.registrationTime || "—"}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-slate-600 whitespace-nowrap">
+                      {act.checkInTime || "—"}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-slate-700">
+                      {act.queueStatus || "—"}
+                    </td>
+                    <td className="p-2 border border-slate-200 text-center">
+                      <span className="font-semibold text-[11px] text-slate-800">
+                        {act.appointmentStatus || "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-        </>
-      )}
-
-      {/* FOOTER */}
-      <ReceptionDashboardFooter resultCount={filteredActivities.length} />
+        {/* 4. REPORT FOOTER */}
+        <div className="text-[10px] text-slate-500 mt-6 pt-3 border-t border-slate-200 flex items-center justify-between">
+          <span>Generated from Hospital Management System</span>
+          <span>Safe Hands Hospital • Reception Operations</span>
+          <span>Generated on: {generatedDateStr}</span>
+        </div>
+      </section>
     </div>
   );
 };

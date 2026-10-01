@@ -99,14 +99,19 @@ export function AppointmentManagementCenterScreen({
   const setFilter = (field: keyof FilterState, value: string) =>
     dispatch({ type: "SET_FIELD", field, value });
 
-  const { appointments, setAppointments, refetch } = useAppointments(
-    userRole as UserRole,
-    dateFilter || undefined,
-    {
+  const appointmentParams = useMemo(
+    () => ({
       doctorId:
         filters.doctorFilter !== "All" ? filters.doctorFilter : undefined,
       status: filters.statusFilter !== "All" ? filters.statusFilter : undefined,
-    },
+    }),
+    [filters.doctorFilter, filters.statusFilter],
+  );
+
+  const { appointments, setAppointments, refetch } = useAppointments(
+    userRole as UserRole,
+    dateFilter || undefined,
+    appointmentParams,
   );
   const [viewMode, setViewMode] = useState<"directory" | "queue">("directory");
   const [deptOptions, setDeptOptions] = useState<string[]>([]);
@@ -148,6 +153,9 @@ export function AppointmentManagementCenterScreen({
     useState<AppointmentRecord | null>(null);
   const [checkInConfirmationToken, setCheckInConfirmationToken] =
     useState<string>("");
+  const [checkingInId, setCheckingInId] = useState<string | number | null>(
+    null,
+  );
 
   const triggerToast = (msg: string, type: "success" | "error" = "success") => {
     setToastMsg(msg);
@@ -162,7 +170,8 @@ export function AppointmentManagementCenterScreen({
 
   // --- SUMMARY KPI COUNTS ---
   const todayAppointments = roleAppointments.filter(
-    (a) => normalizeDateString(a.appointmentDate) === todayDateStr,
+    (a) =>
+      normalizeDateString(a.appointmentDate || a.createdDate) === todayDateStr,
   );
   const totalTodayCount = todayAppointments.length;
   const checkedInCount = todayAppointments.filter(
@@ -234,12 +243,15 @@ export function AppointmentManagementCenterScreen({
         return false;
       if (filters.deptFilter !== "All" && apt.department !== filters.deptFilter)
         return false;
-      if (
-        dateFilter &&
-        normalizeDateString(apt.appointmentDate) !==
-          normalizeDateString(dateFilter)
-      )
-        return false;
+      if (dateFilter) {
+        const aptDate = normalizeDateString(
+          apt.appointmentDate || apt.createdDate,
+        );
+        const filterDate = normalizeDateString(dateFilter);
+        if (aptDate && filterDate && aptDate !== filterDate) {
+          return false;
+        }
+      }
       if (
         filters.visitTypeFilter !== "All" &&
         apt.visitType !== filters.visitTypeFilter
@@ -315,6 +327,9 @@ export function AppointmentManagementCenterScreen({
         : appointments.find((a) => String(a.id) === String(aptOrId)) || null;
     const aptId = typeof aptOrId === "object" ? aptOrId.id : aptOrId;
 
+    if (checkingInId) return;
+    setCheckingInId(aptId);
+
     try {
       const res = await appointmentService.receptionCheckIn(aptId);
       await refetch();
@@ -328,25 +343,36 @@ export function AppointmentManagementCenterScreen({
         };
       }
       const checkInRes = res as unknown as CheckInResponse;
-      const tokenNo =
+      let tokenNo =
         checkInRes?.tokenNumber ||
         checkInRes?.token ||
         checkInRes?.data?.tokenNumber ||
         checkInRes?.data?.token ||
-        targetApt?.tokenNo ||
-        `TK-${aptId}`;
+        "";
+
+      if (!tokenNo) {
+        try {
+          tokenNo = await appointmentService.getAppointmentToken(aptId);
+        } catch {
+          // Token endpoint optional
+        }
+      }
+
+      if (!tokenNo && targetApt?.tokenNo) {
+        tokenNo = targetApt.tokenNo;
+      }
 
       if (targetApt) {
         setCheckInConfirmationApt(targetApt);
-        setCheckInConfirmationToken(String(tokenNo));
+        setCheckInConfirmationToken(String(tokenNo || ""));
       }
 
       triggerToast(`Patient checked in successfully.`);
     } catch (err) {
       const error = err as Error | null | undefined;
-      triggerToast(
-        error?.message || "Check-in is only allowed on the appointment date.",
-      );
+      triggerToast(error?.message || "Check-in failed. Please try again.");
+    } finally {
+      setCheckingInId(null);
     }
   };
 
@@ -577,6 +603,13 @@ export function AppointmentManagementCenterScreen({
           ) : userRole === "Doctor" ? (
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
+                <button
+                  onClick={onBack ? onBack : () => navigate(-1)}
+                  className="px-3.5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  style={{ fontFamily: PP }}
+                >
+                  <ArrowLeft size={14} /> Back
+                </button>
                 <div className="flex items-center gap-2">
                   <h1
                     className="text-xl font-bold text-[#111827]"
@@ -601,14 +634,6 @@ export function AppointmentManagementCenterScreen({
               </div>
 
               <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={onBack ? onBack : () => navigate(-1)}
-                  className="px-3.5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-                  style={{ fontFamily: PP }}
-                >
-                  <ArrowLeft size={14} /> Back
-                </button>
-
                 <button
                   onClick={() => setViewMode("queue")}
                   className="px-3.5 py-2.5 rounded-xl border border-[#0D47A1] bg-blue-50 text-xs font-bold text-[#0D47A1] hover:bg-blue-100 transition-colors flex items-center gap-1.5 shadow-xs"
@@ -947,11 +972,7 @@ export function AppointmentManagementCenterScreen({
                 key={tab.id}
                 onClick={() => {
                   setStatusTab(tab.id);
-                  if (tab.id !== "All" && tab.id !== "Waiting") {
-                    setFilter("statusFilter", tab.id);
-                  } else {
-                    setFilter("statusFilter", "All");
-                  }
+                  setFilter("statusFilter", tab.id);
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                   statusTab === tab.id
@@ -1172,10 +1193,14 @@ export function AppointmentManagementCenterScreen({
                               apt.status === "CONFIRMED") && (
                               <button
                                 onClick={() => handleCheckInPatient(apt)}
-                                className="px-2 py-1 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 shadow-xs bg-[#0D47A1] text-white hover:bg-[#0c3d8a] cursor-pointer"
+                                disabled={checkingInId === apt.id}
+                                className="px-2 py-1 rounded-lg text-[10px] font-bold transition-colors flex items-center gap-1 shadow-xs bg-[#0D47A1] text-white hover:bg-[#0c3d8a] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Check-In Patient"
                               >
-                                <CheckCircle2 size={12} /> Check-In
+                                <CheckCircle2 size={12} />{" "}
+                                {checkingInId === apt.id
+                                  ? "Checking In..."
+                                  : "Check-In"}
                               </button>
                             )}
 

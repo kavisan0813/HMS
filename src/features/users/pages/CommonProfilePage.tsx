@@ -166,6 +166,20 @@ export function CommonProfilePage() {
     return String(profile.role).toUpperCase() === "PATIENT";
   }, [profile]);
 
+  // Only admin roles can use the PUT /api/v1/admin/users/{userId} endpoint
+  const canEditProfile = useMemo(() => {
+    if (!authUser) return false;
+    const currentRole = String(
+      (authUser as unknown as { role?: string }).role || "",
+    ).toUpperCase();
+    const isAdminRole =
+      currentRole === "SUPER_ADMIN" ||
+      currentRole === "HOSPITAL_ADMIN" ||
+      currentRole === "ADMIN";
+    // Admins can edit any profile; non-admins cannot (no self-update API exists)
+    return isAdminRole;
+  }, [authUser]);
+
   // Fetch Departments lookup (only for Doctor roles)
   useEffect(() => {
     if (!isDoctorRole) return;
@@ -178,7 +192,7 @@ export function CommonProfilePage() {
       .catch(() => {});
   }, [isDoctorRole]);
 
-  // Fetch Profile Data from GET /api/v1/admin/users/{userId}
+  // Fetch Profile Data
   const loadProfile = useCallback(async () => {
     if (!targetUserId) {
       setLoading(false);
@@ -189,64 +203,85 @@ export function CommonProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await usersApi.adminGetUserById(targetUserId);
-      if (response.success && response.data) {
-        const data = response.data;
+      let data: UserDetailData | null = null;
 
-        const rawGender =
-          data.gender ||
-          (data as unknown as { sex?: string }).sex ||
-          authUser?.gender ||
-          "";
-
-        const rawDob =
-          data.dateOfBirth ||
-          (data as unknown as { dob?: string }).dob ||
-          (data as unknown as { birthDate?: string }).birthDate ||
-          authUser?.dateOfBirth ||
-          authUser?.dob ||
-          "";
-
-        const normalizedData: UserDetailData = {
-          ...data,
-          gender: rawGender || data.gender,
-          dateOfBirth: rawDob || data.dateOfBirth,
-        };
-
-        setProfile(normalizedData);
-        const doc = data.doctorProfile;
-
-        // Initialize form with backend values
-        setForm({
-          fullName: data.fullName || authUser?.fullName || authUser?.name || "",
-          email: data.email || authUser?.email || "",
-          mobile: data.mobile || authUser?.mobile || "",
-          gender: (rawGender || "MALE").toUpperCase(),
-          dateOfBirth: rawDob ? String(rawDob).split("T")[0] : "",
-          residentialAddress: data.residentialAddress || "",
-          professionalBio: data.professionalBio || "",
-          photo: data.photo || "",
-          photoUrl: data.photoUrl || data.photo || "",
-          medicalRegistrationNumber: doc?.medicalRegistrationNumber || "",
-          qualification: doc?.qualification || "",
-          yearsOfExperience: doc?.yearsOfExperience || 0,
-          primaryDepartmentId: doc?.primaryDepartment?.departmentId || 0,
-          secondaryDepartmentIds: (doc?.secondaryDepartments || []).map(
-            (d) => d.departmentId,
-          ),
-          primarySpecialtyId: doc?.primarySpecialty?.specialtyId || 0,
-          secondarySpecialtyIds: (doc?.secondarySpecialties || []).map(
-            (s) => s.specialtyId,
-          ),
-          consultationFee: doc?.consultationFee || 0,
-          slotDurationMinutes: doc?.slotDurationMinutes || 15,
-          availability: doc?.availability || [],
-          scheduleExceptions: doc?.scheduleExceptions || [],
-          changeReason: "Profile update",
-        });
-      } else {
-        setError(response.message || "Failed to load user profile details.");
+      // When viewing self-profile, use the authenticated /api/v1/auth/me endpoint (works for all roles without 403)
+      if (isSelfProfile) {
+        try {
+          const authRes = await authApi.getProfile();
+          if (authRes && authRes.data) {
+            data = authRes.data as unknown as UserDetailData;
+          }
+        } catch {
+          if (authUser) {
+            data = authUser as unknown as UserDetailData;
+          }
+        }
       }
+
+      // When an Admin views another user's profile, or as fallback for admin self-profile
+      if (!data && canEditProfile) {
+        const response = await usersApi.adminGetUserById(targetUserId);
+        if (response.success && response.data) {
+          data = response.data;
+        }
+      }
+
+      if (!data) {
+        throw new Error("Unable to load profile data.");
+      }
+
+      const rawGender =
+        data.gender ||
+        (data as unknown as { sex?: string }).sex ||
+        authUser?.gender ||
+        "";
+
+      const rawDob =
+        data.dateOfBirth ||
+        (data as unknown as { dob?: string }).dob ||
+        (data as unknown as { birthDate?: string }).birthDate ||
+        authUser?.dateOfBirth ||
+        authUser?.dob ||
+        "";
+
+      const normalizedData: UserDetailData = {
+        ...data,
+        gender: rawGender || data.gender,
+        dateOfBirth: rawDob || data.dateOfBirth,
+      };
+
+      setProfile(normalizedData);
+      const doc = data.doctorProfile;
+
+      // Initialize form with backend values
+      setForm({
+        fullName: data.fullName || authUser?.fullName || authUser?.name || "",
+        email: data.email || authUser?.email || "",
+        mobile: data.mobile || authUser?.mobile || "",
+        gender: (rawGender || "MALE").toUpperCase(),
+        dateOfBirth: rawDob ? String(rawDob).split("T")[0] : "",
+        residentialAddress: data.residentialAddress || "",
+        professionalBio: data.professionalBio || "",
+        photo: data.photo || "",
+        photoUrl: data.photoUrl || data.photo || "",
+        medicalRegistrationNumber: doc?.medicalRegistrationNumber || "",
+        qualification: doc?.qualification || "",
+        yearsOfExperience: doc?.yearsOfExperience || 0,
+        primaryDepartmentId: doc?.primaryDepartment?.departmentId || 0,
+        secondaryDepartmentIds: (doc?.secondaryDepartments || []).map(
+          (d) => d.departmentId,
+        ),
+        primarySpecialtyId: doc?.primarySpecialty?.specialtyId || 0,
+        secondarySpecialtyIds: (doc?.secondarySpecialties || []).map(
+          (s) => s.specialtyId,
+        ),
+        consultationFee: doc?.consultationFee || 0,
+        slotDurationMinutes: doc?.slotDurationMinutes || 15,
+        availability: doc?.availability || [],
+        scheduleExceptions: doc?.scheduleExceptions || [],
+        changeReason: "Profile update",
+      });
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -256,7 +291,7 @@ export function CommonProfilePage() {
     } finally {
       setLoading(false);
     }
-  }, [targetUserId, authUser]);
+  }, [targetUserId, authUser, isSelfProfile, canEditProfile]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -834,15 +869,17 @@ export function CommonProfilePage() {
               <span className="px-2.5 py-0.5 bg-white/20 text-white rounded-full text-[10px] font-bold uppercase tracking-wider">
                 {profile.role}
               </span>
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  String(profile.status).toUpperCase() === "ACTIVE"
-                    ? "bg-emerald-400/30 text-emerald-100 border border-emerald-300/40"
-                    : "bg-amber-400/30 text-amber-100 border border-amber-300/40"
-                }`}
-              >
-                ● {profile.status}
-              </span>
+              {profile.status && (
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    String(profile.status).toUpperCase() === "ACTIVE"
+                      ? "bg-emerald-400/30 text-emerald-100 border border-emerald-300/40"
+                      : "bg-amber-400/30 text-amber-100 border border-amber-300/40"
+                  }`}
+                >
+                  ● {profile.status}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs text-blue-100 font-medium">

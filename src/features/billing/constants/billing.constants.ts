@@ -58,14 +58,6 @@ export const DEFAULT_CONFIGURATION: BillingConfiguration = {
       reqRef: true,
       iconName: "FileText",
     },
-    {
-      id: "p6",
-      name: "Health Insurance / TPA",
-      enabled: true,
-      isDefault: false,
-      reqRef: true,
-      iconName: "Receipt",
-    },
   ],
   discount: {
     allowDiscounts: true,

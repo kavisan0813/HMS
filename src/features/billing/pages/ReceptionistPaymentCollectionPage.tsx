@@ -42,13 +42,15 @@ const paymentFormReducer = (
   [action.field]: action.value,
 });
 
+const RECEPTIONIST_BILLING_PARAMS = { page: 0, size: 200 } as const;
+
 export function ReceptionistPaymentCollectionPage() {
   const navigate = useNavigate();
   const {
     data: billsData,
     isLoading,
     refetch,
-  } = useBillingList({ page: 0, size: 200 });
+  } = useBillingList(RECEPTIONIST_BILLING_PARAMS);
   const invoices = useMemo(
     () => (billsData?.bills || []).map(mapApiBillToInvoiceRecord),
     [billsData],

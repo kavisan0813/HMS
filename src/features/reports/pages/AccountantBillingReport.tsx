@@ -24,6 +24,8 @@ import {
 import { useDailyRevenueDetails, extractList } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
 import type { DailyRevenueDetail } from "../types/reports.types";
+import { useNavigate } from "react-router";
+import { ROUTES } from "../../../app/routes/routes";
 
 import {
   AreaChart,
@@ -98,6 +100,7 @@ export function AccountantBillingReportScreen({
   onBack?: () => void;
   onOpenRevenueReport?: () => void;
 }) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("Today");
   const [, setDeptFilter] = useState("All Departments");
@@ -574,37 +577,7 @@ export function AccountantBillingReportScreen({
           </div>
         </div>
 
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate Billing report state
-          </span>
-        </div>
+
 
         {/* ERROR STATE */}
         {hasError && (
@@ -1189,7 +1162,19 @@ export function AccountantBillingReportScreen({
                             className="hover:bg-slate-50 transition-colors"
                           >
                             <td className="py-3.5 px-4 font-mono font-bold text-[#0D47A1]">
-                              {item.invoiceId}
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
+                                  )
+                                }
+                                className="hover:underline cursor-pointer font-mono font-bold text-[#0D47A1] text-left"
+                              >
+                                {item.invoiceId}
+                              </button>
                             </td>
                             <td className="py-3.5 px-4 font-bold text-[#111827]">
                               {item.patientName}
@@ -1233,31 +1218,42 @@ export function AccountantBillingReportScreen({
                               <div className="flex items-center justify-end gap-1">
                                 <button
                                   onClick={() =>
-                                    alert(`Viewing invoice ${item.invoiceId}`)
+                                    navigate(
+                                      ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                        ":invoiceId",
+                                        String(item.invoiceId),
+                                      ),
+                                    )
                                   }
-                                  className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
+                                  className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
                                   title="View Invoice"
                                 >
                                   <CreditCard className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() =>
-                                    alert(
-                                      `Printing receipt for ${item.invoiceId}`,
+                                    navigate(
+                                      ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                        ":invoiceId",
+                                        String(item.invoiceId),
+                                      ),
                                     )
                                   }
-                                  className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition"
+                                  className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition cursor-pointer"
                                   title="Print Invoice"
                                 >
                                   <Printer className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() =>
-                                    alert(
-                                      `Downloading PDF for ${item.invoiceId}`,
+                                    navigate(
+                                      ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                        ":invoiceId",
+                                        String(item.invoiceId),
+                                      ),
                                     )
                                   }
-                                  className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
+                                  className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                   title="Download PDF"
                                 >
                                   <Download className="w-4 h-4" />

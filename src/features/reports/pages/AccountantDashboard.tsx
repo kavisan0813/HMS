@@ -471,8 +471,8 @@ export function AccountantReportsDashboardScreen({
       typeof refundLogData?.totalRefundedAmount === "number"
         ? refundLogData.totalRefundedAmount
         : refundsList.reduce<number>((acc, curr) => {
-            return acc + (curr.amount || 0);
-          }, 0);
+          return acc + (curr.amount || 0);
+        }, 0);
 
     const collectionRate: number =
       totalBilledAmount > 0
@@ -600,53 +600,53 @@ export function AccountantReportsDashboardScreen({
       style={{ fontFamily: RB }}
     >
       {/* Top Header Section */}
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className="text-xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Financial Operations & Analytics
-                </h1>
-              </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Comprehensive overview of hospital revenue, collections, payment
-                breakdown, and billing register.
-              </p>
-            </div>
-
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-[#64748B] bg-white border border-[#E5E7EB] hover:text-[#111827] hover:bg-slate-50 transition shadow-sm"
+              <h1
+                className="text-xl font-bold text-[#111827]"
+                style={{ fontFamily: PP }}
               >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#0D47A1]" : ""}`}
-                />
-                <span>Refresh Data</span>
-              </button>
-
-              <button
-                onClick={handleExportCsv}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export CSV</span>
-              </button>
-
-              <button
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-              >
-                <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
-                <span>Print Report</span>
-              </button>
+                Financial Operations & Analytics
+              </h1>
             </div>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              Comprehensive overview of hospital revenue, collections, payment
+              breakdown, and billing register.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-[#64748B] bg-white border border-[#E5E7EB] hover:text-[#111827] hover:bg-slate-50 transition shadow-sm"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-[#0D47A1]" : ""}`}
+              />
+              <span>Refresh Data</span>
+            </button>
+
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white bg-[#009688] hover:bg-teal-700 transition shadow-sm"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
+              <span>Print Report</span>
+            </button>
           </div>
         </div>
+      </div>
 
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
@@ -684,9 +684,7 @@ export function AccountantReportsDashboardScreen({
                 <span className="text-[#64748B] font-semibold flex items-center gap-0.5">
                   <TrendingUp className="w-3 h-3" /> Revenue
                 </span>
-                <span className="text-[#0D47A1] font-semibold flex items-center gap-0.5 group-hover:underline">
-                  View Detail <ChevronRight className="w-3 h-3" />
-                </span>
+
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
@@ -739,9 +737,6 @@ export function AccountantReportsDashboardScreen({
                 <span className="text-[#009688] font-semibold">
                   {computedInvoiceSummary.paidInvoices} Paid Invoices
                 </span>
-                <span className="text-[#009688] font-semibold flex items-center gap-0.5 group-hover:underline">
-                  View Detail <ChevronRight className="w-3 h-3" />
-                </span>
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
@@ -790,9 +785,7 @@ export function AccountantReportsDashboardScreen({
                 <span className="text-[#66BB6A] font-semibold">
                   {computedInvoiceSummary.collectionRate}% Collection Rate
                 </span>
-                <span className="text-[#66BB6A] font-semibold flex items-center gap-0.5 group-hover:underline">
-                  View Detail <ChevronRight className="w-3 h-3" />
-                </span>
+                
               </div>
               <div className="grid grid-cols-2 gap-1 pt-2 border-t border-[#E5E7EB] text-[11px] text-center">
                 <div>
@@ -1409,17 +1402,37 @@ export function AccountantReportsDashboardScreen({
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={handleExportCsv}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 border border-teal-200 text-xs font-semibold text-[#009688] rounded-xl hover:bg-teal-100 transition"
+                    onClick={() => {
+                      const csvContent = [
+                        "Invoice ID,Patient Name,MRN,Date,Grand Total,Paid,Balance,Method,Status,Collected By",
+                        ...filteredTransactions.map(
+                          (r) =>
+                            `${r.invoiceId},"${r.patientName}",${r.mrn},${r.invoiceDate},${r.grandTotal},${r.amountPaid},${r.balance},${r.paymentMethod},${r.paymentStatus},"${r.collectedBy}"`
+                        ),
+                      ].join("\n");
+                      const blob = new Blob([csvContent], {
+                        type: "text/csv;charset=utf-8;",
+                      });
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement("a");
+                      link.href = url;
+                      link.download = `Financial_Transactions_${todayStr}.csv`;
+                      link.style.display = "none";
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      setTimeout(() => URL.revokeObjectURL(url), 2000);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 border border-teal-200 text-xs font-semibold text-[#009688] rounded-xl hover:bg-teal-100 transition cursor-pointer"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" />
                     <span>Export CSV</span>
                   </button>
                   <button
-                    onClick={() => alert("Exporting Financial Ledger (PDF)...")}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#0D47A1] rounded-xl hover:bg-slate-100 transition cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
+                    <Download className="w-3.5 h-3.5" />
                     <span>Export PDF</span>
                   </button>
                 </div>
@@ -1460,7 +1473,19 @@ export function AccountantReportsDashboardScreen({
                           className="hover:bg-slate-50 transition-colors"
                         >
                           <td className="py-3.5 px-4 font-mono font-bold text-[#0D47A1]">
-                            {item.invoiceId}
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                    ":invoiceId",
+                                    String(item.invoiceId),
+                                  ),
+                                )
+                              }
+                              className="hover:underline cursor-pointer font-mono font-bold text-[#0D47A1] text-left"
+                            >
+                              {item.invoiceId}
+                            </button>
                           </td>
                           <td className="py-3.5 px-4 font-bold text-[#111827]">
                             {item.patientName}
@@ -1497,29 +1522,42 @@ export function AccountantReportsDashboardScreen({
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() =>
-                                  alert(`Viewing invoice ${item.invoiceId}`)
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
+                                  )
                                 }
-                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition"
+                                className="p-1.5 text-[#0D47A1] hover:bg-blue-50 rounded-lg transition cursor-pointer"
                                 title="View Invoice"
                               >
                                 <CreditCard className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() =>
-                                  alert(
-                                    `Printing receipt for ${item.invoiceId}`,
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
                                   )
                                 }
-                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition"
+                                className="p-1.5 text-[#009688] hover:bg-teal-50 rounded-lg transition cursor-pointer"
                                 title="Print Invoice"
                               >
                                 <Printer className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() =>
-                                  alert(`Downloading PDF for ${item.invoiceId}`)
+                                  navigate(
+                                    ROUTES.BILLING_PRINT_PREVIEW.replace(
+                                      ":invoiceId",
+                                      String(item.invoiceId),
+                                    ),
+                                  )
                                 }
-                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition"
+                                className="p-1.5 text-[#64748B] hover:bg-slate-100 rounded-lg transition cursor-pointer"
                                 title="Download PDF"
                               >
                                 <Download className="w-4 h-4" />

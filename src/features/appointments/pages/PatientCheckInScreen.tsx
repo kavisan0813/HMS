@@ -101,9 +101,14 @@ export function PatientCheckInScreen({
     );
   }, [aptSearchQuery, appointments]);
 
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState<string | null>(null);
+
   // Perform Check-In
   const handlePerformCheckIn = async () => {
-    if (!selectedApt) return;
+    if (!selectedApt || isCheckingIn) return;
+    setIsCheckingIn(true);
+    setCheckInError(null);
     try {
       const res = await receptionService.checkInPatient(selectedApt.id);
       setGeneratedToken(res.tokenNumber);
@@ -111,8 +116,11 @@ export function PatientCheckInScreen({
       setEstWaitTime(`${(res.queueNumber ?? 1) * 5} mins`);
       setShowSuccessModal(true);
     } catch (err) {
-      console.log(err);
+      const error = err as Error | null | undefined;
+      setCheckInError(error?.message || "Check-in failed. Please try again.");
       setShowSuccessModal(false);
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
@@ -501,6 +509,19 @@ export function PatientCheckInScreen({
         </div>
       </div>
 
+      {checkInError && (
+        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between">
+          <span>{checkInError}</span>
+          <button
+            type="button"
+            onClick={() => setCheckInError(null)}
+            className="text-red-500 hover:text-red-800 font-bold ml-3"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── STICKY FOOTER ACTION BAR ── */}
       <div className="sticky bottom-0 bg-white border-t border-[#E5E7EB] p-4 rounded-2xl shadow-lg flex items-center justify-between z-10">
         <button
@@ -514,12 +535,24 @@ export function PatientCheckInScreen({
 
         <button
           type="button"
-          disabled={!selectedApt || selectedApt.status === "Cancelled"}
+          disabled={
+            !selectedApt ||
+            isCheckingIn ||
+            selectedApt.status === "Cancelled" ||
+            selectedApt.status === "CANCELLED" ||
+            selectedApt.status === "Completed" ||
+            selectedApt.status === "COMPLETED" ||
+            selectedApt.status === "Checked-In" ||
+            selectedApt.status === "CHECKED_IN" ||
+            selectedApt.status === "No Show" ||
+            selectedApt.status === "NO_SHOW"
+          }
           onClick={handlePerformCheckIn}
           className="px-6 py-2.5 rounded-xl bg-[#009688] text-white text-xs font-semibold hover:bg-teal-700 transition-colors shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ fontFamily: PP }}
         >
-          <UserCheck size={16} /> Check-In Patient
+          <UserCheck size={16} />{" "}
+          {isCheckingIn ? "Checking In..." : "Check-In Patient"}
         </button>
       </div>
 

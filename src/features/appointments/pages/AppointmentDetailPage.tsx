@@ -19,6 +19,7 @@ import { appointmentToPatientSummary } from "../constants/appointment.constants"
 import { StatusBadge } from "../components/StatusBadge";
 import { Avatar } from "../components/Avatar";
 import type { AppointmentRecord } from "../types/appointment.types";
+import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
 
 type DoctorInfo = {
   id: string | number;
@@ -274,20 +275,54 @@ const AppointmentTimeline = ({
 
 const AppointmentDetailActions = ({
   navigate,
+  apt,
 }: {
   navigate: ReturnType<typeof useNavigate>;
+  apt?: AppointmentRecord | null;
 }) => (
   <div className="flex items-center justify-between">
     <button
       onClick={() => navigate(ROUTES.APPOINTMENTS)}
-      className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] text-xs font-semibold text-[#64748B] hover:bg-slate-100 transition-colors"
+      className="px-5 py-2.5 rounded-xl border border-[#E5E7EB] text-xs font-semibold text-[#64748B] hover:bg-slate-100 transition-colors cursor-pointer"
       style={{ fontFamily: RB }}
     >
       Back to Appointments
     </button>
     <button
-      onClick={() => window.print()}
-      className="px-3.5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors flex items-center gap-1.5"
+      onClick={() => {
+        if (apt) {
+          downloadAppointmentSlipPdf({
+            id: apt.appointmentNumber || apt.id,
+            appointmentNumber: apt.appointmentNumber || apt.id,
+            patientName: apt.patientName,
+            patientAge: apt.patientAge,
+            patientGender: apt.patientGender,
+            patientPhone: apt.patientPhone,
+            mrn: apt.patientMrn || apt.mrn,
+            doctor: apt.doctorName,
+            doctorName: apt.doctorName,
+            department:
+              apt.departmentName ||
+              (typeof apt.department === "string"
+                ? apt.department
+                : apt.department?.departmentName),
+            specialty: apt.doctorSpecialty || apt.specialty,
+            date: apt.appointmentDate,
+            appointmentDate: apt.appointmentDate,
+            time: apt.timeSlot,
+            timeSlot: apt.timeSlot,
+            startTime: apt.timeSlot,
+            visitType: apt.visitType,
+            status: apt.status,
+            tokenNo: apt.tokenNo || apt.queueToken,
+            reason: apt.chiefComplaint || apt.reason,
+            notes: apt.notes || apt.symptoms,
+          });
+        } else {
+          window.print();
+        }
+      }}
+      className="px-3.5 py-2.5 rounded-xl border border-[#E5E7EB] bg-white text-slate-700 text-xs font-bold hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
       style={{ fontFamily: PP }}
     >
       <Printer size={14} /> Print Summary
@@ -540,7 +575,7 @@ export function AppointmentDetailPage() {
           </div>
         </div>
 
-        <AppointmentDetailActions navigate={navigate} />
+        <AppointmentDetailActions navigate={navigate} apt={apt} />
       </div>
     </div>
   );

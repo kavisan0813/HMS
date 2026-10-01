@@ -445,20 +445,19 @@ export function PatientTable({
             >
               <button
                 onClick={() => onViewProfile(mrn)}
-                className="px-2.5 py-1.5 rounded-lg bg-[#0D47A1] hover:bg-[#0c3d8a] text-white text-[11px] font-bold transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                style={{ fontFamily: PP }}
+                className="p-1.5 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[#0D47A1] transition-colors cursor-pointer"
+                title="View Patient Profile"
               >
-                <Eye size={12} /> Profile
+                <Eye size={13} />
               </button>
 
               {onBookAppointment && !isDoctor && (
                 <button
                   onClick={() => onBookAppointment(p)}
-                  className="px-2.5 py-1.5 rounded-lg bg-[#009688] hover:bg-teal-700 text-white text-[11px] font-bold transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                  style={{ fontFamily: PP }}
+                  className="p-1.5 rounded-lg border border-teal-200 bg-teal-50 hover:bg-teal-100 text-[#009688] transition-colors cursor-pointer"
                   title="Book Appointment"
                 >
-                  <Calendar size={12} /> Book
+                  <Calendar size={13} />
                 </button>
               )}
 

@@ -17,7 +17,9 @@ type BillingStatus =
 
 export interface InvoiceRecord {
   id: string;
-  /** Human-readable number returned by the billing service. */
+  /** Numeric database ID for API endpoints */
+  billId?: number;
+  /** Human-readable display number returned by the billing service. */
   billNumber?: string;
   invoiceDate: string;
   patientName: string;
@@ -43,6 +45,7 @@ export interface InvoiceRecord {
 
 export interface ApiPatientInvoice {
   id: string | number;
+  billId?: number;
   invoiceNumber?: string;
   date?: string;
   status?: string;
@@ -210,6 +213,7 @@ interface BillItem {
 }
 
 interface BillDetailPatient {
+  email: string;
   id: number;
   mrn: string;
   name: string;

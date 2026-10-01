@@ -130,13 +130,15 @@ export function InvoiceDetailsPage() {
     bRec?.attendingDoctor ||
     "N/A",
   );
-  const displayInvoiceNo = targetId
-    ? targetId.startsWith("BL-")
-      ? targetId
-      : targetId.startsWith("INV-")
-        ? `BL-2026-${targetId.replace("INV-", "").padStart(6, "0")}`
-        : `BL-2026-${String(targetId).padStart(6, "0")}`
-    : bill?.billNumber || "BL-2026-000387";
+  const displayInvoiceNo =
+    bill?.billNumber ||
+    (targetId
+      ? targetId.startsWith("BL-")
+        ? targetId
+        : targetId.startsWith("INV-")
+          ? `BL-2026-${targetId.replace("INV-", "").padStart(6, "0")}`
+          : `BL-2026-${String(targetId).padStart(6, "0")}`
+      : "BL-2026-000387");
 
   const doctorCode = String(docObj.doctorCode || docObj.code || "");
   const summaryData = bill?.summary;

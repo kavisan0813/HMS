@@ -106,8 +106,23 @@ export function mapApiInvoiceToInvoiceRecord(
           ? 0
           : Math.max(0, amount - paidAmount);
 
+  const rawNumericId =
+    typeof apiInv.billId === "number"
+      ? apiInv.billId
+      : typeof apiInv.id === "number"
+        ? apiInv.id
+        : !isNaN(Number(apiInv.id)) && String(apiInv.id).trim() !== ""
+          ? Number(apiInv.id)
+          : undefined;
+
+  const displayBillNumber =
+    apiInv.invoiceNumber ||
+    (rawNumericId ? `BL-2026-${String(rawNumericId).padStart(6, "0")}` : String(apiInv.id || ""));
+
   return {
-    id: String(apiInv.invoiceNumber || apiInv.id),
+    id: String(rawNumericId ?? apiInv.id ?? apiInv.invoiceNumber ?? ""),
+    billId: rawNumericId,
+    billNumber: displayBillNumber,
     invoiceDate: apiInv.date || "N/A",
     patientName: patientName,
     mrn: mrn,
@@ -192,9 +207,21 @@ export function mapApiBillToInvoiceRecord(bill: BillListItem): InvoiceRecord {
     bill.summary?.balanceAmount ??
     Math.max(0, netAmount - paidAmount);
 
+  const numericBillId =
+    typeof bill.billId === "number"
+      ? bill.billId
+      : typeof bill.id === "number"
+        ? bill.id
+        : !isNaN(Number(bill.billId)) && String(bill.billId).trim() !== ""
+          ? Number(bill.billId)
+          : !isNaN(Number(bill.id)) && String(bill.id).trim() !== ""
+            ? Number(bill.id)
+            : undefined;
+
   return {
-    id: String(bill.billId ?? bill.id ?? bill.billNumber),
-    billNumber: bill.billNumber,
+    id: String(numericBillId ?? bill.billId ?? bill.id ?? bill.billNumber ?? ""),
+    billId: numericBillId,
+    billNumber: bill.billNumber || (numericBillId ? `BL-2026-${String(numericBillId).padStart(6, "0")}` : ""),
     invoiceDate: bill.createdAt
       ? new Date(bill.createdAt).toLocaleDateString()
       : new Date().toLocaleDateString(),

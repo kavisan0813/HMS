@@ -761,7 +761,8 @@ export function DockableQueueWorkspace({
     ]);
 
     let list = appointments.filter(
-      (a) => normalizeDateString(a.appointmentDate) === todayStr,
+      (a) =>
+        normalizeDateString(a.appointmentDate || a.createdDate) === todayStr,
     );
     if (isDoctor) {
       // Doctors only see patients ready for consultation — NOT waiting for vitals or just checked-in

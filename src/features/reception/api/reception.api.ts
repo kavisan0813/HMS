@@ -282,17 +282,22 @@ export const receptionApi = {
   },
 
   /**
-   * PATCH /api/v1/reception/appointments/{appointmentId}/check-in
+   * Check-in: PATCH /api/v1/reception/appointments/{appointmentId}/check-in
    */
   async patchCheckIn(
     appointmentId: string | number,
   ): Promise<PatchCheckInResponse> {
+    let numericId = appointmentId;
+    if (typeof appointmentId === "string" && appointmentId.includes("-")) {
+      const parsed = parseInt(appointmentId.split("-").pop() || "", 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        numericId = parsed;
+      }
+    }
     try {
       const res = await apiClient.patch<unknown>(
-        `/api/v1/reception/appointments/${appointmentId}/check-in`,
-        {},
+        `/api/v1/reception/appointments/${numericId}/check-in`,
       );
-
       return res.data as PatchCheckInResponse;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -311,9 +316,16 @@ export const receptionApi = {
   async getAppointmentToken(
     appointmentId: string | number,
   ): Promise<AppointmentTokenResponse> {
+    let numericId = appointmentId;
+    if (typeof appointmentId === "string" && appointmentId.includes("-")) {
+      const parsed = parseInt(appointmentId.split("-").pop() || "", 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        numericId = parsed;
+      }
+    }
     try {
       const res = await apiClient.get<unknown>(
-        `/api/v1/reception/appointments/${appointmentId}/token`,
+        `/api/v1/reception/appointments/${numericId}/token`,
       );
       return res.data as AppointmentTokenResponse;
     } catch (error) {

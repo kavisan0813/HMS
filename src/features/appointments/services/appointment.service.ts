@@ -52,7 +52,13 @@ const normalizeAppointmentRecord = (
 ): AppointmentRecord => {
   const patient = (item?.patient as Record<string, unknown>) || {};
   const doctor = (item?.doctor as Record<string, unknown>) || {};
-  const appointmentDate = (item?.appointmentDate || item?.date || "") as string;
+  const appointmentDate = (item?.appointmentDate ||
+    item?.date ||
+    item?.createdDate ||
+    item?.createdAt ||
+    item?.scheduledDate ||
+    item?.appointment_date ||
+    "") as string;
   const startTime = (item?.startTime ||
     item?.timeSlot ||
     item?.appointmentTime ||
@@ -494,7 +500,7 @@ export const appointmentService = {
 
   async getAppointmentToken(appointmentId: string | number) {
     const res = await appointmentsApi.getAppointmentToken(appointmentId);
-    return res?.data?.tokenNumber || `TK-${String(appointmentId).slice(-4)}`;
+    return res?.data?.tokenNumber || "";
   },
 
   async getTokenDetails(appointmentId: string | number) {

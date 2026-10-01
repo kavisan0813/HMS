@@ -219,6 +219,25 @@ export function DoctorProfilePage() {
         }
 
         if (uid) {
+          if (me && (me.id === uid || String(me.id) === String(uid))) {
+            const doctorRecord = mapApiUserToDoctorRecord(
+              me as unknown as ApiUserDoctorRecord,
+            );
+            setDoctor(doctorRecord);
+            setPersonalForm({
+              fullName: doctorRecord.name.replace(/^Dr\.\s*/, ""),
+              email: doctorRecord.email || "",
+              mobile: doctorRecord.phone || "",
+              gender: doctorRecord.gender || "",
+              dateOfBirth: doctorRecord.dob || "",
+              address: doctorRecord.address || "",
+              bio: doctorRecord.bio || "",
+              photoUrl: doctorRecord.photoUrl || doctorRecord.photo || "",
+              photo: doctorRecord.photo || doctorRecord.photoUrl || "",
+            });
+            return;
+          }
+
           try {
             const response = await apiClient.get<
               DoctorApiResponse<ApiUserDoctorRecord>

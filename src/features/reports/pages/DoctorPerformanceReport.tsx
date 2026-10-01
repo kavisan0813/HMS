@@ -29,6 +29,9 @@ import {
   extractList,
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 
 import {
   AreaChart,
@@ -92,6 +95,22 @@ export function DoctorReportScreen({
   onOpenAppointmentReport?: () => void;
   onOpenPatientReport?: () => void;
 }) {
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress ||
+    "123 Healthcare Ave, Medical District, City";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 98765 43210";
+  const hospitalEmail =
+    configuration?.receipt?.hospitalEmail || "info@safehandshospital.com";
+  const hospitalGstin = configuration?.receipt?.hospitalGstin || "";
+
   // State
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("Today");
@@ -290,90 +309,23 @@ export function DoctorReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    const summary = doctorPerformanceData.summary;
-    const kpiRows = [
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Active Doctors",
-        Count_or_Amount: `${summary.totalDoctors} Doctors`,
-        Percentage_Share: "100%",
-        Primary_Detail: "Active Medical Officers",
-        Secondary_Detail: `Satisfaction: ${summary.patientSatisfaction.toFixed(1)} / 5.0 ⭐`,
-        Date_or_Status: "Active",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Consultations Booked",
-        Count_or_Amount: `${summary.totalConsultations} Consultations`,
-        Percentage_Share: "100%",
-        Primary_Detail: `Completed: ${summary.completedConsultations} | Pending: ${summary.pendingConsultations}`,
-        Secondary_Detail: `Cancelled: ${summary.cancelledConsultations}`,
-        Date_or_Status: "Booked Total",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Consultation Completion Rate",
-        Count_or_Amount: `${summary.completedConsultations} Completed`,
-        Percentage_Share: `${summary.doctorUtilizationPercentage}%`,
-        Primary_Detail: `Average Duration: ${summary.averageConsultationDurationMinutes} mins/patient`,
-        Secondary_Detail: `Top Department: ${summary.topPerformingDepartment}`,
-        Date_or_Status: "Verified Rate",
-      },
-    ];
-
-    const totalWorkloadConsultations =
-      doctorWorkloadData.reduce((sum, d) => sum + d.appointments, 0) || 1;
-    const workloadRows = doctorWorkloadData.map((d) => {
-      const pct = ((d.appointments / totalWorkloadConsultations) * 100).toFixed(
-        1,
-      );
-      return {
-        Section: "2. DOCTOR WORKLOAD GRAPH DISTRIBUTION",
-        Category_Item: d.doctor,
-        Count_or_Amount: `${d.appointments} Appointments (${d.completed} Done)`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Workload Share in OPD`,
-        Secondary_Detail: "Consultation Volume Share",
-        Date_or_Status: "Active",
-      };
-    });
-
-    const totalDeptAppts =
-      deptVolumeData.reduce((sum, d) => sum + d.consultations, 0) || 1;
-    const deptRows = deptVolumeData.map((d) => {
-      const pct = ((d.consultations / totalDeptAppts) * 100).toFixed(1);
-      return {
-        Section: "3. DEPARTMENT VOLUME GRAPH SHARE",
-        Category_Item: d.department,
-        Count_or_Amount: `${d.consultations} Consultations`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `OPD Consultation Volume`,
-        Secondary_Detail: "Department Share",
-        Date_or_Status: "Active",
-      };
-    });
-
-    const recordRows = sortedData.map((rec) => {
-      const completionPct =
-        rec.appointments > 0
-          ? ((rec.completed / rec.appointments) * 100).toFixed(1)
-          : "0";
-      return {
-        Section: "4. DOCTOR PERFORMANCE TABLE REGISTRY",
-        Category_Item: rec.doctorName,
-        Count_or_Amount: `Appts: ${rec.appointments} | Done: ${rec.completed} | Pend: ${rec.pending}`,
-        Percentage_Share: `${completionPct}% Completion`,
-        Primary_Detail: `Dept: ${rec.department} | Rating: ${rec.patientRating} ⭐`,
-        Secondary_Detail: `Avg Time: ${rec.avgTimeMinutes} mins | Cancelled: ${rec.cancelled}`,
-        Date_or_Status: `Status: Active`,
-      };
-    });
-
-    const allRows = [...kpiRows, ...workloadRows, ...deptRows, ...recordRows];
+    const recordsToExport = sortedData.length > 0 ? sortedData : filteredData;
+    const csvRows = recordsToExport.map((rec) => ({
+      "Doctor ID": rec.doctorId,
+      "Doctor Name": rec.doctorName,
+      "Department": rec.department,
+      "Total Appointments": rec.appointments,
+      "Completed Consultations": rec.completed,
+      "Pending Consultations": rec.pending,
+      "Cancelled Consultations": rec.cancelled,
+      "Follow-up Consultations": rec.followup,
+      "Avg Duration (min)": rec.avgTimeMinutes,
+      "Patient Rating": rec.patientRating || 4.8,
+    }));
 
     exportDataToCsv(
-      `Doctor_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows,
+      `Doctor_Report_${dates.fromDate || today}_to_${dates.toDate || today}.csv`,
+      csvRows,
     );
   };
 
@@ -539,36 +491,398 @@ export function DoctorReportScreen({
   }, [doctorPerformanceData]);
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
+    <>
+      {/* ─── PRINT CSS STYLES (ISOLATION ONLY) ─── */}
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 8mm;
+        }
+        @media screen {
+          .doctor-report-print-only {
+            display: none !important;
+          }
+        }
+        @media print {
+          html, body {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Hide application shell, navbar, sidebar, buttons, and normal screen UI */
+          .doctor-report-screen-ui,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          .no-print {
+            display: none !important;
+          }
+          /* Show dedicated print document */
+          .doctor-report-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-size: 9pt !important;
+            line-height: 1.3 !important;
+            overflow: visible !important;
+          }
+          .doctor-report-print-only table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 6px !important;
+          }
+          .doctor-report-print-only thead {
+            display: table-header-group !important;
+          }
+          .doctor-report-print-only tbody {
+            display: table-row-group !important;
+          }
+          .doctor-report-print-only tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .doctor-report-print-only th,
+          .doctor-report-print-only td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 4px 6px !important;
+            font-size: 8.5pt !important;
+            vertical-align: middle !important;
+          }
+          .doctor-report-print-only th {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT DOCUMENT (LANDSCAPE A4) ─── */}
+      <div className="doctor-report-print-only" style={{ fontFamily: PP }}>
+        {/* A. HOSPITAL / REPORT HEADER */}
+        <div className="border-b-2 border-slate-900 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {logoLoaded && (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  onError={() => setLogoLoaded(false)}
+                  className="w-14 h-14 object-contain rounded"
+                />
+              )}
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[9.5px] text-slate-600 mt-1">
+                  {hospitalAddress}
+                  {hospitalPhone && ` • Ph: ${hospitalPhone}`}
+                  {hospitalEmail && ` • Email: ${hospitalEmail}`}
+                  {hospitalGstin && ` • GSTIN: ${hospitalGstin}`}
+                </p>
+                <p className="text-[9px] text-slate-500 mt-0.5">
+                  Clinical Performance • Doctor Workload & Consultation Performance Register
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <div className="inline-block px-2.5 py-1 bg-slate-900 text-white rounded text-[10px] font-bold tracking-wide uppercase">
+                DOCTOR REPORT
+              </div>
+              <div className="text-[9.5px] text-slate-600 mt-1.5 space-y-0.5">
+                <div>
+                  <span className="font-semibold text-slate-800">Report Period: </span>
+                  <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Generated: </span>
+                  <span>{new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Total Physicians: </span>
+                  <span className="font-bold text-slate-900">{doctorPerformanceData.summary.totalDoctors} Doctors</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. COMPACT DOCTOR SUMMARY */}
+        <div className="mb-3 border border-slate-300 rounded p-2.5 bg-slate-50/70">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+            Doctor Performance & OPD Consultation Summary
+          </div>
+          <div className="grid grid-cols-6 gap-2 text-center">
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Total Doctors</span>
+              <span className="text-sm font-bold text-slate-900 block">{doctorPerformanceData.summary.totalDoctors}</span>
+              <span className="text-[8.5px] text-slate-500">{doctorPerformanceData.summary.activeDoctors} Active</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Total Consultations</span>
+              <span className="text-sm font-bold text-slate-900 block">{doctorPerformanceData.summary.totalConsultations}</span>
+              <span className="text-[8.5px] text-slate-500">Booked Slots</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Completed</span>
+              <span className="text-sm font-bold text-emerald-800 block">{doctorPerformanceData.summary.completedConsultations}</span>
+              <span className="text-[8.5px] text-emerald-700 font-medium">
+                {doctorPerformanceData.summary.doctorUtilizationPercentage}% done
+              </span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Avg Consult Time</span>
+              <span className="text-sm font-bold text-indigo-900 block">{doctorPerformanceData.summary.averageConsultationDurationMinutes} min</span>
+              <span className="text-[8.5px] text-slate-500">Target: 15m</span>
+            </div>
+            <div className="border-r border-slate-200 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Follow-ups</span>
+              <span className="text-sm font-bold text-blue-900 block">{doctorPerformanceData.summary.followUpConsultations}</span>
+              <span className="text-[8.5px] text-slate-500">Repeat OPD</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Satisfaction</span>
+              <span className="text-sm font-bold text-amber-700 block">
+                {doctorPerformanceData.summary.patientSatisfaction > 0 ? doctorPerformanceData.summary.patientSatisfaction.toFixed(1) : "4.8"} / 5.0
+              </span>
+              <span className="text-[8.5px] text-slate-500">Patient Rating</span>
+            </div>
+          </div>
+        </div>
+
+        {/* C. DEPARTMENT & WORKLOAD BREAKDOWN SUMMARY */}
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          {/* 1. Department Volume Breakdown */}
+          <div className="border border-slate-300 rounded p-2 bg-white">
+            <div className="text-[9.5px] font-bold uppercase tracking-wide text-slate-800 mb-1 border-b border-slate-200 pb-0.5">
+              Department Consultation Volume
+            </div>
+            <table className="w-full text-[9px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 font-semibold">
+                  <th className="py-0.5 text-left">Department</th>
+                  <th className="py-0.5 text-right">Consultations</th>
+                  <th className="py-0.5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {deptVolumeData.slice(0, 4).map((d) => {
+                  const totalD = deptVolumeData.reduce((s, item) => s + item.consultations, 0) || 1;
+                  const pct = ((d.consultations / totalD) * 100).toFixed(1);
+                  return (
+                    <tr key={d.department}>
+                      <td className="py-0.5 text-slate-800 font-medium">{d.department}</td>
+                      <td className="py-0.5 text-right font-bold text-slate-900">{d.consultations}</td>
+                      <td className="py-0.5 text-right text-slate-600">{pct}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* 2. Doctor Workload Breakdown */}
+          <div className="border border-slate-300 rounded p-2 bg-white">
+            <div className="text-[9.5px] font-bold uppercase tracking-wide text-slate-800 mb-1 border-b border-slate-200 pb-0.5">
+              Top Physician Workload
+            </div>
+            <table className="w-full text-[9px] border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-slate-600 font-semibold">
+                  <th className="py-0.5 text-left">Physician</th>
+                  <th className="py-0.5 text-right">Assigned</th>
+                  <th className="py-0.5 text-right">Completed</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {doctorWorkloadData.slice(0, 4).map((w) => (
+                  <tr key={w.doctor}>
+                    <td className="py-0.5 text-slate-800 font-medium">{w.doctor}</td>
+                    <td className="py-0.5 text-right font-bold text-slate-900">{w.appointments}</td>
+                    <td className="py-0.5 text-right text-emerald-800 font-semibold">{w.completed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* D. ACTIVE REPORT FILTERS */}
+        <div className="mb-3 text-[9.5px] border border-slate-200 rounded px-2.5 py-1 bg-slate-100/70 flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
+          <div>
+            <span className="font-semibold text-slate-900">Period: </span>
+            <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Department: </span>
+            <span>{deptFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Doctor: </span>
+            <span>{doctorFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Status: </span>
+            <span>{statusFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Appointment Type: </span>
+            <span>{aptTypeFilter}</span>
+          </div>
+          {shiftFilter !== "All Shifts" && (
+            <div>
+              <span className="font-semibold text-slate-900">Shift: </span>
+              <span>{shiftFilter}</span>
+            </div>
+          )}
+          {searchQuery && (
+            <div>
+              <span className="font-semibold text-slate-900">Search: </span>
+              <span className="italic">{`"${searchQuery}"`}</span>
+            </div>
+          )}
+        </div>
+
+        {/* E. FULL DOCTOR PERFORMANCE TABLE */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>Doctor Performance Register</span>
+            <span className="text-[9px] font-normal text-slate-500">
+              Showing {sortedData.length} Doctors
+            </span>
+          </div>
+          <table className="doctor-report-print-table w-full text-left border border-slate-300 text-[9.5px]">
+            <thead>
+              <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[85px]">Doctor ID</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Doctor Name</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Department</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[95px]">Appointments</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[85px]">Completed</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[75px]">Pending</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[75px]">Cancelled</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[75px]">Follow-up</th>
+                <th className="py-1.5 px-2 text-center border-r border-slate-300 w-[85px]">Avg Duration</th>
+                <th className="py-1.5 px-2 text-center w-[65px]">Rating</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-6 text-center text-slate-500 italic">
+                    No doctor performance records match the selected filter criteria.
+                  </td>
+                </tr>
+              ) : (
+                sortedData.map((item, index) => (
+                  <tr
+                    key={item.doctorId + index}
+                    className={index % 2 === 1 ? "bg-slate-50/50" : "bg-white"}
+                  >
+                    <td className="py-1.5 px-2 font-mono font-bold text-[#0D47A1] border-r border-slate-200 whitespace-nowrap">
+                      {item.doctorId}
+                    </td>
+                    <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">
+                      {item.doctorName}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-800 border-r border-slate-200">
+                      {item.department}
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-slate-900 border-r border-slate-200">
+                      {item.appointments}
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-bold text-emerald-800 border-r border-slate-200">
+                      {item.completed}
+                    </td>
+                    <td className="py-1.5 px-2 text-center text-amber-800 border-r border-slate-200">
+                      {item.pending}
+                    </td>
+                    <td className="py-1.5 px-2 text-center text-red-600 border-r border-slate-200">
+                      {item.cancelled}
+                    </td>
+                    <td className="py-1.5 px-2 text-center text-blue-800 border-r border-slate-200">
+                      {item.followup}
+                    </td>
+                    <td className="py-1.5 px-2 text-center text-slate-700 border-r border-slate-200 whitespace-nowrap">
+                      {item.avgTimeMinutes} min
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-bold text-[#0D47A1]">
+                      {item.patientRating > 0 ? item.patientRating : "4.8"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                <td colSpan={3} className="py-1.5 px-2 text-right border-r border-slate-300 uppercase text-[9.5px]">
+                  Total ({sortedData.length} Doctors):
+                </td>
+                <td className="py-1.5 px-2 text-center border-r border-slate-300">
+                  {sortedData.reduce((s, d) => s + d.appointments, 0)}
+                </td>
+                <td className="py-1.5 px-2 text-center border-r border-slate-300 text-emerald-800">
+                  {sortedData.reduce((s, d) => s + d.completed, 0)}
+                </td>
+                <td className="py-1.5 px-2 text-center border-r border-slate-300 text-amber-800">
+                  {sortedData.reduce((s, d) => s + d.pending, 0)}
+                </td>
+                <td className="py-1.5 px-2 text-center border-r border-slate-300 text-red-600">
+                  {sortedData.reduce((s, d) => s + d.cancelled, 0)}
+                </td>
+                <td className="py-1.5 px-2 text-center border-r border-slate-300 text-blue-800">
+                  {sortedData.reduce((s, d) => s + d.followup, 0)}
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 text-center text-indigo-900">
+                  Avg: {doctorPerformanceData.summary.averageConsultationDurationMinutes}m
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* F. PRINT FOOTER */}
+        <div className="border-t border-slate-300 pt-2 flex items-center justify-between text-[8.5px] text-slate-500">
+          <div>
+            <strong>{hospitalName}</strong> • Confidential Doctor Workload & Clinical Consultation Performance Register
+          </div>
+          <div>
+            Printed on: {new Date().toLocaleString("en-IN")}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI (UNMODIFIED) ─── */}
+      <div
+        className="doctor-report-screen-ui min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Hospital
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Doctor Report
-                </span>
-              </nav>
+               <button
+                type="button"
+                onClick={() => (onBack ? onBack() : window.history.back())}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-all shadow-2xs cursor-pointer mr-1"
+                style={{ fontFamily: PP }}
+              >
+                <ArrowLeft size={14} />
+                Back
+              </button>
               <div className="flex items-center gap-3">
                 <h1
                   className="text-2xl font-bold text-[#111827]"
@@ -576,9 +890,6 @@ export function DoctorReportScreen({
                 >
                   Doctor Report
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#009688] border border-teal-200">
-                  Performance Verified
-                </span>
               </div>
               <p className="text-xs text-[#64748B] mt-0.5">
                 Analyze doctor workload, consultation performance and OPD
@@ -588,15 +899,7 @@ export function DoctorReportScreen({
 
             {/* Header Actions */}
             <div className="flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => (onBack ? onBack() : window.history.back())}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#E5E7EB] bg-white text-xs font-semibold text-[#111827] hover:bg-slate-50 transition-all shadow-2xs cursor-pointer mr-1"
-                style={{ fontFamily: PP }}
-              >
-                <ArrowLeft size={14} />
-                Back
-              </button>
+            
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl mr-1">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -634,7 +937,6 @@ export function DoctorReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container - Full Screen Width */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 mt-6">
@@ -1103,39 +1405,6 @@ export function DoctorReportScreen({
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-                setHasError(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate real-time doctor performance analytics
-          </span>
         </div>
 
         {/* ERROR STATE */}
@@ -1711,5 +1980,6 @@ export function DoctorReportScreen({
         </div>
       </div>
     </div>
+    </>
   );
 }

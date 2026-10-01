@@ -1,4 +1,4 @@
-import { useReducer, useMemo, useTransition } from "react";
+import { useReducer, useMemo, useTransition, useState } from "react";
 import {
   Download,
   RefreshCw,
@@ -20,6 +20,9 @@ import {
 } from "lucide-react";
 import { useDoctorSelfPatientRegister } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useAuthStore } from "../../auth/store/auth.store";
 
 import {
   AreaChart,
@@ -98,6 +101,39 @@ export interface DoctorPatientRecord {
   diagnosis: string;
   followUpDate: string;
   status: string;
+}
+
+function formatDateDDMMYYYY(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length === 3 && parts[0].length === 4) {
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  }
+  try {
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch {
+    // fallback
+  }
+  return dateStr;
+}
+
+function formatDateTimeDDMMYYYY(date: Date = new Date()): string {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const strHours = String(hours).padStart(2, "0");
+  return `${day}-${month}-${year} ${strHours}:${minutes} ${ampm}`;
 }
 
 const getOffsetDateStr = (daysAgo: number): string => {
@@ -269,6 +305,20 @@ export function DoctorPatientReportScreen({
   const [isPending, startTransition] = useTransition();
   const isLoading = isPending || showLoadingDemo;
 
+  const { user } = useAuthStore();
+  const { logoUrl } = useHospitalBranding();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const effectiveHospitalName = "Safe Hands Hospital";
+
+  const doctorName =
+    user?.fullName || user?.name ? `Dr. ${user.fullName || user.name}` : "Dr. On Duty";
+  const doctorDept =
+    (user as { department?: string; departmentName?: string; specialization?: string })?.department ||
+    (user as { department?: string; departmentName?: string; specialization?: string })?.departmentName ||
+    (user as { department?: string; departmentName?: string; specialization?: string })?.specialization ||
+    "General Medicine / OPD";
+
   // React Query Hooks for Doctor Personal Patient Reports
   const { data: registerData, refetch: refetchRegister } =
     useDoctorSelfPatientRegister({ size: 50 });
@@ -296,26 +346,43 @@ export function DoctorPatientReportScreen({
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  const handleExportAllCsv = () => {
-    const recordsToExport = (
-      filteredPatients.length > 0 ? filteredPatients : doctorPatientSource
-    ).map((rec) => ({
-      Section: "DOCTOR PATIENT REPORT",
-      MRN: rec.mrn || "N/A",
+  const handleExportCsv = () => {
+    const dataset = filteredPatients;
+    const todayDateStr = new Date().toISOString().slice(0, 10);
+    const filename = `doctor-patient-report-${startDate || todayDateStr}.csv`;
+
+    if (dataset.length === 0) {
+      exportDataToCsv(filename, [
+        {
+          "S.No": "",
+          "Patient Name": "No patient records found for the selected report period.",
+          MRN: "",
+          "Age / Gender": "",
+          "Mobile Number": "",
+          "Visit Type": "",
+          "Last Consultation Date": "",
+          Diagnosis: "",
+          "Follow-Up Date": "",
+          Status: "",
+        },
+      ]);
+      return;
+    }
+
+    const rows = dataset.map((rec, idx) => ({
+      "S.No": idx + 1,
       "Patient Name": rec.patientName || "N/A",
+      MRN: rec.mrn || "N/A",
       "Age / Gender": `${rec.age || 0} / ${rec.gender || "N/A"}`,
-      Mobile: rec.mobileNumber || "N/A",
-      "Last Consultation Date": rec.lastConsultationDate || todayStr,
+      "Mobile Number": rec.mobileNumber || "N/A",
       "Visit Type": rec.visitType || "N/A",
+      "Last Consultation Date": rec.lastConsultationDate || todayStr,
       Diagnosis: rec.diagnosis || "Routine OPD",
       "Follow-Up Date": rec.followUpDate || "N/A",
       Status: rec.status || "Completed",
     }));
 
-    exportDataToCsv(
-      `Doctor_Patient_Report_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      recordsToExport,
-    );
+    exportDataToCsv(filename, rows);
   };
 
   const handleResetFilters = () => {
@@ -511,12 +578,326 @@ export function DoctorPatientReportScreen({
     ];
   }, [filteredPatients]);
 
+  const followUpPatients = useMemo(() => {
+    return filteredPatients.filter(
+      (p) => p.followUpDate && p.followUpDate !== "N/A" && p.followUpDate !== "-",
+    );
+  }, [filteredPatients]);
+
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
-      {/* Top Header Section */}
+    <>
+      {/* ─── PRINT-SPECIFIC CSS RULES ─── */}
+      <style>{`
+        @media screen {
+          .doctor-patient-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 12mm;
+          }
+
+          html, body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Hide everything in normal screen UI when printing */
+          .doctor-patient-screen-ui,
+          .no-print,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          input,
+          select {
+            display: none !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .doctor-patient-print-only,
+          .doctor-patient-print-only * {
+            visibility: visible !important;
+          }
+
+          .doctor-patient-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .doctor-patient-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .doctor-patient-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .doctor-patient-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .doctor-patient-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .doctor-patient-print-table th,
+          .doctor-patient-print-table td {
+            word-break: break-word !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="doctor-patient-print-only font-sans">
+        {/* A. HOSPITAL HEADER */}
+        <div className="border-b-2 border-slate-800 pb-3 mb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                  {effectiveHospitalName}
+                </h1>
+                <p className="text-[10px] text-slate-600 font-medium leading-tight">
+                  Hospital Management &amp; Clinical Information System
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <h2 className="text-base font-bold text-slate-900 uppercase tracking-wider">
+                PATIENT REPORT
+              </h2>
+              <p className="text-[11px] text-[#0D47A1] font-bold">
+                Doctor Scoped
+              </p>
+            </div>
+          </div>
+
+          {/* Metadata Grid */}
+          <div className="mt-3 grid grid-cols-4 gap-2 text-[10px] bg-slate-50 border border-slate-200 rounded p-2 text-slate-800">
+            <div>
+              <span className="font-bold text-slate-600">Doctor:</span>{" "}
+              <span className="font-semibold">{doctorName}</span>
+            </div>
+            <div>
+              <span className="font-bold text-slate-600">Department:</span>{" "}
+              <span className="font-semibold">{doctorDept}</span>
+            </div>
+            <div>
+              <span className="font-bold text-slate-600">Report Period:</span>{" "}
+              <span className="font-semibold">
+                {dateRange} ({startDate === endDate ? formatDateDDMMYYYY(startDate) : `${formatDateDDMMYYYY(startDate)} to ${formatDateDDMMYYYY(endDate)}`})
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-slate-600">Generated On:</span>{" "}
+              <span className="font-semibold">{formatDateTimeDDMMYYYY(new Date())}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* B. PATIENT SUMMARY */}
+        <div className="mb-5">
+          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-1.5 pb-1 border-b border-slate-200">
+            PATIENT SUMMARY
+          </h3>
+          <table className="w-full text-left border-collapse text-[10px] border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold uppercase text-[9px]">
+                <th className="p-1.5 border-r border-slate-300">Metric</th>
+                <th className="p-1.5 text-right">Value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 font-medium text-slate-900">
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">My Patients</td>
+                <td className="p-1.5 text-right font-bold text-[#0D47A1]">{kpi.totalPatients}</td>
+              </tr>
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">New Patients</td>
+                <td className="p-1.5 text-right font-bold text-emerald-600">{kpi.newPatients}</td>
+              </tr>
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">Returning Patients</td>
+                <td className="p-1.5 text-right font-bold text-indigo-600">{kpi.returningPatients}</td>
+              </tr>
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">Completed Consults</td>
+                <td className="p-1.5 text-right font-bold text-emerald-600">{kpi.completedConsults}</td>
+              </tr>
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">Scheduled Follow-ups</td>
+                <td className="p-1.5 text-right font-bold text-amber-600">{kpi.scheduledFollowUps}</td>
+              </tr>
+              <tr>
+                <td className="p-1.5 border-r border-slate-300 font-medium">Average Patients / Day</td>
+                <td className="p-1.5 text-right font-bold text-slate-900">{kpi.avgDailyPatients}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* C. DETAILED PATIENT REPORT */}
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-200">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+              DETAILED PATIENT REPORT
+            </h3>
+            <span className="text-[10px] text-slate-600 font-semibold">
+              Total Records: {filteredPatients.length}
+            </span>
+          </div>
+          <table className="doctor-patient-print-table w-full text-left border-collapse text-[9.5px] border border-slate-300">
+            <thead>
+              <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase text-[9px]">
+                <th className="p-1.5 border-r border-slate-300 w-8 text-center">S.No</th>
+                <th className="p-1.5 border-r border-slate-300">Patient</th>
+                <th className="p-1.5 border-r border-slate-300 font-mono">MRN</th>
+                <th className="p-1.5 border-r border-slate-300">Visit Type</th>
+                <th className="p-1.5 border-r border-slate-300">Last Visit</th>
+                <th className="p-1.5 border-r border-slate-300 text-center">Status</th>
+                <th className="p-1.5 text-center">Follow-up</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredPatients.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-4 text-center text-slate-500 italic">
+                    No patient records found for the selected report period.
+                  </td>
+                </tr>
+              ) : (
+                filteredPatients.map((rec, idx) => (
+                  <tr key={rec.mrn || idx} className="border-b border-slate-200">
+                    <td className="p-1.5 border-r border-slate-300 text-center font-medium text-slate-600">
+                      {idx + 1}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-semibold text-slate-900">
+                      <div>{rec.patientName}</div>
+                      <div className="text-[8.5px] text-slate-500 font-normal">
+                        {rec.age} yrs / {rec.gender} • {rec.mobileNumber}
+                      </div>
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-mono text-[9px] font-bold text-[#0D47A1]">
+                      {rec.mrn}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-medium text-slate-800">
+                      {rec.visitType}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 text-slate-600">
+                      {rec.lastConsultationDate ? formatDateDDMMYYYY(rec.lastConsultationDate) : "—"}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 text-center">
+                      <span className="font-semibold text-slate-800">
+                        {rec.status}
+                      </span>
+                    </td>
+                    <td className="p-1.5 text-center text-slate-700">
+                      {rec.followUpDate ? formatDateDDMMYYYY(rec.followUpDate) : "—"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* D. FOLLOW-UP SUMMARY */}
+        {followUpPatients.length > 0 && (
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-slate-200">
+              <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                FOLLOW-UP SUMMARY
+              </h3>
+              <span className="text-[10px] text-slate-600 font-semibold">
+                Follow-up Count: {followUpPatients.length}
+              </span>
+            </div>
+            <table className="doctor-patient-print-table w-full text-left border-collapse text-[9.5px] border border-slate-300">
+              <thead>
+                <tr className="bg-slate-100 border-b border-slate-300 text-slate-800 font-bold uppercase text-[9px]">
+                  <th className="p-1.5 border-r border-slate-300 w-8 text-center">S.No</th>
+                  <th className="p-1.5 border-r border-slate-300">Patient</th>
+                  <th className="p-1.5 border-r border-slate-300 font-mono">MRN</th>
+                  <th className="p-1.5 border-r border-slate-300">Follow-up Date</th>
+                  <th className="p-1.5 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {followUpPatients.map((rec, idx) => (
+                  <tr key={`fu-${rec.mrn || idx}`} className="border-b border-slate-200">
+                    <td className="p-1.5 border-r border-slate-300 text-center font-medium text-slate-600">
+                      {idx + 1}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-semibold text-slate-900">
+                      {rec.patientName}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 font-mono text-[9px] font-bold text-[#0D47A1]">
+                      {rec.mrn}
+                    </td>
+                    <td className="p-1.5 border-r border-slate-300 text-slate-700 font-medium">
+                      {rec.followUpDate ? formatDateDDMMYYYY(rec.followUpDate) : "—"}
+                    </td>
+                    <td className="p-1.5 text-center font-semibold text-slate-800">
+                      {rec.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* E. FOOTER */}
+        <div className="mt-6 pt-3 border-t border-slate-300 flex items-center justify-between text-[9px] text-slate-500">
+          <div>Generated from Safe Hands HMS</div>
+          <div>Generated on: {formatDateTimeDDMMYYYY(new Date())}</div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI CONTAINER ─── */}
+      <div
+        className="doctor-patient-screen-ui no-print min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
+        {/* Top Header Section */}
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -563,22 +944,12 @@ export function DoctorPatientReportScreen({
 
               <button
                 onClick={handleRefresh}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm cursor-pointer"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
                 />
                 <span>Refresh</span>
-              </button>
-
-              <button
-                onClick={() =>
-                  alert("Exporting Doctor Patient Report (PDF)...")
-                }
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Export PDF</span>
               </button>
 
               <button
@@ -590,11 +961,11 @@ export function DoctorPatientReportScreen({
               </button>
 
               <button
-                onClick={handleExportAllCsv}
+                onClick={handleExportCsv}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-slate-50 transition shadow-sm cursor-pointer"
               >
                 <Download className="w-4 h-4 text-emerald-600" />
-                <span>Export CSV for All</span>
+                <span>Export CSV</span>
               </button>
             </div>
           </div>
@@ -979,38 +1350,6 @@ export function DoctorPatientReportScreen({
           </div>
         </div>
 
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-                setHasError(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate Doctor patient report state
-          </span>
-        </div>
 
         {/* ERROR STATE */}
         {hasError && (
@@ -1496,5 +1835,6 @@ export function DoctorPatientReportScreen({
         </div>
       </div>
     </div>
+    </>
   );
 }

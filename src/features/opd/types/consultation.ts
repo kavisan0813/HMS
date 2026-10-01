@@ -71,6 +71,7 @@ export interface MedicineItem {
 }
 
 export interface ConsultationRecord {
+  appointmentNumber: string | number;
   durationOfSymptoms?: string;
   doctorName?: string;
   completionTime?: string;

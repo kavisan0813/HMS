@@ -1,4 +1,8 @@
 import { triggerInternalNotification } from "../api/notification.api";
+import { normalizeRole } from "./role.mapper";
+import { usersApi } from "../../users/api/users.api";
+import type { User } from "../../auth/types/auth.types";
+import { queryClient } from "../../../lib/queryClient";
 
 function isEventAlreadyTriggered(eventId: string): boolean {
   try {
@@ -179,6 +183,39 @@ function getSourceModule(eventType: string): string {
   return "SYSTEM";
 }
 
+function isUserActive(user: User): boolean {
+  if (!user || (!user.id && !(user as unknown as { userId?: number }).userId)) {
+    return false;
+  }
+  if (!user.status) return true;
+  const s = String(user.status).toUpperCase();
+  return (
+    s === "ACTIVE" ||
+    s === "ENABLED" ||
+    s === "VERIFIED"
+  );
+}
+
+let cachedUsers: User[] | null = null;
+let cacheExpiry = 0;
+
+async function getActiveUsers(): Promise<User[]> {
+  const now = Date.now();
+  if (cachedUsers && now < cacheExpiry) {
+    return cachedUsers;
+  }
+  try {
+    const res = await usersApi.adminGetUsers();
+    const list = Array.isArray(res?.data) ? res.data : [];
+    cachedUsers = list;
+    cacheExpiry = now + 30000;
+    return list;
+  } catch (err) {
+    console.error("[NotificationTrigger] Failed to fetch users for role resolution:", err);
+    return cachedUsers || [];
+  }
+}
+
 export interface TriggerNotificationParams {
   eventId: string;
   title: string;
@@ -208,6 +245,19 @@ export interface TriggerNotificationParams {
   }>;
 }
 
+interface ResolvedTarget {
+  userId: number | string;
+  role: string;
+  title: string;
+  message: string;
+  eventType: string;
+  resolvedType: string;
+  resolvedModule: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  actionLabel?: string;
+  actionUrl?: string;
+}
+
 export async function triggerNotificationMatrix(
   params: TriggerNotificationParams,
 ): Promise<void> {
@@ -215,59 +265,106 @@ export async function triggerNotificationMatrix(
     return;
   }
 
-  const currentUser = (await import("../../auth")).useAuthStore.getState().user;
-  const currentUserId = currentUser?.id;
-  let anyDeliverySucceeded = false;
+  const needsRoleResolution = params.receivers.some(
+    (r) =>
+      r.userId === undefined ||
+      r.userId === null ||
+      String(r.userId).trim() === "",
+  );
 
-  await Promise.all(
-    params.receivers.map(async (receiver) => {
-      const title = receiver.titleOverride || params.title;
-      const message = receiver.messageOverride || params.message;
-      const priority = params.priority || "MEDIUM";
+  let activeUsers: User[] = [];
+  if (needsRoleResolution) {
+    activeUsers = await getActiveUsers();
+  }
 
-      const eventType = receiver.eventTypeOverride || params.eventType;
-      const resolvedType =
-        receiver.typeOverride || params.type || getNotificationType(eventType);
-      const resolvedModule =
-        receiver.moduleOverride || params.module || getSourceModule(eventType);
+  const targetMap = new Map<string, ResolvedTarget>();
 
-      if (
-        receiver.userId !== undefined &&
-        receiver.userId !== null &&
-        String(receiver.userId) !== ""
-      ) {
-        if (
-          currentUserId !== undefined &&
-          String(receiver.userId) === String(currentUserId)
-        ) {
-          return;
-        }
-        try {
-          await triggerInternalNotification({
-            eventId: params.eventId,
-            userId: receiver.userId,
+  for (const receiver of params.receivers) {
+    const title = receiver.titleOverride || params.title;
+    const message = receiver.messageOverride || params.message;
+    const priority = params.priority || "MEDIUM";
+
+    const eventType = receiver.eventTypeOverride || params.eventType;
+    const resolvedType =
+      receiver.typeOverride || params.type || getNotificationType(eventType);
+    const resolvedModule =
+      receiver.moduleOverride || params.module || getSourceModule(eventType);
+
+    const hasSpecificUserId =
+      receiver.userId !== undefined &&
+      receiver.userId !== null &&
+      String(receiver.userId).trim() !== "";
+
+    if (hasSpecificUserId) {
+      const uId = String(receiver.userId).trim();
+      if (!targetMap.has(uId)) {
+        targetMap.set(uId, {
+          userId: receiver.userId!,
+          role: receiver.role,
+          title,
+          message,
+          eventType,
+          resolvedType,
+          resolvedModule,
+          priority,
+          actionLabel: params.actionLabel,
+          actionUrl: params.actionUrl,
+        });
+      }
+    } else {
+      const targetNormalizedRole = normalizeRole(receiver.role);
+      const matchingUsers = activeUsers.filter(
+        (u) => isUserActive(u) && normalizeRole(u.role) === targetNormalizedRole,
+      );
+
+      for (const u of matchingUsers) {
+        const uIdNum = u.id ?? (u as unknown as { userId?: number }).userId;
+        if (uIdNum === undefined || uIdNum === null) continue;
+        const uIdStr = String(uIdNum).trim();
+        if (!targetMap.has(uIdStr)) {
+          targetMap.set(uIdStr, {
+            userId: uIdNum,
+            role: receiver.role,
             title,
             message,
-            type: resolvedType,
+            eventType,
+            resolvedType,
+            resolvedModule,
             priority,
-            referenceType: params.referenceType,
-            referenceId: params.referenceId,
-            sourceModule: resolvedModule,
-            eventType: eventType,
-            receiverRole: receiver.role,
             actionLabel: params.actionLabel,
             actionUrl: params.actionUrl,
           });
-          anyDeliverySucceeded = true;
-        } catch (err) {
-          console.error(
-            `[NotificationTrigger] Failed to send to specific user ${receiver.userId}:`,
-            err,
-          );
         }
-      } else {
-        console.warn(
-          `[NotificationTrigger] Skipped role-based notification for "${receiver.role}" because recipient resolution requires /api/v1/admin/users.`,
+      }
+    }
+  }
+
+  let anyDeliverySucceeded = false;
+  const targets = Array.from(targetMap.values());
+
+  await Promise.all(
+    targets.map(async (target) => {
+      try {
+        await triggerInternalNotification({
+          eventId: params.eventId,
+          userId: target.userId,
+          title: target.title,
+          message: target.message,
+          type: target.resolvedType,
+          priority: target.priority,
+          referenceType: params.referenceType,
+          referenceId: params.referenceId,
+          sourceModule: target.resolvedModule,
+          eventType: target.eventType,
+          receiverRole: target.role,
+          actionLabel: target.actionLabel,
+          actionUrl: target.actionUrl,
+        });
+        anyDeliverySucceeded = true;
+      } catch (err) {
+        console.error(
+          `[NotificationTrigger] Failed to send notification to user ${target.userId} (${target.role}):`,
+          err,
         );
       }
     }),
@@ -275,5 +372,6 @@ export async function triggerNotificationMatrix(
 
   if (anyDeliverySucceeded) {
     markEventAsTriggered(params.eventId);
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
   }
 }

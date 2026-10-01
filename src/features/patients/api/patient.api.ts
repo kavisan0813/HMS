@@ -908,11 +908,28 @@ export const patientsApi = {
     }
   },
 
-  checkInAppointment: async (appointmentId: string): Promise<boolean> => {
+  checkInAppointment: async (
+    appointmentId: string | number,
+  ): Promise<boolean> => {
+    let numericId = appointmentId;
+    if (typeof appointmentId === "string" && appointmentId.includes("-")) {
+      const parsed = parseInt(appointmentId.split("-").pop() || "", 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        numericId = parsed;
+      }
+    }
     try {
-      await apiClient.patch(
-        `/api/v1/reception/appointments/${appointmentId}/check-in`,
-      );
+      try {
+        await apiClient.post(
+          `/api/v1/reception/appointments/${numericId}/check-in`,
+          {},
+        );
+      } catch (postErr) {
+        await apiClient.patch(
+          `/api/v1/reception/appointments/${numericId}/check-in`,
+          {},
+        );
+      }
 
       // Trigger notifications for patient checked in
       let patientName = "Patient";
@@ -1285,8 +1302,9 @@ export const patientsApi = {
     try {
       const records = await billingService.getPatientBilling(mrn);
       return records.map((r) => ({
-        id: String(r.id),
-        invoiceNumber: r.billNumber || r.id,
+        id: String(r.billId ?? r.id),
+        billId: r.billId,
+        invoiceNumber: r.billNumber || (r.billId ? `BL-2026-${String(r.billId).padStart(6, "0")}` : String(r.id)),
         date: r.invoiceDate,
         amount: r.invoiceAmount,
         paidAmount: r.paidAmount ?? 0,

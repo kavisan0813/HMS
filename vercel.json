@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.hms.viyaninfo.com/api/:path*"
+      "destination": "http://192.168.1.52:8888/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://api.hms.viyaninfo.com/uploads/:path*"
+      "destination": "http://192.168.1.52:8888/uploads/:path*"
     },
     {
       "source": "/(.*)",

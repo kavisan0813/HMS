@@ -20,13 +20,20 @@ async function fetchEncounterPrescription(
   encounterId: string | number,
 ): Promise<EncounterPrescriptionResponse | null> {
   if (!encounterId) return null;
+  const numId =
+    typeof encounterId === "number"
+      ? encounterId
+      : parseInt(String(encounterId), 10);
+  if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+    return null;
+  }
   try {
     let result: EncounterPrescriptionResponse | null = null;
     try {
       const response = await apiClient.get<
         | ApiEnvelope<EncounterPrescriptionResponse>
         | EncounterPrescriptionResponse
-      >(`/api/v1/encounters/${encounterId}/prescription`);
+      >(`/api/v1/encounters/${numId}/prescription`);
 
       const body = response.data;
       if (body && typeof body === "object" && "data" in body && body.data) {

@@ -7,6 +7,7 @@ import {
   appointmentToPatientSummary,
 } from "../constants/appointment.constants";
 import { appointmentService } from "../services/appointment.service";
+import { downloadAppointmentSlipPdf } from "../../../utils/appointmentPdf.utils";
 import {
   DrawerAppointmentSection,
   DrawerClinicalSection,
@@ -140,7 +141,7 @@ export function AppointmentDetailsDrawer({
   isOpen: boolean;
   onClose: () => void;
   onEditClick: (apt: AppointmentRecord) => void;
-  onPrintClick: (apt: AppointmentRecord) => void;
+  onPrintClick?: (apt: AppointmentRecord) => void;
   onPatientSelect?: (id: number | string) => void;
   isDetailsLoading?: boolean;
   userRole?: UserRole;
@@ -240,7 +241,9 @@ export function AppointmentDetailsDrawer({
     canCheckIn &&
     (apt.status === "Booked" ||
       apt.status === "Scheduled" ||
-      apt.status === "BOOKED");
+      apt.status === "BOOKED" ||
+      apt.status === "Confirmed" ||
+      apt.status === "CONFIRMED");
 
   const footerAction: DrawerFooterAction = isNurse
     ? "nurse"
@@ -251,19 +254,32 @@ export function AppointmentDetailsDrawer({
         : "edit";
 
   const handleCheckIn = async () => {
-    if (!apt) return;
+    if (!apt || isCheckingIn) return;
     setIsCheckingIn(true);
     try {
       const res = await appointmentService.receptionCheckIn(apt.id);
-      const tokenNo =
-        (res as unknown as { tokenNumber?: string })?.tokenNumber ||
-        `TK-${apt.id}`;
-      onCheckInSuccess?.(tokenNo);
+      let tokenNo =
+        (res as unknown as { tokenNumber?: string; token?: string })
+          ?.tokenNumber ||
+        (res as unknown as { token?: string })?.token ||
+        (res as unknown as { data?: { tokenNumber?: string; token?: string } })
+          ?.data?.tokenNumber ||
+        (res as unknown as { data?: { token?: string } })?.data?.token ||
+        "";
+
+      if (!tokenNo) {
+        try {
+          tokenNo = await appointmentService.getAppointmentToken(apt.id);
+        } catch {
+          // Token endpoint optional
+        }
+      }
+
+      onCheckInSuccess?.(tokenNo || apt.tokenNo || "");
       onClose();
     } catch (err) {
       const error = err as Error | null | undefined;
-      const msg =
-        error?.message || "Check-in is only allowed on the appointment date.";
+      const msg = error?.message || "Check-in failed. Please try again.";
       onError?.(msg);
     } finally {
       setIsCheckingIn(false);
@@ -441,6 +457,48 @@ export function AppointmentDetailsDrawer({
             : []),
         ];
 
+  const handlePrintSummary = (aptToPrint: AppointmentRecord) => {
+    if (onPrintClick) {
+      onPrintClick(aptToPrint);
+    }
+    downloadAppointmentSlipPdf({
+      id: aptToPrint.appointmentNumber || aptToPrint.id,
+      appointmentNumber: aptToPrint.appointmentNumber || aptToPrint.id,
+      patientName: patientInfo.name,
+      patientAge:
+        typeof patientInfo.age === "number" ? patientInfo.age : undefined,
+      patientGender: patientInfo.gender,
+      patientPhone: patientInfo.phone,
+      mrn: patientInfo.mrn,
+      bloodGroup: patientInfo.bloodGroup,
+      emergencyContact: patientInfo.emergencyContact,
+      allergies: patientInfo.allergies,
+      doctor: doctorInfo.name,
+      doctorName: doctorInfo.name,
+      department: doctorInfo.department,
+      specialty: doctorInfo.specialty,
+      qualification: doctorInfo.qualification,
+      consultationFee: doctorInfo.consultationFee,
+      date: aptToPrint.appointmentDate,
+      appointmentDate: aptToPrint.appointmentDate,
+      time: aptToPrint.timeSlot,
+      timeSlot: aptToPrint.timeSlot,
+      startTime: aptToPrint.timeSlot,
+      visitType: aptToPrint.visitType,
+      status: aptToPrint.status,
+      tokenNo: aptToPrint.tokenNo || aptToPrint.queueToken,
+      opdRoom: doctorInfo.opdRoom || "General OPD Room",
+      reason:
+        aptToPrint.chiefComplaint ||
+        aptToPrint.reason ||
+        "General Consultation",
+      notes:
+        aptToPrint.notes ||
+        aptToPrint.symptoms ||
+        "No special notes recorded.",
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div
@@ -473,7 +531,7 @@ export function AppointmentDetailsDrawer({
 
           <DrawerFooter
             onClose={onClose}
-            onPrintClick={onPrintClick}
+            onPrintClick={handlePrintSummary}
             apt={apt}
             action={footerAction}
             onPatientSelect={onPatientSelect}
@@ -487,3 +545,4 @@ export function AppointmentDetailsDrawer({
     </div>
   );
 }
+

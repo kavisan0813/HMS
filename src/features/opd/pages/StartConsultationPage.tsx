@@ -412,17 +412,7 @@ export function StartConsultationPage({
           }
         }
 
-        let numericId: number | undefined;
-        if (typeof activeConsultationId === "number") {
-          numericId = activeConsultationId;
-        } else if (typeof activeConsultationId === "string") {
-          const clean = activeConsultationId
-            .replace(/^BL-|^APP-|^ENC-/, "")
-            .replace(/[^0-9]/g, "");
-          if (clean) numericId = parseInt(clean, 10);
-        }
-
-        const idToTry = numericId || activeConsultationId;
+        const idToTry = activeConsultationId;
         const apptRes = await appointmentsApi
           .getAppointmentById(idToTry)
           .catch(() => null);
@@ -551,12 +541,25 @@ export function StartConsultationPage({
   };
 
   useEffect(() => {
-    const targetVitalsId =
+    // Only query vitals when a numeric encounter ID is available
+    const rawTarget =
       activeEncounterId ||
       selectedEncounter?.encounterId ||
-      selectedConsultation?.encounterId ||
-      activeConsultationId ||
-      selectedAppointment?.id;
+      selectedConsultation?.encounterId;
+
+    let targetVitalsId: number | undefined;
+    if (
+      typeof rawTarget === "number" &&
+      Number.isInteger(rawTarget) &&
+      rawTarget > 0
+    ) {
+      targetVitalsId = rawTarget;
+    } else if (
+      typeof rawTarget === "string" &&
+      /^\d+$/.test(rawTarget.trim())
+    ) {
+      targetVitalsId = parseInt(rawTarget.trim(), 10);
+    }
 
     if (!targetVitalsId) return;
 
@@ -598,10 +601,8 @@ export function StartConsultationPage({
     };
   }, [
     activeEncounterId,
-    activeConsultationId,
     selectedEncounter,
     selectedConsultation,
-    selectedAppointment,
   ]);
 
   const calculatedBmi = useMemo(() => {

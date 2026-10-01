@@ -297,7 +297,19 @@ function mapQueueItemToConsultation(
     (rawItem.mobile as string) ||
     "";
 
+  const appointmentNumber =
+    item.appointmentNumber ||
+    (rawItem.appointmentNumber as string | number) ||
+    (rawItem.appointmentCode as string | number) ||
+    (rawItem.appointmentNo as string | number) ||
+    (item.appointmentId
+      ? `APT-${item.appointmentId}`
+      : rawItem.id
+        ? `APT-${rawItem.id}`
+        : "—");
+
   return {
+    appointmentNumber,
     id: String(
       item.appointmentId ||
       (rawItem.appointmentId as number) ||
@@ -968,9 +980,83 @@ function OPDConsultationPage({
   const handleExportReport = () => {
     if (onExportReport) {
       onExportReport();
-    } else {
-      alert("Exporting OPD Operational Report (PDF/Excel)");
+      return;
     }
+
+    if (!filteredConsultations || filteredConsultations.length === 0) {
+      triggerToast("No OPD consultation records available to export.");
+      return;
+    }
+
+    const headers = [
+      "Token",
+      "Patient Name",
+      "MRN",
+      "Doctor Name",
+      "Department",
+      "Appointment ID",
+      "Visit Type",
+      "Date",
+      "Time",
+      "Status",
+    ];
+
+    const rows = filteredConsultations.map((c) => {
+      const token = c.tokenNo || c.id || "—";
+      const patient = c.patientName
+        ? `"${c.patientName.replace(/"/g, '""')}"`
+        : "—";
+      const mrn = c.mrn || "—";
+      const doctor = c.doctor ? `"${c.doctor.replace(/"/g, '""')}"` : "—";
+      const dept = c.department ? `"${c.department.replace(/"/g, '""')}"` : "—";
+      const apptId =
+        c.appointmentNumber ||
+        (c.appointmentId
+          ? String(c.appointmentId).startsWith("APT-")
+            ? c.appointmentId
+            : `APT-${c.appointmentId}`
+          : c.id
+            ? String(c.id).startsWith("APT-")
+              ? c.id
+              : `APT-${c.id}`
+            : "—");
+      const visitType = c.visitType || "First Visit";
+      const date = c.date || getTodayDateString();
+      const time = c.appointmentTime || c.time || "—";
+      const status = normalizeStatus(c.status) || c.status || "WAITING";
+
+      return [
+        token,
+        patient,
+        mrn,
+        doctor,
+        dept,
+        apptId,
+        visitType,
+        date,
+        time,
+        status,
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const todayStr = getTodayDateString();
+    link.download = `OPD_Consultation_Report_${todayStr}.csv`;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+    triggerToast(
+      `Exported ${filteredConsultations.length} OPD consultation records.`,
+    );
   };
 
   const tabs = [

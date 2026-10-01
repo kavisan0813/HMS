@@ -58,6 +58,9 @@ import {
   normalizeCode,
   safeArray,
 } from "../utils/auditlog.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 import type {
   AuditCategory,
   AuditFilterOptions,
@@ -169,6 +172,22 @@ const filterReducer = (
 });
 
 export function AuditLogManagementPage() {
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress ||
+    "123 Healthcare Ave, Medical District, City";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 98765 43210";
+  const hospitalEmail =
+    configuration?.receipt?.hospitalEmail || "info@safehandshospital.com";
+  const hospitalGstin = configuration?.receipt?.hospitalGstin || "";
+
   const [filters, dispatch] = useReducer(filterReducer, {
     currentWorkspace: "All Logs" as AuditCategory,
     searchQuery: "",
@@ -1111,10 +1130,466 @@ export function AuditLogManagementPage() {
   }
 
   return (
-    <div
-      className="flex-1 overflow-y-auto p-6 space-y-6 bg-[#F1F5F9]"
-      style={{ fontFamily: RB }}
-    >
+    <>
+      {/* ─── PRINT-SPECIFIC CSS ─── */}
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 8mm;
+        }
+        @media screen {
+          .audit-log-print-only {
+            display: none !important;
+          }
+        }
+        @media print {
+          html, body {
+            background: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          /* Hide application shell, navbar, sidebar, buttons, and normal screen UI */
+          .audit-log-screen-ui,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          .no-print {
+            display: none !important;
+          }
+          /* Show dedicated print document */
+          .audit-log-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-size: 8.5pt !important;
+            line-height: 1.3 !important;
+            overflow: visible !important;
+          }
+          .audit-log-print-only table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 6px !important;
+          }
+          .audit-log-print-only thead {
+            display: table-header-group !important;
+          }
+          .audit-log-print-only tbody {
+            display: table-row-group !important;
+          }
+          .audit-log-print-only tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .audit-log-print-only th,
+          .audit-log-print-only td {
+            border: 1px solid #cbd5e1 !important;
+            padding: 4px 6px !important;
+            font-size: 8pt !important;
+            vertical-align: top !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            word-break: break-word !important;
+          }
+          .audit-log-print-only th {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+            font-weight: 700 !important;
+            text-align: left !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT DOCUMENT (LANDSCAPE A4) ─── */}
+      <div className="audit-log-print-only" style={{ fontFamily: PP }}>
+        {/* A. HOSPITAL / REPORT HEADER */}
+        <div className="border-b-2 border-slate-900 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              {logoLoaded && (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  onError={() => setLogoLoaded(false)}
+                  className="w-14 h-14 object-contain rounded"
+                />
+              )}
+              <div>
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-none uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[9.5px] text-slate-600 mt-1">
+                  {hospitalAddress}
+                  {hospitalPhone && ` • Ph: ${hospitalPhone}`}
+                  {hospitalEmail && ` • Email: ${hospitalEmail}`}
+                  {hospitalGstin && ` • GSTIN: ${hospitalGstin}`}
+                </p>
+                <p className="text-[9px] text-slate-500 mt-0.5">
+                  Hospital Administration Audit Records • {filters.currentWorkspace} Stream
+                </p>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <div className="inline-block px-2.5 py-1 bg-slate-900 text-white rounded text-[10px] font-bold tracking-wide uppercase">
+                AUDIT LOG REPORT
+              </div>
+              <div className="text-[9.5px] text-slate-600 mt-1.5 space-y-0.5">
+                <div>
+                  <span className="font-semibold text-slate-800">Report Period: </span>
+                  <span>
+                    {filters.selectedDateRange}
+                    {filters.selectedDateRange === "Custom Range" && (filters.customStartDate || filters.customEndDate)
+                      ? ` (${filters.customStartDate || "Start"} to ${filters.customEndDate || "End"})`
+                      : dateRange.fromDate || dateRange.toDate
+                        ? ` (${dateRange.fromDate || ""} to ${dateRange.toDate || ""})`
+                        : ""}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Generated: </span>
+                  <span>{new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">Total Records: </span>
+                  <span className="font-bold text-slate-900">
+                    Showing {filteredRecords.length} of {totalElements.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. COMPACT AUDIT SUMMARY (From existing KPI metrics) */}
+        {kpiCards.length > 0 && (
+          <div className="mb-3 border border-slate-300 rounded p-2.5 bg-slate-50/70">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2 border-b border-slate-200 pb-1">
+              Audit Stream KPI Summary
+            </div>
+            <div className="grid grid-cols-6 gap-2 text-center">
+              {kpiCards.map((card, idx) => (
+                <div
+                  key={card.title}
+                  className={`${idx < kpiCards.length - 1 ? "border-r border-slate-200 pr-2" : ""}`}
+                >
+                  <span className="text-[9px] text-slate-500 block uppercase font-medium">
+                    {card.title}
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 block mt-0.5">
+                    {typeof card.value === "number" ? card.value.toLocaleString() : card.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* C. ACTIVE FILTERS SUMMARY */}
+        <div className="mb-3 bg-slate-50 border border-slate-200 rounded p-2 text-[9px] text-slate-700 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div>
+            <span className="font-semibold text-slate-900">Workspace: </span>
+            <span>{filters.currentWorkspace}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Date Range: </span>
+            <span>{filters.selectedDateRange}</span>
+          </div>
+          {filters.selectedModule !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Module: </span>
+              <span>{filters.selectedModule}</span>
+            </div>
+          )}
+          {filters.selectedDepartment !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Department: </span>
+              <span>{filters.selectedDepartment}</span>
+            </div>
+          )}
+          {filters.selectedRole !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Role: </span>
+              <span>{filters.selectedRole}</span>
+            </div>
+          )}
+          {filters.selectedUser !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">User: </span>
+              <span>{filters.selectedUser}</span>
+            </div>
+          )}
+          {filters.selectedSeverity !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Severity: </span>
+              <span>{filters.selectedSeverity}</span>
+            </div>
+          )}
+          {filters.selectedStatus !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Status: </span>
+              <span>{filters.selectedStatus}</span>
+            </div>
+          )}
+          {filters.selectedEventType !== "All" && (
+            <div>
+              <span className="font-semibold text-slate-900">Event Type: </span>
+              <span>{filters.selectedEventType}</span>
+            </div>
+          )}
+          {filters.searchQuery && (
+            <div>
+              <span className="font-semibold text-slate-900">Search: </span>
+              <span className="italic">{`"${filters.searchQuery}"`}</span>
+            </div>
+          )}
+        </div>
+
+        {/* D. FULL AUDIT LOG TABLE */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center justify-between">
+            <span>Audit Trail Event Register</span>
+            <span className="text-[9px] font-normal text-slate-500">
+              Showing {filteredRecords.length} Loaded Events
+            </span>
+          </div>
+
+          <table className="w-full text-left border border-slate-300 text-[9.5px]">
+            {isLoginWorkspace ? (
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[120px]">User</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[90px]">Role</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[140px]">Login Time</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[140px]">Logout Time</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[110px]">IP Address</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">Device</th>
+                    <th className="py-1.5 px-2 text-center w-[80px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4 text-slate-500">
+                        No login audit records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.user || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.userRole || "—"}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.loginTime || r.timestamp)}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.logoutTime)}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.ipAddress)}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{display(r.device)}</td>
+                        <td className="py-1.5 px-2 text-center font-semibold text-slate-800">{r.status || "—"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            ) : filters.currentWorkspace === "User Activities" ? (
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[120px]">User</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Module</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[130px]">Action</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">Description</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[140px]">Timestamp</th>
+                    <th className="py-1.5 px-2 text-center w-[80px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-slate-500">
+                        No activity records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.user || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.module || "—"}</td>
+                        <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">{r.action || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-600 border-r border-slate-200">{display(r.description)}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.timestamp)}</td>
+                        <td className="py-1.5 px-2 text-center font-semibold text-slate-800">{r.status || "—"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            ) : filters.currentWorkspace === "Data Changes" ? (
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Module</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Record ID</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[110px]">Field</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">Old Value</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">New Value</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[120px]">Modified By</th>
+                    <th className="py-1.5 px-2 w-[140px]">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4 text-slate-500">
+                        No data change records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.module || "—"}</td>
+                        <td className="py-1.5 px-2 font-mono font-bold text-slate-900 border-r border-slate-200">{display(r.recordId)}</td>
+                        <td className="py-1.5 px-2 font-semibold text-slate-800 border-r border-slate-200">{display(r.fieldChanged)}</td>
+                        <td className="py-1.5 px-2 font-mono text-red-700 border-r border-slate-200">{display(r.oldValue)}</td>
+                        <td className="py-1.5 px-2 font-mono text-emerald-700 border-r border-slate-200">{display(r.newValue)}</td>
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.user || "—"}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600">{display(r.timestamp)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            ) : filters.currentWorkspace === "Deleted Records" ? (
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Record ID</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Module</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[120px]">Deleted By</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">Reason / Description</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[140px]">Deleted Time</th>
+                    <th className="py-1.5 px-2 text-center w-[80px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-slate-500">
+                        No deleted records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 font-mono font-bold text-red-700 border-r border-slate-200">{display(r.recordId)}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.module || "—"}</td>
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.user || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-600 border-r border-slate-200">{display(r.deletionReason || r.description)}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.timestamp)}</td>
+                        <td className="py-1.5 px-2 text-center font-semibold text-slate-800">{r.status || "—"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            ) : filters.currentWorkspace === "System Logs" ? (
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[80px]">Severity</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[130px]">Event</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[100px]">Module</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300">Description</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[140px]">Timestamp</th>
+                    <th className="py-1.5 px-2 text-center w-[80px]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-slate-500">
+                        No system logs found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 border-r border-slate-200 font-semibold">{r.severity || "—"}</td>
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.action || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.module || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-600 border-r border-slate-200">{display(r.description)}</td>
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200">{display(r.timestamp)}</td>
+                        <td className="py-1.5 px-2 text-center font-semibold text-slate-800">{r.status || "—"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            ) : (
+              /* Default / All Logs / Critical Events */
+              <>
+                <thead>
+                  <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[130px]">Timestamp</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[95px]">Category</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[110px]">User</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[80px]">Role</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[90px]">Module</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[120px]">Action</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[75px]">Severity</th>
+                    <th className="py-1.5 px-2 border-r border-slate-300 w-[75px]">Status</th>
+                    <th className="py-1.5 px-2">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="text-center py-4 text-slate-500">
+                        No audit records found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRecords.map((r) => (
+                      <tr key={r.id} className="border-b border-slate-200">
+                        <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200 whitespace-nowrap">{display(r.timestamp)}</td>
+                        <td className="py-1.5 px-2 font-semibold text-slate-700 border-r border-slate-200">{r.category || "—"}</td>
+                        <td className="py-1.5 px-2 font-bold text-slate-900 border-r border-slate-200">{r.user || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-600 border-r border-slate-200">{r.userRole || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">{r.module || "—"}</td>
+                        <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">{r.action || "—"}</td>
+                        <td className="py-1.5 px-2 border-r border-slate-200 font-semibold">{r.severity || "—"}</td>
+                        <td className="py-1.5 px-2 border-r border-slate-200 font-semibold">{r.status || "—"}</td>
+                        <td className="py-1.5 px-2 text-slate-600">{display(r.description)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </>
+            )}
+          </table>
+        </div>
+
+        {/* E. PAGE FOOTER */}
+        <div className="border-t border-slate-300 pt-2 text-[8.5px] text-slate-500 flex justify-between items-center">
+          <span>Safe Hands HMS • Audit & Governance Trail</span>
+          <span>Confidential — Internal Administrative Use Only</span>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI ─── */}
+      <div
+        className="audit-log-screen-ui flex-1 overflow-y-auto p-6 space-y-6 bg-[#F1F5F9]"
+        style={{ fontFamily: RB }}
+      >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
@@ -1499,6 +1974,7 @@ export function AuditLogManagementPage() {
         totalCount={totalElements}
         onPageChange={(newPage) => setPage(newPage - 1)}
       />
-    </div>
+      </div>
+    </>
   );
 }

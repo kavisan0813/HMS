@@ -62,13 +62,13 @@ const QUICK_CONFIG_CARDS = [
     icon: Calendar,
     status: "Configured",
   },
-  {
-    id: "billing-config",
-    title: "Billing & Financial",
-    description: "Invoicing, taxes & payment rules",
-    icon: CreditCard,
-    status: "Configured",
-  },
+  // {
+  //   id: "billing-config",
+  //   title: "Billing & Financial",
+  //   description: "Invoicing, taxes & payment rules",
+  //   icon: CreditCard,
+  //   status: "Configured",
+  // },
   {
     id: "notification-settings",
     title: "Notifications",
@@ -76,20 +76,20 @@ const QUICK_CONFIG_CARDS = [
     icon: Bell,
     status: "Configured",
   },
-  {
-    id: "security-audit",
-    title: "Security, Auth & Compliance",
-    description: "Session, 2FA & Audit policy",
-    icon: Lock,
-    status: "Secured",
-  },
-  {
-    id: "backup-maintenance",
-    title: "Backup, Restore & Maintenance",
-    description: "Database export & system logs",
-    icon: Database,
-    status: "Healthy",
-  },
+  // {
+  //   id: "security-audit",
+  //   title: "Security, Auth & Compliance",
+  //   description: "Session, 2FA & Audit policy",
+  //   icon: Lock,
+  //   status: "Secured",
+  // },
+  // {
+  //   id: "backup-maintenance",
+  //   title: "Backup, Restore & Maintenance",
+  //   description: "Database export & system logs",
+  //   icon: Database,
+  //   status: "Healthy",
+  // },
 ];
 
 export function SettingsPage({ onNavigate }: SettingsPageProps) {

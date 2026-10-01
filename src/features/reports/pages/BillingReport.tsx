@@ -27,6 +27,9 @@ import {
   extractList,
 } from "../hooks/useReports";
 import { exportDataToCsv } from "../utils/export.utils";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useBillingConfiguration } from "../../billing/hooks/useBilling";
 
 import {
   AreaChart,
@@ -127,6 +130,21 @@ export function BillingReportScreen({
   onBack?: () => void;
   onOpenRevenueReport?: () => void;
 }) {
+  const { logoUrl } = useHospitalBranding();
+  const { configuration } = useBillingConfiguration();
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  const hospitalName =
+    configuration?.receipt?.hospitalName || "Safe Hands Hospital";
+  const hospitalAddress =
+    configuration?.receipt?.hospitalAddress ||
+    "123 Health Avenue, Medical District";
+  const hospitalPhone =
+    configuration?.receipt?.hospitalPhone || "+91 (011) 2345-6789";
+  const hospitalGstin =
+    configuration?.receipt?.hospitalGstin || "GSTIN: 07AAAAM1234F1Z5";
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+
   // State
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState("Today");
@@ -261,19 +279,6 @@ export function BillingReportScreen({
         paymentStatus: "Paid",
       },
       {
-        invoiceId: "INV-2026-8803",
-        patientName: "Meenakshi Sundaram",
-        mrn: "MRN-20260803",
-        doctorName: "Dr. Anish Kumar",
-        department: "Neurology",
-        invoiceDate: today,
-        invoiceAmount: 12500000,
-        collectedAmount: 10000000,
-        outstandingAmount: 2500000,
-        paymentMethod: "Insurance",
-        paymentStatus: "Partially Paid",
-      },
-      {
         invoiceId: "INV-2026-8804",
         patientName: "Sunil Verma",
         mrn: "MRN-20260804",
@@ -326,129 +331,30 @@ export function BillingReportScreen({
   };
 
   const handleExportAllCsv = () => {
-    // 1. Overview KPI Summary
-    const kpiRows = [
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Billed Amount",
-        Count_or_Amount: `INR ${totalBilled}`,
-        Percentage_Share: "100%",
-        Primary_Detail: `Total Invoices: ${totalInvoices}`,
-        Secondary_Detail: `Avg Invoice: INR ${avgInvoiceValue}`,
-        Date_or_Status: "Billed Total",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Revenue Collected",
-        Count_or_Amount: `INR ${totalPaid}`,
-        Percentage_Share: `${collectionRate}%`,
-        Primary_Detail: `Paid Invoices: ${paidInvoices}`,
-        Secondary_Detail: `Paid Rate: ${paidRate}%`,
-        Date_or_Status: "Collected Total",
-      },
-      {
-        Section: "1. SUMMARY KPI",
-        Category_Item: "Total Outstanding Due",
-        Count_or_Amount: `INR ${totalOutstanding}`,
-        Percentage_Share: `${outstandingRate}%`,
-        Primary_Detail: `Unpaid Invoices: ${unpaidInvoices}`,
-        Secondary_Detail: "Pending Balance",
-        Date_or_Status: "Outstanding Total",
-      },
-    ];
+    const recordsToExport =
+      sortedData.length > 0
+        ? sortedData
+        : filteredData.length > 0
+          ? filteredData
+          : billingTableSource;
 
-    // 2. Graph 1: Payment Method Distribution (%)
-    const totalMethodAmount =
-      paymentMethodData.reduce((sum, m) => sum + m.amount, 0) || 1;
-    const methodRows = paymentMethodData.map((m) => {
-      const pct = ((m.amount / totalMethodAmount) * 100).toFixed(1);
-      return {
-        Section: "2. PAYMENT METHOD GRAPH DISTRIBUTION",
-        Category_Item: m.method,
-        Count_or_Amount: `INR ${m.amount}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Total Collected via ${m.method}`,
-        Secondary_Detail: "Payment Method Breakdown",
-        Date_or_Status: "Active",
-      };
-    });
-
-    // 3. Graph 2: Payment Status Distribution (%)
-    const totalStatusCount =
-      paymentStatusData.reduce((sum, s) => sum + s.value, 0) || 1;
-    const statusRows = paymentStatusData.map((s) => {
-      const pct = ((s.value / totalStatusCount) * 100).toFixed(1);
-      return {
-        Section: "3. PAYMENT STATUS GRAPH DISTRIBUTION",
-        Category_Item: s.name,
-        Count_or_Amount: `${s.value} Invoices`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Invoices with status ${s.name}`,
-        Secondary_Detail: "Status Share",
-        Date_or_Status: s.name,
-      };
-    });
-
-    // 4. Graph 3: Department Performance Revenue Share (%)
-    const totalDeptRev =
-      deptPerformanceData.reduce((sum, d) => sum + d.revenue, 0) || 1;
-    const deptRows = deptPerformanceData.map((d) => {
-      const pct = ((d.revenue / totalDeptRev) * 100).toFixed(1);
-      return {
-        Section: "4. DEPARTMENT PERFORMANCE GRAPH SHARE",
-        Category_Item: d.department,
-        Count_or_Amount: `INR ${d.revenue}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Department Billed Revenue`,
-        Secondary_Detail: "Department Share",
-        Date_or_Status: "Verified",
-      };
-    });
-
-    // 5. Graph 4: Doctor Performance Revenue Share (%)
-    const totalDocRev =
-      doctorRevenueData.reduce((sum, d) => sum + d.revenue, 0) || 1;
-    const doctorRows = doctorRevenueData.map((d) => {
-      const pct = ((d.revenue / totalDocRev) * 100).toFixed(1);
-      return {
-        Section: "5. DOCTOR PERFORMANCE GRAPH SHARE",
-        Category_Item: d.doctor,
-        Count_or_Amount: `INR ${d.revenue}`,
-        Percentage_Share: `${pct}%`,
-        Primary_Detail: `Doctor Generated Revenue`,
-        Secondary_Detail: "Doctor Share",
-        Date_or_Status: "Verified",
-      };
-    });
-
-    // 6. Table: Detailed Invoices Registry
-    const recordRows = (
-      filteredData.length > 0 ? filteredData : billingTableSource
-    ).map((rec) => ({
-      Section: "6. DETAILED INVOICE TABLE REGISTRY",
-      Category_Item: rec.invoiceId,
-      Count_or_Amount: `Billed: INR ${rec.invoiceAmount} (Paid: INR ${rec.collectedAmount})`,
-      Percentage_Share:
-        rec.invoiceAmount > 0
-          ? `${((rec.collectedAmount / rec.invoiceAmount) * 100).toFixed(1)}%`
-          : "0%",
-      Primary_Detail: `Patient: ${rec.patientName} (${rec.mrn})`,
-      Secondary_Detail: `Doctor: ${rec.doctorName} | Dept: ${rec.department} | Method: ${rec.paymentMethod}`,
-      Date_or_Status: `Date: ${rec.invoiceDate} | Status: ${rec.paymentStatus}`,
+    const csvRows = recordsToExport.map((rec) => ({
+      "Invoice ID": rec.invoiceId,
+      "Invoice Date": rec.invoiceDate,
+      "Patient Name": rec.patientName,
+      "MRN": rec.mrn,
+      "Doctor Name": rec.doctorName,
+      "Department": rec.department,
+      "Billed Amount (INR)": rec.invoiceAmount,
+      "Collected Amount (INR)": rec.collectedAmount,
+      "Outstanding Amount (INR)": rec.outstandingAmount,
+      "Payment Method": rec.paymentMethod,
+      "Payment Status": rec.paymentStatus,
     }));
 
-    const allRows = [
-      ...kpiRows,
-      ...methodRows,
-      ...statusRows,
-      ...deptRows,
-      ...doctorRows,
-      ...recordRows,
-    ];
-
     exportDataToCsv(
-      `Billing_Report_Complete_All_Data_${new Date().toISOString().slice(0, 10)}.csv`,
-      allRows,
+      `Billing_Report_${dates.fromDate || today}_to_${dates.toDate || today}.csv`,
+      csvRows,
     );
   };
 
@@ -681,55 +587,340 @@ export function BillingReportScreen({
   };
 
   return (
-    <div
-      className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
-      style={{ fontFamily: RB }}
-    >
+    <>
+      {/* ─── DEDICATED PRINT STYLES ─── */}
+      <style>{`
+        @media screen {
+          .billing-report-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 8mm;
+          }
+
+          html, body {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Hide everything in normal screen UI when printing */
+          .billing-report-screen-ui,
+          .no-print,
+          nav,
+          aside,
+          header,
+          footer,
+          button,
+          input,
+          select {
+            display: none !important;
+          }
+
+          body * {
+            visibility: hidden;
+          }
+
+          .billing-report-print-only,
+          .billing-report-print-only * {
+            visibility: visible !important;
+          }
+
+          .billing-report-print-only {
+            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .billing-report-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .billing-report-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .billing-report-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .billing-report-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .billing-report-print-table th,
+          .billing-report-print-table td {
+            word-break: break-word !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="billing-report-print-only font-sans">
+        {/* A. REPORT HEADER */}
+        <div className="border-b-2 border-slate-800 pb-3 mb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                  {hospitalName}
+                </h1>
+                <p className="text-[10px] text-slate-600 font-medium leading-tight">
+                  {hospitalAddress} • Ph: {hospitalPhone}
+                  {hospitalGstin ? ` • ${hospitalGstin}` : ""}
+                </p>
+                <div className="mt-1 inline-block bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  OPD Billing & Invoice Report
+                </div>
+              </div>
+            </div>
+
+            <div className="text-right text-[11px] space-y-0.5 text-slate-700">
+              <div>
+                <span className="text-slate-500 font-medium">Report Period: </span>
+                <span className="font-bold text-slate-900">
+                  {dates.fromDate === dates.toDate
+                    ? dates.fromDate
+                    : `${dates.fromDate} to ${dates.toDate}`}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Generated: </span>
+                <span className="font-semibold text-slate-900">
+                  {new Date().toLocaleString("en-IN", {
+                    year: "numeric",
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 font-medium">Total Invoices: </span>
+                <span className="font-bold text-slate-900">{sortedData.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* B. REPORT SUMMARY - COMPACT PRINT STATS */}
+        <div className="mb-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+            Financial Summary Overview
+          </div>
+          <div className="grid grid-cols-6 gap-2 border border-slate-300 rounded p-2 bg-slate-50 text-[10px]">
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Total Revenue</span>
+              <span className="text-xs font-bold text-slate-900 block">{formatIndianCurrency(totalBilled)}</span>
+              <span className="text-[8.5px] text-slate-500 font-mono">₹{totalBilled.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Invoices</span>
+              <span className="text-xs font-bold text-slate-900 block">{totalInvoices}</span>
+              <span className="text-[8.5px] text-slate-500">100% total</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Collected</span>
+              <span className="text-xs font-bold text-emerald-800 block">{formatIndianCurrency(totalPaid)}</span>
+              <span className="text-[8.5px] text-emerald-700 font-semibold">{collectionRate}% rate</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Outstanding</span>
+              <span className="text-xs font-bold text-amber-800 block">{formatIndianCurrency(totalOutstanding)}</span>
+              <span className="text-[8.5px] text-amber-700 font-semibold">{outstandingRate}% pending</span>
+            </div>
+            <div className="border-r border-slate-300 pr-2">
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Paid Invoices</span>
+              <span className="text-xs font-bold text-slate-900 block">{paidInvoices}</span>
+              <span className="text-[8.5px] text-slate-500">{paidRate}% settled</span>
+            </div>
+            <div>
+              <span className="text-[9px] text-slate-500 block uppercase font-medium">Avg Invoice</span>
+              <span className="text-xs font-bold text-slate-900 block">{formatIndianCurrency(avgInvoiceValue)}</span>
+              <span className="text-[8.5px] text-slate-500">per invoice</span>
+            </div>
+          </div>
+        </div>
+
+        {/* C. ACTIVE REPORT FILTER INFORMATION */}
+        <div className="mb-3 text-[9.5px] border border-slate-200 rounded px-2.5 py-1 bg-slate-100/70 flex flex-wrap items-center gap-x-4 gap-y-1 text-slate-700">
+          <div>
+            <span className="font-semibold text-slate-900">Date Filter: </span>
+            <span>{dateRange} ({dates.fromDate} to {dates.toDate})</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Department: </span>
+            <span>{deptFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Doctor: </span>
+            <span>{doctorFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Payment Status: </span>
+            <span>{payStatusFilter}</span>
+          </div>
+          <div>
+            <span className="font-semibold text-slate-900">Payment Method: </span>
+            <span>{payMethodFilter}</span>
+          </div>
+          {invStatusFilter !== "All Invoice Statuses" && (
+            <div>
+              <span className="font-semibold text-slate-900">Invoice Status: </span>
+              <span>{invStatusFilter}</span>
+            </div>
+          )}
+          {searchQuery && (
+            <div>
+              <span className="font-semibold text-slate-900">Search: </span>
+              <span className="italic">{`"${searchQuery}"`}</span>
+            </div>
+          )}
+        </div>
+
+        {/* D. FULL BILLING DETAIL TABLE */}
+        <div className="mb-3">
+          <table className="billing-report-print-table w-full text-left border border-slate-300 text-[9.5px]">
+            <thead>
+              <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[90px]">Invoice ID</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[75px]">Date</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Patient Name</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[95px]">MRN</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Doctor</th>
+                <th className="py-1.5 px-2 border-r border-slate-300">Department</th>
+                <th className="py-1.5 px-2 text-right border-r border-slate-300 w-[80px]">Billed (₹)</th>
+                <th className="py-1.5 px-2 text-right border-r border-slate-300 w-[80px]">Collected (₹)</th>
+                <th className="py-1.5 px-2 text-right border-r border-slate-300 w-[80px]">Balance (₹)</th>
+                <th className="py-1.5 px-2 border-r border-slate-300 w-[65px]">Method</th>
+                <th className="py-1.5 px-2 text-center w-[70px]">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {sortedData.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-6 text-center text-slate-500 italic">
+                    No billing records found matching the selected criteria.
+                  </td>
+                </tr>
+              ) : (
+                sortedData.map((item, index) => (
+                  <tr
+                    key={item.invoiceId || index}
+                    className={index % 2 === 1 ? "bg-slate-50/50" : "bg-white"}
+                  >
+                    <td className="py-1.5 px-2 font-mono font-bold text-slate-900 border-r border-slate-200 whitespace-nowrap">
+                      {item.invoiceId}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200 whitespace-nowrap">
+                      {item.invoiceDate}
+                    </td>
+                    <td className="py-1.5 px-2 font-semibold text-slate-900 border-r border-slate-200">
+                      {item.patientName}
+                    </td>
+                    <td className="py-1.5 px-2 font-mono text-slate-600 border-r border-slate-200 whitespace-nowrap">
+                      {item.mrn}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-800 border-r border-slate-200">
+                      {item.doctorName}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">
+                      {item.department}
+                    </td>
+                    <td className="py-1.5 px-2 text-right font-semibold text-slate-900 border-r border-slate-200 whitespace-nowrap">
+                      ₹{item.invoiceAmount.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-1.5 px-2 text-right font-semibold text-emerald-800 border-r border-slate-200 whitespace-nowrap">
+                      ₹{item.collectedAmount.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-1.5 px-2 text-right font-semibold text-amber-800 border-r border-slate-200 whitespace-nowrap">
+                      ₹{item.outstandingAmount.toLocaleString("en-IN")}
+                    </td>
+                    <td className="py-1.5 px-2 text-slate-700 border-r border-slate-200">
+                      {item.paymentMethod}
+                    </td>
+                    <td className="py-1.5 px-2 text-center font-medium">
+                      <span className="text-[8.5px] px-1 py-0.5 rounded border border-slate-300 font-semibold uppercase">
+                        {item.paymentStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
+                <td colSpan={6} className="py-1.5 px-2 text-right border-r border-slate-300 uppercase text-[9.5px]">
+                  Total ({sortedData.length} Records):
+                </td>
+                <td className="py-1.5 px-2 text-right border-r border-slate-300 whitespace-nowrap">
+                  ₹{sortedData.reduce((s, d) => s + d.invoiceAmount, 0).toLocaleString("en-IN")}
+                </td>
+                <td className="py-1.5 px-2 text-right border-r border-slate-300 text-emerald-800 whitespace-nowrap">
+                  ₹{sortedData.reduce((s, d) => s + d.collectedAmount, 0).toLocaleString("en-IN")}
+                </td>
+                <td className="py-1.5 px-2 text-right border-r border-slate-300 text-amber-800 whitespace-nowrap">
+                  ₹{sortedData.reduce((s, d) => s + d.outstandingAmount, 0).toLocaleString("en-IN")}
+                </td>
+                <td colSpan={2} className="py-1.5 px-2 bg-slate-100"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        {/* E. PRINT FOOTER */}
+        <div className="border-t border-slate-300 pt-2 flex items-center justify-between text-[8.5px] text-slate-500">
+          <div>
+            <strong>{hospitalName}</strong> • Confidential OPD Financial Billing Register
+          </div>
+          <div>
+            Printed on: {new Date().toLocaleString("en-IN")}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── NORMAL SCREEN UI (UNMODIFIED) ─── */}
+      <div
+        className="billing-report-screen-ui min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
+        style={{ fontFamily: RB }}
+      >
       {/* Top Header Section */}
-      <div className="bg-white border-b border-[#E5E7EB] sticky top-0 z-20 shadow-sm">
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 py-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <nav className="flex items-center gap-1.5 text-xs text-[#64748B] mb-1">
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Hospital
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <button
-                  type="button"
-                  className="hover:text-[#0D47A1] cursor-pointer"
-                  onClick={onBack}
-                >
-                  Reports
-                </button>
-                <ChevronRight className="w-3.5 h-3.5" />
-                <span className="text-[#0D47A1] font-semibold">
-                  Billing Report
-                </span>
-              </nav>
-              <div className="flex items-center gap-3">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  Billing Report
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#009688] border border-teal-200">
-                  OPD Financial Verified
-                </span>
-              </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor billing performance, payment collections and invoice
-                status across OPD services.
-              </p>
-            </div>
-
-            {/* Header Actions */}
-            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={() => (onBack ? onBack() : window.history.back())}
@@ -739,6 +930,22 @@ export function BillingReportScreen({
                 <ArrowLeft size={14} />
                 Back
               </button>
+              <div className="flex items-center gap-3">
+                <h1
+                  className="text-2xl font-bold text-[#111827]"
+                  style={{ fontFamily: PP }}
+                >
+                  Billing Report
+                </h1>
+              </div>
+              <p className="text-xs text-[#64748B] mt-0.5">
+                Monitor billing performance, payment collections and invoice
+                status across OPD services.
+              </p>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center gap-2 flex-wrap">
               <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl mr-1">
                 <Clock className="w-4 h-4 text-[#0D47A1]" />
                 <span>
@@ -781,7 +988,6 @@ export function BillingReportScreen({
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Container - Full Width with Media Queries */}
       <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 xl:px-10 mt-6">
@@ -1262,39 +1468,6 @@ export function BillingReportScreen({
           </div>
         </div>
 
-        {/* Demo State Controls */}
-        <div className="flex items-center justify-between mb-4 bg-white p-2.5 rounded-xl border border-[#E5E7EB] text-xs">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#111827]">
-              Demo State Toggles:
-            </span>
-            <button
-              onClick={() => {
-                startTransition(() => {
-                  setShowLoadingDemo(!showLoadingDemo);
-                  setHasError(false);
-                });
-                setHasError(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${isLoading ? "bg-amber-50 border-amber-300 text-[#F59E0B]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Loading Skeleton
-            </button>
-            <button
-              onClick={() => {
-                setHasError(!hasError);
-                setShowLoadingDemo(false);
-              }}
-              className={`px-2.5 py-1 rounded-lg border text-xs ${hasError ? "bg-red-50 border-red-[#EF4444] text-[#EF4444]" : "bg-slate-50 border-[#E5E7EB] text-[#64748B]"}`}
-            >
-              Toggle Error State
-            </button>
-          </div>
-          <span className="text-[11px] text-[#64748B]">
-            Simulate real-time billing report states
-          </span>
-        </div>
-
         {/* ERROR STATE */}
         {hasError && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6 text-center">
@@ -1685,7 +1858,7 @@ export function BillingReportScreen({
                   </p>
                 </div>
                 <button
-                  onClick={() => alert("Exporting Billing Register (CSV)...")}
+                  onClick={handleExportAllCsv}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
@@ -1908,5 +2081,6 @@ export function BillingReportScreen({
         </div>
       </div>
     </div>
+    </>
   );
 }

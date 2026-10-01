@@ -85,14 +85,70 @@ export const consultationService = {
   }> => {
     consultationStoreActions.setLoading(true);
     try {
-      const appointmentId = appointment.id || appointment.appointmentId;
-      if (!appointmentId) {
-        throw new Error("Appointment ID is missing");
+      // Resolve numeric appointment DB ID (Long)
+      const rawApt = appointment as unknown as Record<string, unknown>;
+      let appointmentDbId: number | undefined;
+
+      if (
+        typeof appointment.id === "number" &&
+        Number.isInteger(appointment.id) &&
+        appointment.id > 0
+      ) {
+        appointmentDbId = appointment.id;
+      } else if (
+        typeof appointment.id === "string" &&
+        /^\d+$/.test(appointment.id)
+      ) {
+        appointmentDbId = parseInt(appointment.id, 10);
+      } else if (
+        typeof appointment.appointmentId === "number" &&
+        Number.isInteger(appointment.appointmentId) &&
+        appointment.appointmentId > 0
+      ) {
+        appointmentDbId = appointment.appointmentId;
+      } else if (
+        typeof appointment.appointmentId === "string" &&
+        /^\d+$/.test(appointment.appointmentId)
+      ) {
+        appointmentDbId = parseInt(appointment.appointmentId, 10);
+      } else if (
+        typeof rawApt.appointment_id === "number" &&
+        rawApt.appointment_id > 0
+      ) {
+        appointmentDbId = rawApt.appointment_id as number;
+      }
+
+      if (!appointmentDbId) {
+        const identifier =
+          appointment.appointmentNumber ||
+          appointment.appointmentId ||
+          appointment.id;
+        if (identifier) {
+          const resolved = await appointmentsApi
+            .getAppointmentById(identifier)
+            .catch(() => null);
+          if (
+            resolved?.id &&
+            typeof resolved.id === "number" &&
+            Number.isInteger(resolved.id) &&
+            resolved.id > 0
+          ) {
+            appointmentDbId = resolved.id;
+          } else if (resolved?.id && /^\d+$/.test(String(resolved.id))) {
+            appointmentDbId = parseInt(String(resolved.id), 10);
+          }
+        }
+      }
+
+      if (!appointmentDbId) {
+        throw new Error(
+          "Appointment numeric database ID could not be resolved",
+        );
       }
 
       // 1. Transition appointment status to IN_CONSULTATION in backend (PATCH /api/v1/doctor/appointments/{id}/start)
       try {
-        await appointmentsApi.doctorStartConsultation(appointmentId);
+        await appointmentsApi.doctorStartConsultation(appointmentDbId);
       } catch (startErr) {
         console.warn(
           "Transition appointment to IN_CONSULTATION warning:",
@@ -100,43 +156,84 @@ export const consultationService = {
         );
       }
 
-      // 2. Create / Open Encounter with linked appointment & patient (POST /api/v1/encounters)
-      const rawApt = appointment as unknown as Record<string, unknown>;
-      const pSub = (
-        rawApt.patient && typeof rawApt.patient === "object"
-          ? rawApt.patient
-          : {}
-      ) as Record<string, unknown>;
-      const patientId =
-        appointment.patientId ||
-        (rawApt.patientId as string | number) ||
-        (rawApt.patient_id as string | number) ||
-        (rawApt.patientID as string | number) ||
-        (pSub.id as string | number) ||
-        (pSub.patientId as string | number) ||
-        (pSub.patient_id as string | number) ||
-        undefined;
+      // 2. Check if encounter already exists for this appointment
+      let encounterDbId: number | undefined;
+      let encounter: Record<string, unknown> | null = null;
 
-      const encounter = await consultationApi.createEncounter(
-        appointmentId,
-        patientId,
+      const potentialEncId =
+        (rawApt.encounterId as number | string) ||
+        (rawApt.encounter_id as number | string) ||
+        ((rawApt.encounter as Record<string, unknown>)?.id as
+          | number
+          | string) ||
+        ((rawApt.encounter as Record<string, unknown>)?.encounterId as
+          | number
+          | string);
+
+      if (
+        typeof potentialEncId === "number" &&
+        Number.isInteger(potentialEncId) &&
+        potentialEncId > 0
+      ) {
+        encounterDbId = potentialEncId;
+      } else if (
+        typeof potentialEncId === "string" &&
+        /^\d+$/.test(potentialEncId)
+      ) {
+        encounterDbId = parseInt(potentialEncId, 10);
+      }
+
+      if (encounterDbId) {
+        encounter = (await consultationApi
+          .getEncounter(encounterDbId)
+          .catch(() => null)) as unknown as Record<string, unknown>;
+      }
+
+      if (!encounter || !encounterDbId) {
+        // Create new encounter using EXACT backend DTO: { appointmentId: appointmentDbId }
+        const created = await consultationApi.createEncounter(appointmentDbId);
+        encounter = created as unknown as Record<string, unknown>;
+        const rawCreatedId =
+          created.encounterId ||
+          created.id ||
+          (created as unknown as Record<string, unknown>).encounter_id;
+        if (
+          typeof rawCreatedId === "number" &&
+          Number.isInteger(rawCreatedId) &&
+          rawCreatedId > 0
+        ) {
+          encounterDbId = rawCreatedId;
+        } else if (
+          typeof rawCreatedId === "string" &&
+          /^\d+$/.test(rawCreatedId)
+        ) {
+          encounterDbId = parseInt(rawCreatedId, 10);
+        }
+      }
+
+      if (!encounterDbId) {
+        throw new Error(
+          "Encounter created or resolved without numeric encounter ID",
+        );
+      }
+
+      consultationStoreActions.setEncounter(
+        encounter as unknown as Parameters<
+          typeof consultationStoreActions.setEncounter
+        >[0],
       );
-      consultationStoreActions.setEncounter(encounter);
 
       // 3. Fetch aggregated Encounter Workspace context (GET /api/v1/encounters/{id}/workspace)
       try {
-        await consultationApi.getWorkspace(encounter.encounterId);
+        await consultationApi.getWorkspace(encounterDbId);
       } catch (err) {
-        // non-blocking fallback - log error but continue
         console.warn("Failed to fetch encounter workspace:", err);
       }
 
       // 4. Load patient vitals for the encounter
       let vitals: PatientVitals | null = null;
       try {
-        vitals = await consultationApi.loadEncounterVitals(
-          encounter.encounterId,
-        );
+        vitals = await consultationApi.loadEncounterVitals(encounterDbId);
         if (vitals) {
           consultationStoreActions.setVitals(vitals);
         }
@@ -147,7 +244,7 @@ export const consultationService = {
 
       // 5. Initialize Consultation Draft (POST /api/v1/encounters/{id}/consultation)
       const consultation = await consultationApi.initializeConsultation(
-        encounter.encounterId,
+        encounterDbId,
         chiefComplaint || appointment.chiefComplaint || "",
       );
 
@@ -155,10 +252,16 @@ export const consultationService = {
       const prescription = null;
       consultationStoreActions.setPrescription(prescription);
 
-      // 5. Build consultation record (status already IN_CONSULTATION from queue/encounter)
+      // 7. Build consultation record
       const record: ConsultationRecord = {
         id: String(consultation.id),
-        appointmentId,
+        appointmentId: appointmentDbId,
+        appointmentNumber: String(
+          appointment.appointmentNumber ||
+            appointment.appointmentId ||
+            appointment.id ||
+            "",
+        ),
         tokenNo: String(
           appointment.tokenNo ||
             appointment.tokenNumber ||
@@ -212,7 +315,7 @@ export const consultationService = {
       consultationStoreActions.setStatus("IN_CONSULTATION");
 
       return {
-        encounterId: encounter.encounterId,
+        encounterId: encounterDbId,
         consultationId: consultation.id,
       };
     } catch (err) {
@@ -231,9 +334,16 @@ export const consultationService = {
   loadEncounterContext: async (
     encounterId: string | number,
   ): Promise<PatientVitals | null> => {
+    const numId =
+      typeof encounterId === "number"
+        ? encounterId
+        : parseInt(String(encounterId), 10);
+    if (!Number.isInteger(numId) || numId <= 0 || isNaN(Number(encounterId))) {
+      return null;
+    }
     consultationStoreActions.setLoading(true);
     try {
-      const vitals = await consultationApi.loadEncounterVitals(encounterId);
+      const vitals = await consultationApi.loadEncounterVitals(numId);
       return vitals;
     } catch (err) {
       const errorMessage =
@@ -525,27 +635,131 @@ export const consultationService = {
     consultationStoreActions.setLoading(true);
     try {
       let workspace: Record<string, unknown> | null = null;
-      let realEncounterId = targetId;
+      let resolvedEncounterDbId: number | undefined;
 
-      // 1. Try fetching workspace assuming targetId is encounterId
-      try {
-        workspace = await consultationApi.getWorkspace(targetId);
-      } catch (err) {
-        console.log(err);
-        workspace = null;
-      }
+      const isNumeric =
+        typeof targetId === "number"
+          ? Number.isInteger(targetId) && targetId > 0
+          : /^\d+$/.test(String(targetId).trim());
 
-      // 2. Fallback: if workspace is null, targetId is likely an appointmentId. Resolve encounterId first.
-      if (!workspace) {
-        try {
-          const encRes = await consultationApi.createEncounter(targetId);
-          if (encRes?.encounterId) {
-            realEncounterId = encRes.encounterId;
-            workspace = await consultationApi.getWorkspace(realEncounterId);
+      if (isNumeric) {
+        const numId =
+          typeof targetId === "number"
+            ? targetId
+            : parseInt(String(targetId).trim(), 10);
+        // 1. Try fetching workspace assuming targetId is numeric encounterId
+        workspace = await consultationApi.getWorkspace(numId).catch(() => null);
+        if (workspace) {
+          resolvedEncounterDbId = numId;
+        } else {
+          // 2. If workspace not found, targetId might be numeric appointmentId
+          const appt = await appointmentsApi
+            .getAppointmentById(numId)
+            .catch(() => null);
+          if (appt) {
+            const rawAppt = appt as unknown as Record<string, unknown>;
+            const existingEncId =
+              (rawAppt.encounterId as number | string) ||
+              (rawAppt.encounter_id as number | string) ||
+              ((rawAppt.encounter as Record<string, unknown>)?.id as
+                | number
+                | string);
+
+            let encDbId: number | undefined;
+            if (
+              typeof existingEncId === "number" &&
+              Number.isInteger(existingEncId) &&
+              existingEncId > 0
+            ) {
+              encDbId = existingEncId;
+            } else if (
+              typeof existingEncId === "string" &&
+              /^\d+$/.test(existingEncId)
+            ) {
+              encDbId = parseInt(existingEncId, 10);
+            }
+
+            if (encDbId) {
+              resolvedEncounterDbId = encDbId;
+              workspace = await consultationApi
+                .getWorkspace(encDbId)
+                .catch(() => null);
+            } else {
+              const encRes = await consultationApi
+                .createEncounter(numId)
+                .catch(() => null);
+              const createdId = encRes?.encounterId || encRes?.id;
+              if (createdId) {
+                resolvedEncounterDbId =
+                  typeof createdId === "number"
+                    ? createdId
+                    : parseInt(String(createdId), 10);
+                workspace = await consultationApi
+                  .getWorkspace(resolvedEncounterDbId)
+                  .catch(() => null);
+              }
+            }
           }
-        } catch (err) {
-          console.log(err);
-          workspace = null;
+        }
+      } else {
+        // targetId is a display identifier string like "APT-20261001-0001"
+        const appt = await appointmentsApi
+          .getAppointmentById(targetId)
+          .catch(() => null);
+        if (appt) {
+          const apptDbId =
+            typeof appt.id === "number"
+              ? appt.id
+              : parseInt(String(appt.id), 10);
+          if (
+            apptDbId &&
+            Number.isInteger(apptDbId) &&
+            apptDbId > 0 &&
+            !isNaN(apptDbId)
+          ) {
+            const rawAppt = appt as unknown as Record<string, unknown>;
+            const existingEncId =
+              (rawAppt.encounterId as number | string) ||
+              (rawAppt.encounter_id as number | string) ||
+              ((rawAppt.encounter as Record<string, unknown>)?.id as
+                | number
+                | string);
+
+            let encDbId: number | undefined;
+            if (
+              typeof existingEncId === "number" &&
+              Number.isInteger(existingEncId) &&
+              existingEncId > 0
+            ) {
+              encDbId = existingEncId;
+            } else if (
+              typeof existingEncId === "string" &&
+              /^\d+$/.test(existingEncId)
+            ) {
+              encDbId = parseInt(existingEncId, 10);
+            }
+
+            if (encDbId) {
+              resolvedEncounterDbId = encDbId;
+              workspace = await consultationApi
+                .getWorkspace(encDbId)
+                .catch(() => null);
+            } else {
+              const encRes = await consultationApi
+                .createEncounter(apptDbId)
+                .catch(() => null);
+              const createdId = encRes?.encounterId || encRes?.id;
+              if (createdId) {
+                resolvedEncounterDbId =
+                  typeof createdId === "number"
+                    ? createdId
+                    : parseInt(String(createdId), 10);
+                workspace = await consultationApi
+                  .getWorkspace(resolvedEncounterDbId)
+                  .catch(() => null);
+              }
+            }
+          }
         }
       }
 
@@ -571,12 +785,13 @@ export const consultationService = {
       };
 
       // Hydrate Redux store
-      if (eSub.encounterId) {
-        consultationStoreActions.setEncounter(
-          eSub as unknown as Parameters<
-            typeof consultationStoreActions.setEncounter
-          >[0],
-        );
+      if (eSub.encounterId || resolvedEncounterDbId) {
+        consultationStoreActions.setEncounter({
+          ...eSub,
+          encounterId: eSub.encounterId || resolvedEncounterDbId,
+        } as unknown as Parameters<
+          typeof consultationStoreActions.setEncounter
+        >[0]);
       }
       consultationStoreActions.setVitals(normalizedVitals);
       consultationStoreActions.setStatus("IN_CONSULTATION");

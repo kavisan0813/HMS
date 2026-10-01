@@ -249,6 +249,15 @@ interface PaginatedData<T> {
   totalPages: number;
 }
 
+// ── Defensive helper to prevent sending non-numeric bill numbers (e.g. BILL-0001) to Long endpoints
+function validateNumericBillId(billId: number | string): number {
+  const num = typeof billId === "number" ? billId : Number(billId);
+  if (!Number.isInteger(num) || num <= 0) {
+    throw new Error(`Valid numeric billId is required, received: '${billId}'`);
+  }
+  return num;
+}
+
 // ─── BILLING API CLIENT ─────────────────────────────────────────────────────
 export const billingApi = {
   // ── 1. Search & Filter Bills ────────────────────────────────────────────
@@ -390,8 +399,9 @@ export const billingApi = {
   // ── 3. Load Billing Workspace ──────────────────────────────────────────
   async getBill(billId: number | string): Promise<ApiResponse<BillWorkspace>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.get<ApiResponse<BillWorkspace>>(
-        `/api/v1/billing/${billId}`,
+        `/api/v1/billing/${validId}`,
       );
       return response.data;
     } catch (error) {
@@ -409,8 +419,9 @@ export const billingApi = {
     payload: BillItemPayload,
   ): Promise<ApiResponse<BillItem>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.post<ApiResponse<BillItem>>(
-        `/api/v1/billing/${billId}/items`,
+        `/api/v1/billing/${validId}/items`,
         payload,
       );
       return response.data;
@@ -430,8 +441,9 @@ export const billingApi = {
     payload: BillItemPayload,
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.put<ApiResponse<unknown>>(
-        `/api/v1/billing/${billId}/items/${itemId}`,
+        `/api/v1/billing/${validId}/items/${itemId}`,
         payload,
       );
       return response.data;
@@ -450,9 +462,10 @@ export const billingApi = {
     itemId: number | string,
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.delete<ApiResponse<unknown>>(
-        `/api/v1/billing/${billId}/items/${itemId}`,
-      );
+        `/api/v1/billing/${validId}/items/${itemId}`,
+        );
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -469,10 +482,11 @@ export const billingApi = {
     payload: BillDiscountPayload,
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       let response;
       try {
         response = await apiClient.post<ApiResponse<unknown>>(
-          `/api/v1/billing/${billId}/discount`,
+          `/api/v1/billing/${validId}/discount`,
           payload,
         );
       } catch (err: unknown) {
@@ -481,7 +495,7 @@ export const billingApi = {
           (err.response?.status === 405 || err.response?.status === 404)
         ) {
           response = await apiClient.patch<ApiResponse<unknown>>(
-            `/api/v1/billing/${billId}/discount`,
+            `/api/v1/billing/${validId}/discount`,
             payload,
           );
         } else {
@@ -503,8 +517,9 @@ export const billingApi = {
     billId: number | string,
   ): Promise<ApiResponse<BillSummary>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.get<ApiResponse<BillSummary>>(
-        `/api/v1/billing/${billId}/summary`,
+        `/api/v1/billing/${validId}/summary`,
       );
       return response.data;
     } catch (error) {
@@ -521,10 +536,11 @@ export const billingApi = {
     billId: number | string,
   ): Promise<ApiResponse<BillFinalizeResponse>> {
     try {
+      const validId = validateNumericBillId(billId);
       let response;
       try {
         response = await apiClient.post<ApiResponse<BillFinalizeResponse>>(
-          `/api/v1/billing/${billId}/finalize`,
+          `/api/v1/billing/${validId}/finalize`,
         );
       } catch (err: unknown) {
         if (
@@ -532,7 +548,7 @@ export const billingApi = {
           (err.response?.status === 405 || err.response?.status === 404)
         ) {
           response = await apiClient.patch<ApiResponse<BillFinalizeResponse>>(
-            `/api/v1/billing/${billId}/finalize`,
+            `/api/v1/billing/${validId}/finalize`,
           );
         } else {
           throw err;
@@ -553,8 +569,9 @@ export const billingApi = {
     billId: number | string,
   ): Promise<ApiResponse<PaymentHistoryResponse>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.get<ApiResponse<PaymentHistoryResponse>>(
-        `/api/v1/billing/${billId}/payments`,
+        `/api/v1/billing/${validId}/payments`,
       );
       return response.data;
     } catch (error) {
@@ -572,9 +589,10 @@ export const billingApi = {
     payload: PaymentReceivePayload,
   ): Promise<ApiResponse<PaymentReceiveResponse>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.post<
         ApiResponse<PaymentReceiveResponse>
-      >(`/api/v1/billing/${billId}/payments`, payload);
+      >(`/api/v1/billing/${validId}/payments`, payload);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -588,8 +606,9 @@ export const billingApi = {
   // ── 12. Generate Receipt ───────────────────────────────────────────────
   async getReceipt(billId: number | string): Promise<ApiResponse<ReceiptData>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.get<ApiResponse<ReceiptData>>(
-        `/api/v1/billing/${billId}/receipt`,
+        `/api/v1/billing/${validId}/receipt`,
       );
       return response.data;
     } catch (error) {
@@ -606,8 +625,9 @@ export const billingApi = {
     billId: number | string,
   ): Promise<ApiResponse<ReceiptData>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.post<ApiResponse<ReceiptData>>(
-        `/api/v1/billing/${billId}/receipt/reprint`,
+        `/api/v1/billing/${validId}/receipt/reprint`,
       );
       return response.data;
     } catch (error) {
@@ -625,8 +645,9 @@ export const billingApi = {
     payload: { amount: number; reason: string },
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.post<ApiResponse<unknown>>(
-        `/api/v1/billing/${billId}/refund`,
+        `/api/v1/billing/${validId}/refund`,
         payload,
       );
       return response.data;
@@ -645,8 +666,9 @@ export const billingApi = {
     payload?: { reason?: string },
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.patch<ApiResponse<unknown>>(
-        `/api/v1/billing/${billId}/cancel`,
+        `/api/v1/billing/${validId}/cancel`,
         payload || {},
       );
       return response.data;
@@ -665,8 +687,9 @@ export const billingApi = {
     payload: { reason: string },
   ): Promise<ApiResponse<unknown>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.patch<ApiResponse<unknown>>(
-        `/api/v1/billing/${billId}/void`,
+        `/api/v1/billing/${validId}/void`,
         payload,
       );
       return response.data;
@@ -817,8 +840,9 @@ export const billingApi = {
     billId: number | string,
   ): Promise<ApiResponse<BillAuditResponse>> {
     try {
+      const validId = validateNumericBillId(billId);
       const response = await apiClient.get<ApiResponse<BillAuditResponse>>(
-        `/api/v1/billing/${billId}/audit`,
+        `/api/v1/billing/${validId}/audit`,
       );
       return response.data;
     } catch (error) {

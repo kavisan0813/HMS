@@ -36,6 +36,9 @@ interface PaymentHistoryRecord {
   remarks: string;
 }
 
+const PAYMENT_HISTORY_BILLING_PARAMS = { page: 0, size: 200 } as const;
+const DISABLED_BILLING_PARAMS = { enabled: false } as const;
+
 export function PaymentHistoryPage() {
   const navigate = useNavigate();
   const role = useAuthStore((s) => s.user)?.role;
@@ -44,7 +47,7 @@ export function PaymentHistoryPage() {
   );
 
   const { data: billsData, isLoading } = useBillingList(
-    isUnauthorizedRole ? { enabled: false } : { page: 0, size: 200 },
+    isUnauthorizedRole ? DISABLED_BILLING_PARAMS : PAYMENT_HISTORY_BILLING_PARAMS,
   );
   const invoices = useMemo(
     () => (billsData?.bills || []).map(mapApiBillToInvoiceRecord),
@@ -119,8 +122,81 @@ export function PaymentHistoryPage() {
     setDateRange("This Month");
   };
 
+  const handleExportPaymentHistory = () => {
+    if (!filteredPayments || filteredPayments.length === 0) {
+      alert("No payment transactions available to export.");
+      return;
+    }
+
+    const escapeCsv = (val: string | number | null | undefined) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const headers = [
+      "Receipt No",
+      "Invoice ID",
+      "Payment Date",
+      "Patient Name",
+      "MRN",
+      "Doctor",
+      "Method",
+      "Invoice Amount",
+      "Amount Paid",
+      "Balance",
+      "Cashier",
+      "Status",
+    ];
+
+    const rows = filteredPayments.map((p) => {
+      const receiptNo = escapeCsv(p.receiptNo || "—");
+      const invoiceId = escapeCsv(p.invoiceId || "—");
+      const paymentDate = escapeCsv(p.paymentDate || "—");
+      const patientName = escapeCsv(p.patientName || "—");
+      const mrn = escapeCsv(p.mrn || "—");
+      const doctorName = escapeCsv(p.doctorName || "—");
+      const paymentMethod = escapeCsv(p.paymentMethod || "—");
+      const invoiceAmount = p.invoiceAmount ?? 0;
+      const amountPaid = p.amountPaid ?? 0;
+      const balance = p.balance ?? 0;
+      const cashier = escapeCsv(p.collectedBy || "—");
+      const status = escapeCsv(p.status || "Paid");
+
+      return [
+        receiptNo,
+        invoiceId,
+        paymentDate,
+        patientName,
+        mrn,
+        doctorName,
+        paymentMethod,
+        invoiceAmount,
+        amountPaid,
+        balance,
+        cashier,
+        status,
+      ].join(",");
+    });
+
+    const csvContent = [headers.map(escapeCsv).join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    link.download = `Payment_History_Ledger_${todayStr}.csv`;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+
   const paymentFilterToolbar = (
-    <div className="flex items-center justify-between gap-3 flex-wrap text-xs">
+    <div className="no-print flex items-center justify-between gap-3 flex-wrap text-xs">
       <div className="flex items-center gap-2 flex-wrap">
         <select
           aria-label="Select date range"
@@ -187,50 +263,186 @@ export function PaymentHistoryPage() {
 
   return (
     <div className="w-full bg-[#F1F5F9] min-h-screen p-4 md:p-6 pb-28 space-y-6">
-      {/* 1. PAGE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
-            style={{ fontFamily: RB }}
-          >
-            <ArrowLeft size={16} />
-            Back
-          </button>
-          <h1
-            className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight"
-            style={{ fontFamily: PP }}
-          >
-            Payment History Ledger
-          </h1>
-          <p
-            className="text-xs md:text-sm text-[#64748B] mt-0.5"
-            style={{ fontFamily: RB }}
-          >
-            Review all payment transactions, receipts and payment records.
-          </p>
+      {/* Print Styles */}
+      <style>{`
+        @page {
+          size: A4 landscape;
+          margin: 8mm 10mm;
+        }
+
+        @media print {
+          html, body {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #FFFFFF !important;
+            color: #111827 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          body * {
+            visibility: hidden !important;
+          }
+
+          #payment-history-ledger-print,
+          #payment-history-ledger-print * {
+            visibility: visible !important;
+          }
+
+          #payment-history-ledger-print {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+
+          /* Reset all container clipping, paddings, fixed max-heights and shadows */
+          #payment-history-ledger-print * {
+            box-shadow: none !important;
+            text-shadow: none !important;
+          }
+
+          #payment-history-ledger-print .bg-white,
+          #payment-history-ledger-print .rounded-2xl,
+          #payment-history-ledger-print .rounded-xl,
+          #payment-history-ledger-print .border {
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+            width: 100% !important;
+            max-width: 100% !important;
+          }
+
+          #payment-history-ledger-print .max-h-140,
+          #payment-history-ledger-print .overflow-x-auto,
+          #payment-history-ledger-print .overflow-y-auto,
+          #payment-history-ledger-print .overflow-hidden {
+            overflow: visible !important;
+            max-height: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border: none !important;
+          }
+
+          /* Table Full Width & Layout */
+          #payment-history-ledger-print table {
+            width: 100% !important;
+            max-width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 10px !important;
+            border: 1px solid #CBD5E1 !important;
+            table-layout: auto !important;
+          }
+
+          #payment-history-ledger-print thead {
+            display: table-header-group !important;
+            background-color: #F1F5F9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          #payment-history-ledger-print tbody {
+            display: table-row-group !important;
+          }
+
+          #payment-history-ledger-print tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          #payment-history-ledger-print th,
+          #payment-history-ledger-print td {
+            white-space: normal !important;
+            word-break: normal !important;
+            overflow-wrap: anywhere !important;
+            vertical-align: middle !important;
+            padding: 6px 4px !important;
+            font-size: 10px !important;
+            line-height: 1.25 !important;
+            border: 1px solid #E2E8F0 !important;
+          }
+
+          #payment-history-ledger-print th {
+            font-size: 9.5px !important;
+            font-weight: 700 !important;
+            color: #0D47A1 !important;
+            background-color: #F1F5F9 !important;
+            text-transform: uppercase !important;
+          }
+
+          #payment-history-ledger-print th svg {
+            display: none !important;
+          }
+
+          /* Hide interactive / non-printable elements */
+          .no-print,
+          #payment-history-ledger-print input,
+          #payment-history-ledger-print select,
+          #payment-history-ledger-print button,
+          #payment-history-ledger-print .relative:has(input),
+          #payment-history-ledger-print .border-t:has(select),
+          #payment-history-ledger-print .border-t:has(button),
+          #payment-history-ledger-print th:last-child,
+          #payment-history-ledger-print td:last-child {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      <div id="payment-history-ledger-print" className="space-y-6">
+        {/* 1. PAGE HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="no-print inline-flex items-center gap-2 px-3.5 py-2 mb-3 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-xs transition-all cursor-pointer"
+              style={{ fontFamily: RB }}
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
+            <h1
+              className="text-xl md:text-2xl font-bold text-[#111827] tracking-tight"
+              style={{ fontFamily: PP }}
+            >
+              Payment History Ledger
+            </h1>
+            <p
+              className="text-xs md:text-sm text-[#64748B] mt-0.5"
+              style={{ fontFamily: RB }}
+            >
+              Review all payment transactions, receipts and payment records.
+            </p>
+          </div>
+          <div className="no-print flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E7EB] text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+              style={{ fontFamily: RB }}
+            >
+              <Printer size={14} />
+              <span className="hidden sm:inline">Print Report</span>
+            </button>
+            <button
+              onClick={handleExportPaymentHistory}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-semibold hover:bg-blue-900 transition-colors shadow-sm active:scale-95 cursor-pointer"
+              style={{ fontFamily: PP }}
+            >
+              <Download size={15} />
+              Export Payment History
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#E5E7EB] text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
-            style={{ fontFamily: RB }}
-          >
-            <Printer size={14} />
-            <span className="hidden sm:inline">Print Report</span>
-          </button>
-          <button
-            onClick={() => console.log("Exporting Payment History...")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0D47A1] text-white text-xs font-semibold hover:bg-blue-900 transition-colors shadow-sm active:scale-95 cursor-pointer"
-            style={{ fontFamily: PP }}
-          >
-            <Download size={15} />
-            Export Payment History
-          </button>
-        </div>
-      </div>
 
       {/* 2. TRANSACTION LEDGER DATA TABLE */}
       <DataTable<PaymentHistoryRecord>
@@ -465,6 +677,7 @@ export function PaymentHistoryPage() {
         }
         pagination={true}
       />
+      </div>
 
       {/* PAYMENT DETAILS DRAWER */}
       {selectedDrawerPayment && (

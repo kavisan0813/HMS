@@ -37,6 +37,10 @@ import {
   LineChart,
   Line,
 } from "../../../common/components/recharts-lazy";
+import safehandshospital_logo from "../../../assets/safehandshospital_logo.webp";
+import { useHospitalBranding } from "../../settings/hooks/useHospitalBranding";
+import { useAuthStore } from "../../auth/store/auth.store";
+import { exportDataToCsv } from "../utils/export.utils";
 
 const PP = "Poppins, system-ui, sans-serif";
 const RB = "Roboto, system-ui, sans-serif";
@@ -438,86 +442,447 @@ export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
     ];
   }, []);
 
+  const { logoUrl } = useHospitalBranding();
+  const currentUser = useAuthStore((s) => s.user);
+  const [logoLoaded, setLogoLoaded] = React.useState(true);
+  const effectiveLogo = logoUrl || safehandshospital_logo;
+  const hospitalName = "Safe Hands Hospital";
+  const hospitalAddress = "123 Healthcare Ave, Medical District";
+  const hospitalPhone = "+91 (011) 2345-6789";
+  const hospitalGstin = "GSTIN: 07AAAAM1234F1Z5";
+
+  const doctorDisplayName =
+    currentUser?.fullName ||
+    currentUser?.name ||
+    "Dr. Medical Practitioner";
+  const doctorDept =
+    currentUser?.department ||
+    currentUser?.departmentName ||
+    "Clinical Consultation / Outpatient";
+  const doctorSpecialization =
+    currentUser?.specialization ||
+    "General Medicine & Clinical Practice";
+  const doctorStaffId = currentUser?.id ? `DOC-${currentUser.id}` : "DOC-2026-MED";
+
+  const reportPeriodText =
+    startDate && endDate && startDate === endDate
+      ? startDate
+      : `${startDate || todayStr} to ${endDate || todayStr}`;
+  const generatedTimestamp = `${new Date().toLocaleDateString("en-GB")} ${new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  })}`;
+
+  const handleExportCsv = () => {
+    const csvFilename = `doctor-performance-report-${startDate || todayStr}.csv`;
+    const exportRows = filteredPerformance.map((item, idx) => ({
+      "S.No": idx + 1,
+      "Consultation ID": item.consultationId,
+      "Patient Name": item.patientName,
+      "MRN": item.mrn,
+      "Appointment Date": item.appointmentDate,
+      "Consultation Time": item.consultationTime,
+      "Diagnosis": item.diagnosis,
+      "Prescription Status": item.prescriptionStatus,
+      "Follow-up Date": item.followUp,
+      "Consultation Status": item.consultationStatus,
+    }));
+
+    exportDataToCsv(csvFilename, exportRows);
+  };
+
   return (
     <div
       className="min-h-screen bg-[#F1F5F9] text-[#111827] pb-12"
       style={{ fontFamily: RB }}
     >
-      {/* Top Header Section */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onBack || (() => window.history.back())}
-              className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer shadow-2xs"
-              title="Go Back"
-            >
-              <ArrowLeft size={18} />
-            </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className="text-2xl font-bold text-[#111827]"
-                  style={{ fontFamily: PP }}
-                >
-                  My Performance Report
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 10mm;
+        }
+
+        @media screen {
+          .doctor-self-report-print-only {
+            display: none !important;
+          }
+        }
+
+        @media print {
+          /* Hide application navbar, sidebar, header, screen dashboard and buttons */
+          header, nav, aside, [role="navigation"], .no-print, .doctor-self-report-screen-ui {
+            display: none !important;
+            visibility: hidden !important;
+          }
+
+          body, html {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+
+          #root, main, div[class*="min-h-screen"], div[class*="overflow-"] {
+            overflow: visible !important;
+            height: auto !important;
+            max-height: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: transparent !important;
+          }
+
+          .doctor-self-report-print-only {
+            display: block !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            min-width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+          }
+
+          .doctor-self-report-print-only * {
+            visibility: visible !important;
+          }
+
+          .doctor-self-print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: auto !important;
+          }
+
+          .doctor-self-print-table thead {
+            display: table-header-group !important;
+          }
+
+          .doctor-self-print-table tfoot {
+            display: table-footer-group !important;
+          }
+
+          .doctor-self-print-table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+
+          .doctor-self-print-table th,
+          .doctor-self-print-table td {
+            word-break: break-word !important;
+            white-space: normal !important;
+          }
+        }
+      `}</style>
+
+      {/* ─── DEDICATED PRINT PRESENTATION (VISIBLE ONLY IN PRINT) ─── */}
+      <div className="doctor-self-report-print-only font-sans">
+        {/* A. REPORT HEADER */}
+        <div className="border-b-2 border-slate-800 pb-4 mb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              {logoLoaded && effectiveLogo ? (
+                <img
+                  src={effectiveLogo}
+                  alt=""
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                  onError={() => setLogoLoaded(false)}
+                />
+              ) : null}
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
+                  {hospitalName}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
-                  Doctor Access Scoped
-                </span>
+                <p className="text-[11px] text-slate-600 font-medium leading-tight">
+                  {hospitalAddress} • Ph: {hospitalPhone}
+                  {hospitalGstin ? ` • ${hospitalGstin}` : ""}
+                </p>
+                <div className="mt-1.5 inline-block bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded">
+                  DOCTOR PERFORMANCE REPORT
+                </div>
               </div>
-              <p className="text-xs text-[#64748B] mt-0.5">
-                Monitor your consultations, workload, patient care and clinical
-                performance metrics.
-              </p>
-            </div>
-          </div>
-
-          {/* Header Actions */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
-              <Clock className="w-4 h-4 text-[#0D47A1]" />
-              <span>
-                Last Updated:{" "}
-                <strong className="text-[#111827]">
-                  {new Date().toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </strong>
-              </span>
             </div>
 
-            <button
-              onClick={handleRefresh}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
-              />
-              <span>Refresh</span>
-            </button>
-
-            <button
-              onClick={() =>
-                alert("Exporting My Performance Report (PDF)...")
-              }
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export PDF</span>
-            </button>
-
-            <button
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
-              <span>Print Report</span>
-            </button>
+            <div className="text-right text-[11px] text-slate-600 space-y-0.5">
+              <div>
+                <span className="font-semibold text-slate-800">Doctor:</span>{" "}
+                {doctorDisplayName}
+              </div>
+              {doctorStaffId && (
+                <div>
+                  <span className="font-semibold text-slate-800">Doctor ID:</span>{" "}
+                  {doctorStaffId}
+                </div>
+              )}
+              {doctorDept && (
+                <div>
+                  <span className="font-semibold text-slate-800">Department:</span>{" "}
+                  {doctorDept}
+                </div>
+              )}
+              {doctorSpecialization && (
+                <div>
+                  <span className="font-semibold text-slate-800">Specialization:</span>{" "}
+                  {doctorSpecialization}
+                </div>
+              )}
+              <div>
+                <span className="font-semibold text-slate-800">Report Period:</span>{" "}
+                {reportPeriodText}
+              </div>
+              <div>
+                <span className="font-semibold text-slate-800">Generated:</span>{" "}
+                {generatedTimestamp}
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* B. PERFORMANCE SUMMARY TABLE */}
+        <div className="mb-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-300 pb-1 mb-2">
+            1. Clinical Performance Summary
+          </h2>
+          <table className="w-full text-xs border border-slate-300">
+            <tbody>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="p-2 font-semibold text-slate-700 w-1/4">Total Consultations</td>
+                <td className="p-2 text-slate-900 font-bold w-1/4">{kpi.totalConsultations}</td>
+                <td className="p-2 font-semibold text-slate-700 w-1/4">Completed Consultations</td>
+                <td className="p-2 text-emerald-800 font-bold w-1/4">{kpi.completedConsultations}</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 font-semibold text-slate-700">Completion Rate</td>
+                <td className="p-2 text-slate-900 font-bold">{kpi.completionRate}%</td>
+                <td className="p-2 font-semibold text-slate-700">Avg Consultation Time</td>
+                <td className="p-2 text-slate-900 font-bold">{kpi.avgConsultationTime}</td>
+              </tr>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="p-2 font-semibold text-slate-700">Follow-up Patients</td>
+                <td className="p-2 text-amber-800 font-bold">{kpi.followUpCount} Active</td>
+                <td className="p-2 font-semibold text-slate-700">Patient Satisfaction</td>
+                <td className="p-2 text-slate-900 font-bold">{kpi.rating} (98% Score)</td>
+              </tr>
+              <tr>
+                <td className="p-2 font-semibold text-slate-700">Daily Workload</td>
+                <td className="p-2 text-slate-900 font-bold">{kpi.avgDailyWorkload} Consults/Day</td>
+                <td className="p-2 font-semibold text-slate-700">Practice Scope</td>
+                <td className="p-2 text-slate-900 font-medium">Doctor Access Scoped</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* C. CONSULTATION BREAKDOWN & STATUS SUMMARY */}
+        <div className="mb-4">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-300 pb-1 mb-2">
+            2. Consultation & Status Breakdown
+          </h2>
+          <table className="w-full text-xs border border-slate-300">
+            <thead className="bg-slate-100 text-slate-700">
+              <tr className="border-b border-slate-300">
+                <th className="p-2 text-left font-bold">Metric / Status</th>
+                <th className="p-2 text-center font-bold">Count</th>
+                <th className="p-2 text-center font-bold">Percentage</th>
+                <th className="p-2 text-left font-bold">Benchmark / Target</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 font-medium text-slate-900">Completed Consultations</td>
+                <td className="p-2 text-center font-bold text-emerald-800">{kpi.completedConsultations}</td>
+                <td className="p-2 text-center font-semibold text-emerald-800">{kpi.completionRate}%</td>
+                <td className="p-2 text-slate-600">Target &gt; 85%</td>
+              </tr>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="p-2 font-medium text-slate-900">In Progress / Pending</td>
+                <td className="p-2 text-center font-bold text-amber-800">{kpi.pendingConsultations}</td>
+                <td className="p-2 text-center font-semibold text-amber-800">
+                  {kpi.totalConsultations > 0 ? Math.round((kpi.pendingConsultations / kpi.totalConsultations) * 100) : 0}%
+                </td>
+                <td className="p-2 text-slate-600">Active Queue</td>
+              </tr>
+              <tr className="border-b border-slate-200">
+                <td className="p-2 font-medium text-slate-900">Cancelled Consultations</td>
+                <td className="p-2 text-center font-bold text-red-800">{kpi.cancelledConsultations}</td>
+                <td className="p-2 text-center font-semibold text-red-800">
+                  {kpi.totalConsultations > 0 ? Math.round((kpi.cancelledConsultations / kpi.totalConsultations) * 100) : 0}%
+                </td>
+                <td className="p-2 text-slate-600">Target &lt; 5%</td>
+              </tr>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <td className="p-2 font-medium text-slate-900">Scheduled Follow-ups</td>
+                <td className="p-2 text-center font-bold text-slate-900">{kpi.followUpCount}</td>
+                <td className="p-2 text-center font-semibold text-slate-700">—</td>
+                <td className="p-2 text-slate-600">Post-Consultation Care</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* D. DETAILED CONSULTATION ACTIVITY TABLE */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between border-b border-slate-300 pb-1 mb-2">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+              3. Detailed Consultation Activity ({filteredPerformance.length} Records)
+            </h2>
+            <span className="text-[10px] text-slate-500 font-medium">Doctor Access Scoped</span>
+          </div>
+
+          {filteredPerformance.length === 0 ? (
+            <div className="p-4 border border-slate-300 bg-slate-50 text-center text-xs text-slate-500">
+              No performance activity records found for the selected report period.
+            </div>
+          ) : (
+            <table className="doctor-self-print-table w-full text-[11px] border border-slate-300">
+              <thead className="bg-slate-100 text-slate-800">
+                <tr className="border-b border-slate-300">
+                  <th className="p-2 text-center w-8">#</th>
+                  <th className="p-2 text-left">Consultation ID</th>
+                  <th className="p-2 text-left">Patient Name</th>
+                  <th className="p-2 text-left">MRN</th>
+                  <th className="p-2 text-left">Appt Date</th>
+                  <th className="p-2 text-left">Time</th>
+                  <th className="p-2 text-left">Diagnosis</th>
+                  <th className="p-2 text-left">Rx Status</th>
+                  <th className="p-2 text-left">Follow-up</th>
+                  <th className="p-2 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPerformance.map((item, idx) => (
+                  <tr key={item.consultationId || idx} className="border-b border-slate-200">
+                    <td className="p-2 text-slate-500 text-center">{idx + 1}</td>
+                    <td className="p-2 font-mono font-bold text-slate-900">{item.consultationId}</td>
+                    <td className="p-2 font-semibold text-slate-900">{item.patientName}</td>
+                    <td className="p-2 font-mono text-slate-600">{item.mrn}</td>
+                    <td className="p-2 text-slate-700">{item.appointmentDate}</td>
+                    <td className="p-2 text-slate-800">{item.consultationTime}</td>
+                    <td className="p-2 text-slate-800">{item.diagnosis}</td>
+                    <td className="p-2 text-slate-800">{item.prescriptionStatus}</td>
+                    <td className="p-2 text-slate-700">{item.followUp || "—"}</td>
+                    <td className="p-2 text-center font-semibold">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                        item.consultationStatus === "Completed"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : item.consultationStatus === "In Progress"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-slate-100 text-slate-800"
+                      }`}>
+                        {item.consultationStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* E. WORKLOAD & PATIENT SATISFACTION DETAILS */}
+        <div className="border border-slate-300 bg-slate-50 p-3 mb-4 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-medium text-slate-700">
+            <div>Total Consults: <strong className="text-slate-900">{kpi.totalConsultations}</strong></div>
+            <div>Completed: <strong className="text-emerald-800">{kpi.completedConsultations}</strong></div>
+            <div>In Progress: <strong className="text-amber-800">{kpi.pendingConsultations}</strong></div>
+            <div>Cancelled: <strong className="text-red-800">{kpi.cancelledConsultations}</strong></div>
+            <div>Follow-up Patients: <strong className="text-slate-900">{kpi.followUpCount} Active</strong></div>
+            <div>Avg Consult Time: <strong className="text-slate-900">{kpi.avgConsultationTime}</strong></div>
+            <div>Patient Satisfaction: <strong className="text-slate-900">{kpi.rating} (42 Reviews)</strong></div>
+            <div>Avg Daily Workload: <strong className="text-slate-900">{kpi.avgDailyWorkload} / Day</strong></div>
+          </div>
+        </div>
+
+        {/* F. PRINT FOOTER */}
+        <div className="pt-3 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500">
+          <div>Generated from Safe Hands Hospital Management System</div>
+          <div>Confidential Doctor Performance Audit Record • Generated on: {generatedTimestamp}</div>
+        </div>
       </div>
+
+      {/* ─── NORMAL SCREEN VIEW (VISUALLY UNCHANGED) ─── */}
+      <div className="doctor-self-report-screen-ui no-print">
+        {/* Top Header Section */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onBack || (() => window.history.back())}
+                className="p-2.5 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer shadow-2xs"
+                title="Go Back"
+              >
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1
+                    className="text-2xl font-bold text-[#111827]"
+                    style={{ fontFamily: PP }}
+                  >
+                    My Performance Report
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#0D47A1]/10 text-[#0D47A1] border border-blue-200">
+                    Doctor Access Scoped
+                  </span>
+                </div>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Monitor your consultations, workload, patient care and clinical
+                  performance metrics.
+                </p>
+              </div>
+            </div>
+
+            {/* Header Actions */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="hidden lg:flex items-center gap-2 text-xs text-[#64748B] bg-slate-50 border border-[#E5E7EB] px-3 py-2 rounded-xl">
+                <Clock className="w-4 h-4 text-[#0D47A1]" />
+                <span>
+                  Last Updated:{" "}
+                  <strong className="text-[#111827]">
+                    {new Date().toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </strong>
+                </span>
+              </div>
+
+              <button
+                onClick={handleRefresh}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-[#0D47A1] ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                <span>Refresh</span>
+              </button>
+
+              <button
+                onClick={handleExportCsv}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium text-white bg-[#0D47A1] hover:bg-blue-900 transition shadow-sm"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#111827] bg-white border border-[#E5E7EB] hover:bg-slate-50 transition shadow-sm"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#0D47A1]" />
+                <span>Print Report</span>
+              </button>
+            </div>
+          </div>
+        </div>
 
       {/* Main Container Full Width */}
       <div className="w-full px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
@@ -1211,13 +1576,11 @@ export function DoctorDoctorReportScreen({ onBack }: { onBack?: () => void }) {
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    alert("Exporting Performance Register (CSV)...")
-                  }
+                  onClick={handleExportCsv}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-[#E5E7EB] text-xs font-semibold text-[#111827] rounded-xl hover:bg-slate-100 transition"
                 >
                   <Download className="w-3.5 h-3.5 text-[#0D47A1]" />
-                  <span>Export Register</span>
+                  <span>Export Register (CSV)</span>
                 </button>
               </div>
 

@@ -20,24 +20,28 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
+        // target: "http://192.168.1.52:8888",
         target: "https://api.hms.viyaninfo.com",
         changeOrigin: true,
         secure: true,
         headers: {
-          Origin: "https://hms.viyaninfo.com",
+          // Origin: "http://192.168.1.52:8888",
+          Origin: "https://api.hms.viyaninfo.com",
         },
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
-            proxyReq.setHeader("origin", "https://hms.viyaninfo.com");
+            // proxyReq.setHeader("origin", "http://192.168.1.52:8888 ");
+            proxyReq.setHeader("origin", "https://api.hms.viyaninfo.com");
           });
         },
       },
       "/uploads": {
+        // target: "http://192.168.1.52:8888",
         target: "https://api.hms.viyaninfo.com",
         changeOrigin: true,
         secure: true,
         headers: {
-          Origin: "https://hms.viyaninfo.com",
+          Origin: "http://192.168.1.52:8888",
         },
       },
     },

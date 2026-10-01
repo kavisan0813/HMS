@@ -64,7 +64,6 @@ const REGISTRATION_TYPES = [
 
 const PATIENT_CATEGORIES = [
   { value: "GENERAL", label: "General" },
-  { value: "INSURANCE", label: "Insurance" },
   { value: "VIP", label: "VIP" },
   { value: "CORPORATE", label: "Corporate" },
 ];
